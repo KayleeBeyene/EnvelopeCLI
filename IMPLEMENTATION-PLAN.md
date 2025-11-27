@@ -86,29 +86,29 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 2: Core Data Models
 
-- [ ] **STEP 2 COMPLETE**
+- [x] **STEP 2 COMPLETE**
 
 **Objective**: Implement all core data entities (Account, Transaction, Category, CategoryGroup, BudgetAllocation) with full serde support and validation.
 
 **Implementation Details**: Create strongly-typed models matching the PRD data model exactly. Use newtype patterns for IDs. Implement Display traits for terminal output. Add validation methods on each struct. Use chrono for dates, uuid for IDs.
 
 **Files to Create/Modify**:
-- [ ] `src/models/mod.rs`: Module exports for all models
-- [ ] `src/models/account.rs`: Account struct (id, name, type, on_budget, archived, created_at, reconciliation fields)
-- [ ] `src/models/transaction.rs`: Transaction struct with status enum (Pending/Cleared/Reconciled), splits, transfer_id, import_id
-- [ ] `src/models/category.rs`: Category and CategoryGroup structs with sort_order
-- [ ] `src/models/budget.rs`: BudgetAllocation struct with flexible period support (monthly, weekly, bi-weekly, custom)
-- [ ] `src/models/payee.rs`: Payee struct with auto-categorization rules
-- [ ] `src/models/period.rs`: BudgetPeriod enum and parsing (2025-01, 2025-W03, custom date ranges)
-- [ ] `src/models/money.rs`: Money type (i64 cents internally, proper arithmetic, Display impl)
-- [ ] `src/models/ids.rs`: Newtype wrappers (AccountId, TransactionId, CategoryId, etc.)
+- [x] `src/models/mod.rs`: Module exports for all models
+- [x] `src/models/account.rs`: Account struct (id, name, type, on_budget, archived, created_at, reconciliation fields)
+- [x] `src/models/transaction.rs`: Transaction struct with status enum (Pending/Cleared/Reconciled), splits, transfer_id, import_id
+- [x] `src/models/category.rs`: Category and CategoryGroup structs with sort_order
+- [x] `src/models/budget.rs`: BudgetAllocation struct with flexible period support (monthly, weekly, bi-weekly, custom)
+- [x] `src/models/payee.rs`: Payee struct with auto-categorization rules
+- [x] `src/models/period.rs`: BudgetPeriod enum and parsing (2025-01, 2025-W03, custom date ranges)
+- [x] `src/models/money.rs`: Money type (i64 cents internally, proper arithmetic, Display impl)
+- [x] `src/models/ids.rs`: Newtype wrappers (AccountId, TransactionId, CategoryId, etc.)
 
 **Dependencies**: Step 1
 
 **Testing Checklist**:
-- [ ] Unit tests for serialization round-trips
-- [ ] Validation tests for all entities
-- [ ] Money arithmetic tests
+- [x] Unit tests for serialization round-trips
+- [x] Validation tests for all entities
+- [x] Money arithmetic tests
 
 **User Actions Required**: None
 
