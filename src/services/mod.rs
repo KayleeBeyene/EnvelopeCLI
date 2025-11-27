@@ -6,9 +6,17 @@
 pub mod account;
 pub mod budget;
 pub mod category;
+pub mod import;
+pub mod payee;
 pub mod period;
+pub mod transaction;
+pub mod transfer;
 
 pub use account::AccountService;
 pub use budget::BudgetService;
 pub use category::CategoryService;
+pub use import::{ColumnMapping, ImportPreviewEntry, ImportResult, ImportService, ImportStatus};
+pub use payee::PayeeService;
 pub use period::PeriodService;
+pub use transaction::{CreateTransactionInput, TransactionFilter, TransactionService};
+pub use transfer::TransferService;
