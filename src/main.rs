@@ -98,7 +98,8 @@ fn main() -> Result<()> {
 
     match cli.command {
         Some(Commands::Tui) => {
-            println!("TUI mode not yet implemented. Coming in Phase 4!");
+            // Launch the TUI
+            envelope::tui::run_tui(&storage, &settings, &paths)?;
         }
         Some(Commands::Account(cmd)) => {
             handle_account_command(&storage, cmd)?;

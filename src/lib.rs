@@ -34,8 +34,7 @@ pub mod error;
 pub mod models;
 pub mod services;
 pub mod storage;
-// pub mod tui;       // Step 17+
-// pub mod import;    // Step 15+
+pub mod tui;        // Phase 4: TUI
 // pub mod export;    // Step 30
 // pub mod reports;   // Step 28+
 // pub mod crypto;    // Step 31

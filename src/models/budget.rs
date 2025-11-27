@@ -145,6 +145,18 @@ impl CategoryBudgetSummary {
         }
     }
 
+    /// Create an empty summary for a category (all zeros)
+    pub fn empty(category_id: CategoryId) -> Self {
+        Self {
+            category_id,
+            period: BudgetPeriod::current_month(),
+            budgeted: Money::zero(),
+            carryover: Money::zero(),
+            activity: Money::zero(),
+            available: Money::zero(),
+        }
+    }
+
     /// Create from an allocation and activity amount
     pub fn from_allocation(allocation: &BudgetAllocation, activity: Money) -> Self {
         Self::new(
