@@ -20,7 +20,7 @@ HOW TO USE THIS DOCUMENT:
 
 - [x] **Phase 1: Foundation** (Steps 1-5)
 - [x] **Phase 2: Core Budget** (Steps 6-10)
-- [ ] **Phase 3: Transactions** (Steps 11-16)
+- [x] **Phase 3: Transactions** (Steps 11-16)
 - [ ] **Phase 4: TUI** (Steps 17-25)
 - [ ] **Phase 5: Reconciliation** (Steps 26-27)
 - [ ] **Phase 6: Reporting** (Steps 28-30)
@@ -44,7 +44,7 @@ HOW TO USE THIS DOCUMENT:
 |-------|-------|-------------|--------|
 | 1. Foundation | 1-5 | Project setup, data models, storage, audit, backup | Complete |
 | 2. Core Budget | 6-10 | Accounts, categories, periods, allocation, rollover | Complete |
-| 3. Transactions | 11-16 | CRUD, payees, splits, transfers, CSV import | Not Started |
+| 3. Transactions | 11-16 | CRUD, payees, splits, transfers, CSV import | Complete |
 | 4. TUI | 17-25 | Framework, views, dialogs, command palette, help | Not Started |
 | 5. Reconciliation | 26-27 | Reconciliation workflow, locking, adjustments | Not Started |
 | 6. Reporting | 28-30 | Reports, data export | Not Started |
@@ -342,27 +342,27 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 11: Transaction CRUD
 
-- [ ] **STEP 11 COMPLETE**
+- [x] **STEP 11 COMPLETE**
 
 **Objective**: Implement manual transaction entry with all fields: date, payee, amount, category, memo, status.
 
 **Implementation Details**: TransactionService with full CRUD. Auto-detect inflow/outflow from sign. Track pending/cleared/reconciled status. Update category available balance on transaction changes. CLI commands for transaction management.
 
 **Files to Create/Modify**:
-- [ ] `src/services/transaction.rs`: TransactionService - create, get, list, update, delete, set_status, filter_by_account, filter_by_date_range
-- [ ] `src/cli/transaction.rs`: Transaction subcommands (add, list, edit, delete, clear)
-- [ ] `src/main.rs`: (modify) Wire up transaction commands
-- [ ] `src/display/transaction.rs`: Format transaction for terminal (register view)
-- [ ] `src/services/budget.rs`: (modify) Recalculate category available when transactions change
+- [x] `src/services/transaction.rs`: TransactionService - create, get, list, update, delete, set_status, filter_by_account, filter_by_date_range
+- [x] `src/cli/transaction.rs`: Transaction subcommands (add, list, edit, delete, clear)
+- [x] `src/main.rs`: (modify) Wire up transaction commands
+- [x] `src/display/transaction.rs`: Format transaction for terminal (register view)
+- [x] `src/services/budget.rs`: (modify) Recalculate category available when transactions change
 
 **Dependencies**: Steps 1-10
 
 **Testing Checklist**:
-- [ ] Add transactions
-- [ ] Verify category balances update
-- [ ] Edit transaction
-- [ ] Verify recalculation
-- [ ] Delete and verify
+- [x] Add transactions
+- [x] Verify category balances update
+- [x] Edit transaction
+- [x] Verify recalculation
+- [x] Delete and verify
 
 **User Actions Required**: None
 
@@ -370,26 +370,26 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 12: Payee Auto-Suggestion
 
-- [ ] **STEP 12 COMPLETE**
+- [x] **STEP 12 COMPLETE**
 
 **Objective**: Implement payee autocomplete and automatic category suggestion based on historical patterns.
 
 **Implementation Details**: Build payee index from transaction history. Track category frequency per payee. Suggest most common category when payee entered. CLI flag `--auto-categorize`. Payee CRUD for managing rules.
 
 **Files to Create/Modify**:
-- [ ] `src/services/payee.rs`: PayeeService - suggest_payees (fuzzy), get_suggested_category, learn_from_transaction
-- [ ] `src/services/transaction.rs`: (modify) Call payee learning on transaction create
-- [ ] `src/cli/transaction.rs`: (modify) Add --auto-categorize flag, payee suggestions in interactive mode
-- [ ] `src/cli/payee.rs`: Payee management commands (list, set-category, delete)
-- [ ] `src/main.rs`: (modify) Wire up payee commands
+- [x] `src/services/payee.rs`: PayeeService - suggest_payees (fuzzy), get_suggested_category, learn_from_transaction
+- [x] `src/services/transaction.rs`: (modify) Call payee learning on transaction create
+- [x] `src/cli/transaction.rs`: (modify) Add --auto-categorize flag, payee suggestions in interactive mode
+- [x] `src/cli/payee.rs`: Payee management commands (list, set-category, delete)
+- [x] `src/main.rs`: (modify) Wire up payee commands
 
 **Dependencies**: Steps 1-11
 
 **Testing Checklist**:
-- [ ] Add transactions with same payee/category
-- [ ] Verify suggestion
-- [ ] Test fuzzy matching
-- [ ] Test manual override
+- [x] Add transactions with same payee/category
+- [x] Verify suggestion
+- [x] Test fuzzy matching
+- [x] Test manual override
 
 **User Actions Required**: None
 
@@ -397,27 +397,27 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 13: Split Transactions
 
-- [ ] **STEP 13 COMPLETE**
+- [x] **STEP 13 COMPLETE**
 
 **Objective**: Implement split transactions where a single transaction is divided across multiple categories.
 
 **Implementation Details**: Transaction with null category_id but populated splits array. Validate splits sum to transaction amount. Display split breakdown. Edit individual splits. CLI syntax for splits.
 
 **Files to Create/Modify**:
-- [ ] `src/services/transaction.rs`: (modify) Add create_split, validate_splits, update_split
-- [ ] `src/services/budget.rs`: (modify) Handle split transactions in category calculations
-- [ ] `src/cli/transaction.rs`: (modify) Add split creation syntax `--split groceries:50 --split household:35.50`
-- [ ] `src/display/transaction.rs`: (modify) Show split breakdown in transaction display
-- [ ] `src/models/transaction.rs`: (modify) Add Split struct, validation methods
+- [x] `src/services/transaction.rs`: (modify) Add create_split, validate_splits, update_split
+- [x] `src/services/budget.rs`: (modify) Handle split transactions in category calculations
+- [x] `src/cli/transaction.rs`: (modify) Add split creation syntax `--split groceries:50 --split household:35.50`
+- [x] `src/display/transaction.rs`: (modify) Show split breakdown in transaction display
+- [x] `src/models/transaction.rs`: (modify) Add Split struct, validation methods
 
 **Dependencies**: Steps 1-12
 
 **Testing Checklist**:
-- [ ] Create split transaction
-- [ ] Verify each category updated
-- [ ] Edit split
-- [ ] Verify totals match
-- [ ] Test validation rejects mismatched amounts
+- [x] Create split transaction
+- [x] Verify each category updated
+- [x] Edit split
+- [x] Verify totals match
+- [x] Test validation rejects mismatched amounts
 
 **User Actions Required**: None
 
@@ -425,27 +425,27 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 14: Account Transfers
 
-- [ ] **STEP 14 COMPLETE**
+- [x] **STEP 14 COMPLETE**
 
 **Objective**: Implement transfers between accounts as linked transaction pairs maintaining consistency.
 
 **Implementation Details**: Transfer creates two transactions with matching transfer_id. Outflow from source, inflow to destination. Transfers are not categorized (don't affect budget). Delete/edit updates both transactions.
 
 **Files to Create/Modify**:
-- [ ] `src/services/transfer.rs`: TransferService - create_transfer (creates both transactions), edit_transfer, delete_transfer, get_linked_transaction
-- [ ] `src/services/transaction.rs`: (modify) Handle transfer transactions specially (not categorizable)
-- [ ] `src/cli/transfer.rs`: Transfer command (envelope transfer FROM_ACCOUNT TO_ACCOUNT AMOUNT)
-- [ ] `src/main.rs`: (modify) Wire up transfer command
-- [ ] `src/display/transaction.rs`: (modify) Show transfer indicator and linked account
+- [x] `src/services/transfer.rs`: TransferService - create_transfer (creates both transactions), edit_transfer, delete_transfer, get_linked_transaction
+- [x] `src/services/transaction.rs`: (modify) Handle transfer transactions specially (not categorizable)
+- [x] `src/cli/transfer.rs`: Transfer command (envelope transfer FROM_ACCOUNT TO_ACCOUNT AMOUNT)
+- [x] `src/main.rs`: (modify) Wire up transfer command
+- [x] `src/display/transaction.rs`: (modify) Show transfer indicator and linked account
 
 **Dependencies**: Steps 1-13
 
 **Testing Checklist**:
-- [ ] Create transfer
-- [ ] Verify both transactions created
-- [ ] Verify balances correct
-- [ ] Delete transfer
-- [ ] Verify both removed
+- [x] Create transfer
+- [x] Verify both transactions created
+- [x] Verify balances correct
+- [x] Delete transfer
+- [x] Verify both removed
 
 **User Actions Required**: None
 
@@ -453,26 +453,26 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 15: CSV Import - Core Parser
 
-- [ ] **STEP 15 COMPLETE**
+- [x] **STEP 15 COMPLETE**
 
 **Objective**: Implement CSV parsing with configurable column mapping for bank exports.
 
 **Implementation Details**: Detect common CSV formats automatically. Allow manual column mapping. Parse dates in multiple formats. Handle amount columns (single signed, separate debit/credit). Store format presets per account.
 
 **Files to Create/Modify**:
-- [ ] `src/import/mod.rs`: Import module exports
-- [ ] `src/import/csv_parser.rs`: CSVParser - detect format, parse with mapping, normalize amounts
-- [ ] `src/import/column_mapping.rs`: ColumnMapping struct, common presets (Chase, BoA, etc.), interactive mapping builder
-- [ ] `src/import/date_parser.rs`: Parse dates in multiple formats (MM/DD/YYYY, YYYY-MM-DD, DD/MM/YYYY, etc.)
-- [ ] `src/config/settings.rs`: (modify) Store account-specific import mappings
+- [x] `src/import/mod.rs`: Import module exports
+- [x] `src/import/csv_parser.rs`: CSVParser - detect format, parse with mapping, normalize amounts
+- [x] `src/import/column_mapping.rs`: ColumnMapping struct, common presets (Chase, BoA, etc.), interactive mapping builder
+- [x] `src/import/date_parser.rs`: Parse dates in multiple formats (MM/DD/YYYY, YYYY-MM-DD, DD/MM/YYYY, etc.)
+- [x] `src/config/settings.rs`: (modify) Store account-specific import mappings
 
 **Dependencies**: Steps 1-14
 
 **Testing Checklist**:
-- [ ] Parse sample CSVs from major banks
-- [ ] Test date format detection
-- [ ] Test amount normalization
-- [ ] Test preset matching
+- [x] Parse sample CSVs from major banks
+- [x] Test date format detection
+- [x] Test amount normalization
+- [x] Test preset matching
 
 **User Actions Required**: May need to configure column mapping for non-standard bank formats
 
@@ -480,27 +480,27 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 16: CSV Import - Duplicate Detection & Import Flow
 
-- [ ] **STEP 16 COMPLETE**
+- [x] **STEP 16 COMPLETE**
 
 **Objective**: Implement duplicate detection and the full import workflow with preview and confirmation.
 
 **Implementation Details**: Generate import_id from transaction attributes (date + amount + payee hash). Detect duplicates against existing transactions. Preview imported transactions. Allow skip duplicates, import all, or select specific. Bulk categorize imported transactions.
 
 **Files to Create/Modify**:
-- [ ] `src/import/duplicate.rs`: DuplicateDetector - generate import_id, find_duplicates, similarity scoring
-- [ ] `src/import/workflow.rs`: ImportWorkflow - parse, detect duplicates, preview, confirm, execute import
-- [ ] `src/cli/import.rs`: Import command with interactive preview and confirmation
-- [ ] `src/main.rs`: (modify) Wire up import command
-- [ ] `src/display/import.rs`: Format import preview (highlight duplicates, show mapping)
+- [x] `src/import/duplicate.rs`: DuplicateDetector - generate import_id, find_duplicates, similarity scoring
+- [x] `src/import/workflow.rs`: ImportWorkflow - parse, detect duplicates, preview, confirm, execute import
+- [x] `src/cli/import.rs`: Import command with interactive preview and confirmation
+- [x] `src/main.rs`: (modify) Wire up import command
+- [x] `src/display/import.rs`: Format import preview (highlight duplicates, show mapping)
 
 **Dependencies**: Steps 1-15
 
 **Testing Checklist**:
-- [ ] Import CSV
-- [ ] Verify duplicates flagged
-- [ ] Re-import same CSV
-- [ ] Verify duplicates detected
-- [ ] Test selective import
+- [x] Import CSV
+- [x] Verify duplicates flagged
+- [x] Re-import same CSV
+- [x] Verify duplicates detected
+- [x] Test selective import
 
 **User Actions Required**: Confirm imports; handle duplicate decisions
 
