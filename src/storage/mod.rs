@@ -179,6 +179,36 @@ impl Storage {
     pub fn backup_manager(&self, retention: BackupRetention) -> BackupManager {
         BackupManager::new(self.paths.clone(), retention)
     }
+
+    /// Create a backup before a destructive operation if needed
+    ///
+    /// This creates a backup only if:
+    /// - No backup exists yet, OR
+    /// - The most recent backup is older than 60 seconds
+    ///
+    /// This prevents creating too many backups when multiple destructive
+    /// operations happen in quick succession.
+    ///
+    /// Returns Ok(Some(path)) if a backup was created, Ok(None) if skipped.
+    pub fn backup_before_destructive(&self) -> EnvelopeResult<Option<PathBuf>> {
+        let retention = BackupRetention::default();
+        let manager = BackupManager::new(self.paths.clone(), retention);
+
+        // Check if we need to create a backup
+        if let Some(latest) = manager.get_latest_backup()? {
+            let age = chrono::Utc::now()
+                .signed_duration_since(latest.created_at);
+
+            // Skip if last backup was less than 60 seconds ago
+            if age.num_seconds() < 60 {
+                return Ok(None);
+            }
+        }
+
+        // Create backup
+        let path = manager.create_backup()?;
+        Ok(Some(path))
+    }
 }
 
 #[cfg(test)]

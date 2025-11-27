@@ -175,6 +175,9 @@ impl<'a> CategoryService<'a> {
     ///
     /// If the group has categories, they must be moved or deleted first
     /// unless force_delete_categories is true.
+    ///
+    /// Automatically creates a backup before deletion if one hasn't been
+    /// created recently.
     pub fn delete_group(&self, id: CategoryGroupId, force_delete_categories: bool) -> EnvelopeResult<()> {
         let group = self
             .storage
@@ -193,6 +196,9 @@ impl<'a> CategoryService<'a> {
                 categories.len()
             )));
         }
+
+        // Create automatic backup before destructive operation
+        self.storage.backup_before_destructive()?;
 
         self.storage.categories.delete_group(id, force_delete_categories)?;
         self.storage.categories.save()?;
@@ -430,6 +436,9 @@ impl<'a> CategoryService<'a> {
     }
 
     /// Delete a category
+    ///
+    /// Automatically creates a backup before deletion if one hasn't been
+    /// created recently.
     pub fn delete_category(&self, id: CategoryId) -> EnvelopeResult<()> {
         let category = self
             .storage
@@ -439,6 +448,9 @@ impl<'a> CategoryService<'a> {
 
         // TODO: Check for budget allocations and transactions using this category
         // For now, just delete
+
+        // Create automatic backup before destructive operation
+        self.storage.backup_before_destructive()?;
 
         self.storage.categories.delete_category(id)?;
         self.storage.categories.save()?;

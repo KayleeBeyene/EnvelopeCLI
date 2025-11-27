@@ -170,7 +170,7 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 5: Backup System
 
-- [x] **STEP 5 COMPLETE** *(Infrastructure only - automatic triggers pending)*
+- [x] **STEP 5 COMPLETE**
 
 **Objective**: Implement automatic rolling backups with configurable retention (30 daily + 12 monthly default).
 
@@ -181,8 +181,9 @@ HOW TO USE THIS DOCUMENT:
 - [x] `src/backup/manager.rs`: BackupManager - create backups, enforce retention, list available backups
 - [x] `src/backup/restore.rs`: Restore from backup functionality
 - [x] `src/config/settings.rs`: (modify) Add backup retention settings (daily_count, monthly_count)
-- [ ] `src/storage/mod.rs`: (modify) Call backup before destructive operations ⚠️ *Not wired up*
-- [ ] `src/cli/backup.rs`: CLI commands for backup management ⚠️ *Not implemented*
+- [x] `src/storage/mod.rs`: (modify) Add `backup_before_destructive()` method for auto-backup
+- [x] `src/cli/backup.rs`: CLI commands (create, list, restore, info, prune)
+- [x] `src/services/category.rs`: (modify) Call `backup_before_destructive()` in delete operations
 
 **Dependencies**: Steps 1, 3, 4
 
@@ -190,11 +191,9 @@ HOW TO USE THIS DOCUMENT:
 - [x] Create multiple backups
 - [x] Verify retention policy deletes old ones
 - [x] Test restore functionality
-- [ ] Verify automatic backup before destructive operations
+- [x] Verify automatic backup before destructive operations (category delete triggers backup)
 
 **User Actions Required**: None
-
-> **Status Note**: Backup infrastructure (manager, restore, retention) is complete and tested. Remaining work: (1) Wire up automatic backup triggers before destructive operations, (2) Add CLI commands for manual backup/restore.
 
 ---
 

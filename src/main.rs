@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use envelope::cli::{handle_account_command, handle_budget_command, handle_category_command};
+use envelope::cli::{handle_account_command, handle_backup_command, handle_budget_command, handle_category_command};
 use envelope::config::{paths::EnvelopePaths, settings::Settings};
 use envelope::storage::Storage;
 
@@ -37,6 +37,10 @@ enum Commands {
     /// Budget management commands
     #[command(subcommand)]
     Budget(envelope::cli::BudgetCommands),
+
+    /// Backup management commands
+    #[command(subcommand)]
+    Backup(envelope::cli::BackupCommands),
 
     /// Transaction management commands
     #[command(subcommand, alias = "txn")]
@@ -115,6 +119,9 @@ fn main() -> Result<()> {
         }
         Some(Commands::Budget(cmd)) => {
             handle_budget_command(&storage, &settings, cmd)?;
+        }
+        Some(Commands::Backup(cmd)) => {
+            handle_backup_command(&paths, &settings, cmd)?;
         }
         Some(Commands::Transaction(cmd)) => handle_transaction_command(cmd),
         Some(Commands::Init) => {
