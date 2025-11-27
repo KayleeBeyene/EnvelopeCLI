@@ -18,7 +18,7 @@ HOW TO USE THIS DOCUMENT:
 
 ### Overall Progress
 
-- [ ] **Phase 1: Foundation** (Steps 1-5)
+- [x] **Phase 1: Foundation** (Steps 1-5)
 - [ ] **Phase 2: Core Budget** (Steps 6-10)
 - [ ] **Phase 3: Transactions** (Steps 11-16)
 - [ ] **Phase 4: TUI** (Steps 17-25)
@@ -42,7 +42,7 @@ HOW TO USE THIS DOCUMENT:
 
 | Phase | Steps | Description | Status |
 |-------|-------|-------------|--------|
-| 1. Foundation | 1-5 | Project setup, data models, storage, audit, backup | In Progress |
+| 1. Foundation | 1-5 | Project setup, data models, storage, audit, backup | Complete |
 | 2. Core Budget | 6-10 | Accounts, categories, periods, allocation, rollover | Not Started |
 | 3. Transactions | 11-16 | CRUD, payees, splits, transfers, CSV import | Not Started |
 | 4. TUI | 17-25 | Framework, views, dialogs, command palette, help | Not Started |
@@ -145,24 +145,24 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 4: Audit Logging System
 
-- [ ] **STEP 4 COMPLETE**
+- [x] **STEP 4 COMPLETE**
 
 **Objective**: Implement the append-only audit log that records all create, update, delete operations with before/after values.
 
 **Implementation Details**: Create audit log format with timestamp, operation type, entity type, entity ID, user-readable diff. Implement append-only writer. Add audit hooks that storage layer calls automatically.
 
 **Files to Create/Modify**:
-- [ ] `src/audit/mod.rs`: Audit module exports
-- [ ] `src/audit/entry.rs`: AuditEntry struct (timestamp, operation: Create/Update/Delete, entity_type, entity_id, before, after)
-- [ ] `src/audit/logger.rs`: AuditLogger - append entries to audit.log, flush on each write
-- [ ] `src/audit/diff.rs`: Generate human-readable diffs for before/after values
-- [ ] `src/storage/mod.rs`: (modify) Add audit integration to Storage struct
+- [x] `src/audit/mod.rs`: Audit module exports
+- [x] `src/audit/entry.rs`: AuditEntry struct (timestamp, operation: Create/Update/Delete, entity_type, entity_id, before, after)
+- [x] `src/audit/logger.rs`: AuditLogger - append entries to audit.log, flush on each write
+- [x] `src/audit/diff.rs`: Generate human-readable diffs for before/after values
+- [x] `src/storage/mod.rs`: (modify) Add audit integration to Storage struct
 
 **Dependencies**: Steps 1, 2, 3
 
 **Testing Checklist**:
-- [ ] Create/update/delete entities and verify audit.log contains correct entries
-- [ ] Test log survives crashes
+- [x] Create/update/delete entities and verify audit.log contains correct entries
+- [x] Test log survives crashes
 
 **User Actions Required**: None
 
@@ -170,25 +170,25 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 5: Backup System
 
-- [ ] **STEP 5 COMPLETE**
+- [x] **STEP 5 COMPLETE**
 
 **Objective**: Implement automatic rolling backups with configurable retention (30 daily + 12 monthly default).
 
 **Implementation Details**: Create backup before any destructive operation. Implement rolling retention policy. Store backups as dated JSON archives in backups/ directory. Add restore capability.
 
 **Files to Create/Modify**:
-- [ ] `src/backup/mod.rs`: Backup module exports
-- [ ] `src/backup/manager.rs`: BackupManager - create backups, enforce retention, list available backups
-- [ ] `src/backup/restore.rs`: Restore from backup functionality
-- [ ] `src/config/settings.rs`: (modify) Add backup retention settings (daily_count, monthly_count)
-- [ ] `src/storage/mod.rs`: (modify) Call backup before destructive operations
+- [x] `src/backup/mod.rs`: Backup module exports
+- [x] `src/backup/manager.rs`: BackupManager - create backups, enforce retention, list available backups
+- [x] `src/backup/restore.rs`: Restore from backup functionality
+- [x] `src/config/settings.rs`: (modify) Add backup retention settings (daily_count, monthly_count)
+- [x] `src/storage/mod.rs`: (modify) Call backup before destructive operations
 
 **Dependencies**: Steps 1, 3, 4
 
 **Testing Checklist**:
-- [ ] Create multiple backups
-- [ ] Verify retention policy deletes old ones
-- [ ] Test restore functionality
+- [x] Create multiple backups
+- [x] Verify retention policy deletes old ones
+- [x] Test restore functionality
 
 **User Actions Required**: None
 

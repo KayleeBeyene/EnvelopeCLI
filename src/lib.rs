@@ -25,14 +25,14 @@
 //! let settings = Settings::load_or_create(&paths)?;
 //! ```
 
+pub mod audit;
+pub mod backup;
 pub mod config;
 pub mod error;
 pub mod models;
 pub mod storage;
 
 // These modules will be added in later steps:
-// pub mod audit;     // Step 4
-// pub mod backup;    // Step 5
 // pub mod services;  // Step 6+
 // pub mod cli;       // Step 6+
 // pub mod display;   // Step 6+
