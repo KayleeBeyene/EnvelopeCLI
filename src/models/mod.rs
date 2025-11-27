@@ -13,7 +13,7 @@ pub mod period;
 pub mod transaction;
 
 pub use account::{Account, AccountType};
-pub use budget::BudgetAllocation;
+pub use budget::{BudgetAllocation, CategoryBudgetSummary};
 pub use category::{Category, CategoryGroup, DefaultCategoryGroup};
 pub use ids::{AccountId, CategoryGroupId, CategoryId, PayeeId, TransactionId};
 pub use money::Money;

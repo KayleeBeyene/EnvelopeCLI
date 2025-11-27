@@ -27,15 +27,13 @@
 
 pub mod audit;
 pub mod backup;
+pub mod cli;
 pub mod config;
+pub mod display;
 pub mod error;
 pub mod models;
+pub mod services;
 pub mod storage;
-
-// These modules will be added in later steps:
-// pub mod services;  // Step 6+
-// pub mod cli;       // Step 6+
-// pub mod display;   // Step 6+
 // pub mod tui;       // Step 17+
 // pub mod import;    // Step 15+
 // pub mod export;    // Step 30

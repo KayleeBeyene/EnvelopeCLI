@@ -19,7 +19,7 @@ HOW TO USE THIS DOCUMENT:
 ### Overall Progress
 
 - [x] **Phase 1: Foundation** (Steps 1-5)
-- [ ] **Phase 2: Core Budget** (Steps 6-10)
+- [x] **Phase 2: Core Budget** (Steps 6-10)
 - [ ] **Phase 3: Transactions** (Steps 11-16)
 - [ ] **Phase 4: TUI** (Steps 17-25)
 - [ ] **Phase 5: Reconciliation** (Steps 26-27)
@@ -43,7 +43,7 @@ HOW TO USE THIS DOCUMENT:
 | Phase | Steps | Description | Status |
 |-------|-------|-------------|--------|
 | 1. Foundation | 1-5 | Project setup, data models, storage, audit, backup | Complete |
-| 2. Core Budget | 6-10 | Accounts, categories, periods, allocation, rollover | Not Started |
+| 2. Core Budget | 6-10 | Accounts, categories, periods, allocation, rollover | Complete |
 | 3. Transactions | 11-16 | CRUD, payees, splits, transfers, CSV import | Not Started |
 | 4. TUI | 17-25 | Framework, views, dialogs, command palette, help | Not Started |
 | 5. Reconciliation | 26-27 | Reconciliation workflow, locking, adjustments | Not Started |
@@ -170,7 +170,7 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 5: Backup System
 
-- [x] **STEP 5 COMPLETE**
+- [x] **STEP 5 COMPLETE** *(Infrastructure only - automatic triggers pending)*
 
 **Objective**: Implement automatic rolling backups with configurable retention (30 daily + 12 monthly default).
 
@@ -181,7 +181,8 @@ HOW TO USE THIS DOCUMENT:
 - [x] `src/backup/manager.rs`: BackupManager - create backups, enforce retention, list available backups
 - [x] `src/backup/restore.rs`: Restore from backup functionality
 - [x] `src/config/settings.rs`: (modify) Add backup retention settings (daily_count, monthly_count)
-- [x] `src/storage/mod.rs`: (modify) Call backup before destructive operations
+- [ ] `src/storage/mod.rs`: (modify) Call backup before destructive operations ⚠️ *Not wired up*
+- [ ] `src/cli/backup.rs`: CLI commands for backup management ⚠️ *Not implemented*
 
 **Dependencies**: Steps 1, 3, 4
 
@@ -189,8 +190,11 @@ HOW TO USE THIS DOCUMENT:
 - [x] Create multiple backups
 - [x] Verify retention policy deletes old ones
 - [x] Test restore functionality
+- [ ] Verify automatic backup before destructive operations
 
 **User Actions Required**: None
+
+> **Status Note**: Backup infrastructure (manager, restore, retention) is complete and tested. Remaining work: (1) Wire up automatic backup triggers before destructive operations, (2) Add CLI commands for manual backup/restore.
 
 ---
 
@@ -198,30 +202,30 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 6: Account Management (CRUD)
 
-- [ ] **STEP 6 COMPLETE**
+- [x] **STEP 6 COMPLETE**
 
 **Objective**: Implement complete account management - create, read, update, archive accounts with balance tracking.
 
 **Implementation Details**: Account service layer with full CRUD. Balance calculation from transactions. Archive (soft-delete) functionality. CLI commands: `envelope account create`, `envelope account list`, `envelope account edit`, `envelope account archive`.
 
 **Files to Create/Modify**:
-- [ ] `src/services/mod.rs`: Services module exports
-- [ ] `src/services/account.rs`: AccountService - create, get, list, update, archive, calculate_balance, calculate_cleared_balance
-- [ ] `src/cli/mod.rs`: CLI module structure
-- [ ] `src/cli/account.rs`: Account subcommands using clap (create, list, edit, archive, show)
-- [ ] `src/main.rs`: (modify) Wire up account commands
-- [ ] `src/display/mod.rs`: Display formatting module
-- [ ] `src/display/account.rs`: Format account for terminal output (table format)
+- [x] `src/services/mod.rs`: Services module exports
+- [x] `src/services/account.rs`: AccountService - create, get, list, update, archive, calculate_balance, calculate_cleared_balance
+- [x] `src/cli/mod.rs`: CLI module structure
+- [x] `src/cli/account.rs`: Account subcommands using clap (create, list, edit, archive, show)
+- [x] `src/main.rs`: (modify) Wire up account commands
+- [x] `src/display/mod.rs`: Display formatting module
+- [x] `src/display/account.rs`: Format account for terminal output (table format)
 
 **Dependencies**: Steps 1-5
 
 **Testing Checklist**:
-- [ ] CLI integration tests - create account
-- [ ] Verify JSON storage
-- [ ] List accounts
-- [ ] Edit account
-- [ ] Archive account
-- [ ] Balance calculation tests
+- [x] CLI integration tests - create account
+- [x] Verify JSON storage
+- [x] List accounts
+- [x] Edit account
+- [x] Archive account
+- [x] Balance calculation tests
 
 **User Actions Required**: None
 
@@ -229,26 +233,26 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 7: Category & Group Management
 
-- [ ] **STEP 7 COMPLETE**
+- [x] **STEP 7 COMPLETE**
 
 **Objective**: Implement category and category group management with customizable organization and sort ordering.
 
 **Implementation Details**: Categories belong to groups. Groups have sort order. CRUD for both. CLI commands for category management. Create default groups on first run (Bills, Needs, Wants, Savings).
 
 **Files to Create/Modify**:
-- [ ] `src/services/category.rs`: CategoryService - CRUD for categories and groups, reorder, move between groups
-- [ ] `src/cli/category.rs`: Category subcommands (create, list, edit, delete, move, reorder)
-- [ ] `src/main.rs`: (modify) Wire up category commands
-- [ ] `src/display/category.rs`: Format categories/groups for terminal (tree structure)
-- [ ] `src/storage/init.rs`: (modify) Create default category groups on first run
+- [x] `src/services/category.rs`: CategoryService - CRUD for categories and groups, reorder, move between groups
+- [x] `src/cli/category.rs`: Category subcommands (create, list, edit, delete, move, reorder)
+- [x] `src/main.rs`: (modify) Wire up category commands
+- [x] `src/display/category.rs`: Format categories/groups for terminal (tree structure)
+- [x] `src/storage/init.rs`: (modify) Create default category groups on first run
 
 **Dependencies**: Steps 1-6
 
 **Testing Checklist**:
-- [ ] Create groups and categories
-- [ ] Verify hierarchy
-- [ ] Test reordering
-- [ ] Verify defaults created on fresh install
+- [x] Create groups and categories
+- [x] Verify hierarchy
+- [x] Test reordering
+- [x] Verify defaults created on fresh install
 
 **User Actions Required**: Confirm default category groups (Bills, Needs, Wants, Savings) or customize
 
@@ -256,26 +260,26 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 8: Budget Period System
 
-- [ ] **STEP 8 COMPLETE**
+- [x] **STEP 8 COMPLETE**
 
 **Objective**: Implement flexible budget periods supporting weekly, bi-weekly, monthly, and custom date ranges.
 
 **Implementation Details**: Period parsing and normalization. Period navigation (next/previous). Period detection from date. Support all formats: monthly (2025-01), weekly (2025-W03), bi-weekly, custom ranges.
 
 **Files to Create/Modify**:
-- [ ] `src/models/period.rs`: (expand) Full period implementation - parsing, comparison, iteration, contains_date
-- [ ] `src/services/period.rs`: PeriodService - current period, navigate, list periods in range
-- [ ] `src/cli/period.rs`: Period commands (current, list, set-preference)
-- [ ] `src/config/settings.rs`: (modify) Store user's preferred period type
-- [ ] `src/main.rs`: (modify) Wire up period commands
+- [x] `src/models/period.rs`: (expand) Full period implementation - parsing, comparison, iteration, contains_date
+- [x] `src/services/period.rs`: PeriodService - current period, navigate, list periods in range
+- [x] `src/cli/budget.rs`: Period commands integrated with budget CLI (period, periods, prev, next)
+- [x] `src/config/settings.rs`: (modify) Store user's preferred period type
+- [x] `src/main.rs`: (modify) Wire up period commands
 
 **Dependencies**: Steps 1-7
 
 **Testing Checklist**:
-- [ ] Parse all period formats
-- [ ] Test navigation
-- [ ] Verify date containment
-- [ ] Test preference persistence
+- [x] Parse all period formats
+- [x] Test navigation
+- [x] Verify date containment
+- [x] Test preference persistence
 
 **User Actions Required**: Select preferred budget period type during setup
 
@@ -283,26 +287,26 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 9: Budget Allocation & Available to Budget
 
-- [ ] **STEP 9 COMPLETE**
+- [x] **STEP 9 COMPLETE**
 
 **Objective**: Implement zero-based budget allocation where users assign funds to categories and track "Available to Budget" reaching zero.
 
 **Implementation Details**: BudgetService with assign funds, move funds, calculate available. Available to Budget = Total Income - Total Assigned. Track per-category: budgeted, activity (spending), available. CLI commands for budget operations.
 
 **Files to Create/Modify**:
-- [ ] `src/services/budget.rs`: BudgetService - assign, move_funds, get_available_to_budget, get_category_available, get_period_summary
-- [ ] `src/cli/budget.rs`: Budget subcommands (assign, move, status, overview)
-- [ ] `src/main.rs`: (modify) Wire up budget commands
-- [ ] `src/display/budget.rs`: Format budget overview (table with budgeted/activity/available columns)
-- [ ] `src/models/budget.rs`: (modify) Add computed fields, validation for negative assignments
+- [x] `src/services/budget.rs`: BudgetService - assign, move_funds, get_available_to_budget, get_category_available, get_period_summary
+- [x] `src/cli/budget.rs`: Budget subcommands (assign, move, status, overview)
+- [x] `src/main.rs`: (modify) Wire up budget commands
+- [x] `src/cli/budget.rs`: Format budget overview (table with budgeted/activity/available columns) - inline in CLI
+- [x] `src/models/budget.rs`: (modify) Add computed fields, validation for negative assignments
 
 **Dependencies**: Steps 1-8
 
 **Testing Checklist**:
-- [ ] Assign funds
-- [ ] Verify Available to Budget decreases
-- [ ] Move funds between categories
-- [ ] Verify zero-sum
+- [x] Assign funds
+- [x] Verify Available to Budget decreases
+- [x] Move funds between categories
+- [x] Verify zero-sum
 
 **User Actions Required**: None
 
@@ -310,26 +314,26 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 10: Category Balance Rollover
 
-- [ ] **STEP 10 COMPLETE**
+- [x] **STEP 10 COMPLETE**
 
 **Objective**: Implement automatic rollover of category balances (positive or negative) to subsequent budget periods.
 
 **Implementation Details**: When entering a new period, calculate carryover from previous period. Store carryover amount in allocation. Visual indication of overspent categories. Handle both surplus and deficit rollovers.
 
 **Files to Create/Modify**:
-- [ ] `src/services/budget.rs`: (modify) Add rollover calculation, apply_rollover, get_carryover
-- [ ] `src/services/period.rs`: (modify) Trigger rollover on period transition
-- [ ] `src/models/budget.rs`: (modify) Ensure carryover field is properly used
-- [ ] `src/display/budget.rs`: (modify) Show carryover amounts, highlight negative (overspent) categories
+- [x] `src/services/budget.rs`: (modify) Add rollover calculation, apply_rollover, get_carryover
+- [x] `src/cli/budget.rs`: (modify) Added rollover and overspent commands
+- [x] `src/models/budget.rs`: (modify) Ensure carryover field is properly used
+- [x] `src/cli/budget.rs`: (modify) Show carryover amounts in overview, highlight negative (overspent) categories
 
 **Dependencies**: Steps 1-9
 
 **Testing Checklist**:
-- [ ] Create allocations in period 1
-- [ ] Spend more than budgeted
-- [ ] Advance to period 2
-- [ ] Verify negative carryover
-- [ ] Test positive carryover
+- [x] Create allocations in period 1
+- [x] Spend more than budgeted
+- [x] Advance to period 2
+- [x] Verify negative carryover
+- [x] Test positive carryover
 
 **User Actions Required**: None
 

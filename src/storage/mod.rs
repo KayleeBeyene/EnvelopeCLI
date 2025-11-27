@@ -52,7 +52,7 @@ impl Storage {
             accounts: AccountRepository::new(paths.accounts_file()),
             transactions: TransactionRepository::new(paths.transactions_file()),
             categories: CategoryRepository::new(paths.budget_file()),
-            budget: BudgetRepository::new(paths.budget_file()),
+            budget: BudgetRepository::new(paths.allocations_file()),
             payees: PayeeRepository::new(paths.payees_file()),
             audit,
             paths,

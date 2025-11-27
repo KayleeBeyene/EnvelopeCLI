@@ -5,6 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::str::FromStr;
 use uuid::Uuid;
 
 /// Macro to generate ID newtype wrappers
@@ -51,6 +52,20 @@ macro_rules! define_id {
         impl From<Uuid> for $name {
             fn from(uuid: Uuid) -> Self {
                 Self(uuid)
+            }
+        }
+
+        impl FromStr for $name {
+            type Err = uuid::Error;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                // Try to parse the full UUID
+                if let Ok(uuid) = Uuid::parse_str(s) {
+                    return Ok(Self(uuid));
+                }
+                // Try stripping common prefixes
+                let s = s.strip_prefix($display_prefix).unwrap_or(s);
+                Ok(Self(Uuid::parse_str(s)?))
             }
         }
     };

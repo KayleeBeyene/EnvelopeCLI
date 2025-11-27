@@ -78,9 +78,14 @@ impl EnvelopePaths {
         self.data_dir().join("transactions.json")
     }
 
-    /// Get the path to budget.json (categories, groups, allocations)
+    /// Get the path to budget.json (categories and groups)
     pub fn budget_file(&self) -> PathBuf {
         self.data_dir().join("budget.json")
+    }
+
+    /// Get the path to allocations.json (budget allocations per period)
+    pub fn allocations_file(&self) -> PathBuf {
+        self.data_dir().join("allocations.json")
     }
 
     /// Get the path to payees.json
