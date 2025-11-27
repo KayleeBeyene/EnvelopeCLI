@@ -14,7 +14,7 @@ pub mod transaction;
 
 pub use account::{Account, AccountType};
 pub use budget::BudgetAllocation;
-pub use category::{Category, CategoryGroup};
+pub use category::{Category, CategoryGroup, DefaultCategoryGroup};
 pub use ids::{AccountId, CategoryGroupId, CategoryId, PayeeId, TransactionId};
 pub use money::Money;
 pub use payee::Payee;

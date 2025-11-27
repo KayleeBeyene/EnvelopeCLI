@@ -116,28 +116,28 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 3: File I/O & Storage Layer
 
-- [ ] **STEP 3 COMPLETE**
+- [x] **STEP 3 COMPLETE**
 
 **Objective**: Implement the JSON storage system with atomic writes, file locking, and automatic directory creation.
 
 **Implementation Details**: Create repository traits for each entity type. Implement JSON file storage with atomic writes (write to temp, then rename). Add file locking for concurrent access safety. Create storage initialization that ensures directory structure exists.
 
 **Files to Create/Modify**:
-- [ ] `src/storage/mod.rs`: Storage module exports, Storage struct coordinating all repositories
-- [ ] `src/storage/file_io.rs`: Atomic write helper, read_json/write_json generic functions
-- [ ] `src/storage/accounts.rs`: AccountRepository - load/save accounts.json
-- [ ] `src/storage/transactions.rs`: TransactionRepository - load/save transactions.json with indexing
-- [ ] `src/storage/categories.rs`: CategoryRepository - load/save budget.json (categories + groups)
-- [ ] `src/storage/budget.rs`: BudgetRepository - allocations storage
-- [ ] `src/storage/payees.rs`: PayeeRepository - load/save payees.json
-- [ ] `src/storage/init.rs`: Initialize storage, create default directory structure, handle first-run
+- [x] `src/storage/mod.rs`: Storage module exports, Storage struct coordinating all repositories
+- [x] `src/storage/file_io.rs`: Atomic write helper, read_json/write_json generic functions
+- [x] `src/storage/accounts.rs`: AccountRepository - load/save accounts.json
+- [x] `src/storage/transactions.rs`: TransactionRepository - load/save transactions.json with indexing
+- [x] `src/storage/categories.rs`: CategoryRepository - load/save budget.json (categories + groups)
+- [x] `src/storage/budget.rs`: BudgetRepository - allocations storage
+- [x] `src/storage/payees.rs`: PayeeRepository - load/save payees.json
+- [x] `src/storage/init.rs`: Initialize storage, create default directory structure, handle first-run
 
 **Dependencies**: Steps 1, 2
 
 **Testing Checklist**:
-- [ ] Integration tests creating temp directories
-- [ ] Verify atomic writes don't corrupt on failure
-- [ ] Test concurrent access
+- [x] Integration tests creating temp directories
+- [x] Verify atomic writes don't corrupt on failure
+- [x] Test concurrent access
 
 **User Actions Required**: None
 

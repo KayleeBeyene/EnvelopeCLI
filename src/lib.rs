@@ -28,9 +28,9 @@
 pub mod config;
 pub mod error;
 pub mod models;
+pub mod storage;
 
 // These modules will be added in later steps:
-// pub mod storage;   // Step 3
 // pub mod audit;     // Step 4
 // pub mod backup;    // Step 5
 // pub mod services;  // Step 6+
