@@ -7,9 +7,13 @@ use crate::config::settings::Settings;
 use crate::models::{AccountId, BudgetPeriod, CategoryId, TransactionId};
 use crate::storage::Storage;
 
+use super::dialogs::adjustment::AdjustmentDialogState;
 use super::dialogs::bulk_categorize::BulkCategorizeState;
 use super::dialogs::move_funds::MoveFundsState;
+use super::dialogs::reconcile_start::ReconcileStartState;
 use super::dialogs::transaction::TransactionFormState;
+use super::dialogs::unlock_confirm::UnlockConfirmState;
+use super::views::reconcile::ReconciliationState;
 
 /// Which view is currently active
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -19,6 +23,7 @@ pub enum ActiveView {
     Register,
     Budget,
     Reports,
+    Reconcile,
 }
 
 /// Which panel currently has focus
@@ -49,6 +54,9 @@ pub enum ActiveDialog {
     Help,
     Confirm(String),
     BulkCategorize,
+    ReconcileStart,
+    UnlockConfirm(UnlockConfirmState),
+    Adjustment,
 }
 
 impl Default for ActiveDialog {
@@ -136,6 +144,15 @@ pub struct App<'a> {
 
     /// Bulk categorize dialog state
     pub bulk_categorize_state: BulkCategorizeState,
+
+    /// Reconciliation view state
+    pub reconciliation_state: ReconciliationState,
+
+    /// Reconcile start dialog state
+    pub reconcile_start_state: ReconcileStartState,
+
+    /// Adjustment dialog state
+    pub adjustment_dialog_state: AdjustmentDialogState,
 }
 
 impl<'a> App<'a> {
@@ -168,6 +185,9 @@ impl<'a> App<'a> {
             transaction_form: TransactionFormState::new(),
             move_funds_state: MoveFundsState::new(),
             bulk_categorize_state: BulkCategorizeState::new(),
+            reconciliation_state: ReconciliationState::new(),
+            reconcile_start_state: ReconcileStartState::new(),
+            adjustment_dialog_state: AdjustmentDialogState::default(),
         }
     }
 
@@ -203,6 +223,12 @@ impl<'a> App<'a> {
                 self.selected_category_index = 0;
             }
             ActiveView::Reports => {}
+            ActiveView::Reconcile => {
+                // Initialize reconciliation state if account is selected
+                if let Some(account_id) = self.selected_account {
+                    self.reconciliation_state.init_for_account(account_id);
+                }
+            }
         }
     }
 

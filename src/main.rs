@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 
 use envelope::cli::{
     handle_account_command, handle_backup_command, handle_budget_command, handle_category_command,
-    handle_payee_command, handle_transaction_command,
+    handle_payee_command, handle_reconcile_command, handle_transaction_command,
 };
 use envelope::config::{paths::EnvelopePaths, settings::Settings};
 use envelope::storage::Storage;
@@ -52,6 +52,10 @@ enum Commands {
     /// Payee management commands
     #[command(subcommand)]
     Payee(envelope::cli::PayeeCommands),
+
+    /// Reconciliation commands
+    #[command(subcommand)]
+    Reconcile(envelope::cli::ReconcileCommands),
 
     /// Transfer between accounts
     Transfer {
@@ -118,6 +122,9 @@ fn main() -> Result<()> {
         }
         Some(Commands::Payee(cmd)) => {
             handle_payee_command(&storage, cmd)?;
+        }
+        Some(Commands::Reconcile(cmd)) => {
+            handle_reconcile_command(&storage, cmd)?;
         }
         Some(Commands::Transfer {
             from,

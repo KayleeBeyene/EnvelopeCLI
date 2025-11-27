@@ -101,6 +101,17 @@ fn get_help_lines(app: &App) -> Vec<Line<'static>> {
             lines.push(Line::from(""));
             lines.push(Line::from("Reports view coming soon!"));
         }
+        ActiveView::Reconcile => {
+            lines.push(Line::from(vec![
+                Span::styled("Reconciliation", Style::default().add_modifier(Modifier::BOLD).fg(Color::Yellow)),
+            ]));
+            lines.push(Line::from(""));
+            lines.push(key_line("Tab", "Switch between header and transactions"));
+            lines.push(key_line("Space", "Toggle cleared status"));
+            lines.push(key_line("Enter", "Start reconciliation / Complete"));
+            lines.push(key_line("j/k", "Navigate transactions"));
+            lines.push(key_line("Esc", "Cancel reconciliation"));
+        }
     }
 
     lines.push(Line::from(""));

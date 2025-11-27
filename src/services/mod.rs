@@ -9,6 +9,7 @@ pub mod category;
 pub mod import;
 pub mod payee;
 pub mod period;
+pub mod reconciliation;
 pub mod transaction;
 pub mod transfer;
 
@@ -18,5 +19,6 @@ pub use category::CategoryService;
 pub use import::{ColumnMapping, ImportPreviewEntry, ImportResult, ImportService, ImportStatus};
 pub use payee::PayeeService;
 pub use period::PeriodService;
+pub use reconciliation::{ReconciliationResult, ReconciliationService, ReconciliationSession, ReconciliationSummary};
 pub use transaction::{CreateTransactionInput, TransactionFilter, TransactionService};
 pub use transfer::TransferService;

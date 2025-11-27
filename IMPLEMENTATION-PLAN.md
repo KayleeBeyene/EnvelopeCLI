@@ -22,7 +22,7 @@ HOW TO USE THIS DOCUMENT:
 - [x] **Phase 2: Core Budget** (Steps 6-10)
 - [x] **Phase 3: Transactions** (Steps 11-16)
 - [x] **Phase 4: TUI** (Steps 17-25)
-- [ ] **Phase 5: Reconciliation** (Steps 26-27)
+- [x] **Phase 5: Reconciliation** (Steps 26-27)
 - [ ] **Phase 6: Reporting** (Steps 28-30)
 - [ ] **Phase 7: Security & Polish** (Steps 31-35)
 
@@ -46,7 +46,7 @@ HOW TO USE THIS DOCUMENT:
 | 2. Core Budget | 6-10 | Accounts, categories, periods, allocation, rollover | Complete |
 | 3. Transactions | 11-16 | CRUD, payees, splits, transfers, CSV import | Complete |
 | 4. TUI | 17-25 | Framework, views, dialogs, command palette, help | Complete |
-| 5. Reconciliation | 26-27 | Reconciliation workflow, locking, adjustments | Not Started |
+| 5. Reconciliation | 26-27 | Reconciliation workflow, locking, adjustments | Complete |
 | 6. Reporting | 28-30 | Reports, data export | Not Started |
 | 7. Security & Polish | 31-35 | Encryption, setup wizard, error handling, CI, docs | Not Started |
 
@@ -759,26 +759,26 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 26: Reconciliation Workflow
 
-- [ ] **STEP 26 COMPLETE**
+- [x] **STEP 26 COMPLETE**
 
 **Objective**: Implement the full reconciliation workflow - enter statement balance, mark transactions cleared, and complete reconciliation.
 
 **Implementation Details**: Start reconciliation for account. Enter statement date and ending balance. Show uncleared transactions. Display difference (statement - cleared total). Mark transactions cleared. When difference = 0, allow completion. Lock reconciled transactions.
 
 **Files to Create/Modify**:
-- [ ] `src/services/reconciliation.rs`: ReconciliationService - start, get_difference, complete, get_uncleared_transactions
-- [ ] `src/cli/reconcile.rs`: Reconcile command with interactive flow
-- [ ] `src/tui/views/reconcile.rs`: ReconciliationView - statement entry, transaction list, difference display
-- [ ] `src/tui/dialogs/reconcile_start.rs`: Dialog to enter statement date/balance
-- [ ] `src/main.rs`: (modify) Wire up reconcile command
+- [x] `src/services/reconciliation.rs`: ReconciliationService - start, get_difference, complete, get_uncleared_transactions
+- [x] `src/cli/reconcile.rs`: Reconcile command with interactive flow
+- [x] `src/tui/views/reconcile.rs`: ReconciliationView - statement entry, transaction list, difference display
+- [x] `src/tui/dialogs/reconcile_start.rs`: Dialog to enter statement date/balance
+- [x] `src/main.rs`: (modify) Wire up reconcile command
 
 **Dependencies**: Steps 1-25
 
 **Testing Checklist**:
-- [ ] Start reconciliation
-- [ ] Clear transactions until difference = 0
-- [ ] Complete reconciliation
-- [ ] Verify transactions locked
+- [x] Start reconciliation
+- [x] Clear transactions until difference = 0
+- [x] Complete reconciliation
+- [x] Verify transactions locked
 
 **User Actions Required**: Enter statement balance; confirm reconciliation completion
 
@@ -786,27 +786,27 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 27: Transaction Locking & Adjustment Transactions
 
-- [ ] **STEP 27 COMPLETE**
+- [x] **STEP 27 COMPLETE**
 
 **Objective**: Implement reconciled transaction locking and balance adjustment transactions for discrepancies.
 
 **Implementation Details**: Reconciled transactions cannot be edited without explicit unlock. Unlock requires confirmation and creates audit entry. If difference non-zero at completion, offer to create adjustment transaction. Adjustment categorized to special category.
 
 **Files to Create/Modify**:
-- [ ] `src/services/transaction.rs`: (modify) Add check_locked, unlock_transaction, require unlock for edit/delete
-- [ ] `src/services/reconciliation.rs`: (modify) Add create_adjustment_transaction, complete_with_discrepancy
-- [ ] `src/models/transaction.rs`: (modify) Add is_locked() helper based on status
-- [ ] `src/tui/dialogs/unlock_confirm.rs`: Confirmation dialog for unlocking reconciled transaction
-- [ ] `src/tui/dialogs/adjustment.rs`: Dialog to confirm creating adjustment transaction
+- [x] `src/services/transaction.rs`: (modify) Add check_locked, unlock_transaction, require unlock for edit/delete
+- [x] `src/services/reconciliation.rs`: (modify) Add create_adjustment_transaction, complete_with_discrepancy
+- [x] `src/models/transaction.rs`: (modify) Add is_locked() helper based on status
+- [x] `src/tui/dialogs/unlock_confirm.rs`: Confirmation dialog for unlocking reconciled transaction
+- [x] `src/tui/dialogs/adjustment.rs`: Dialog to confirm creating adjustment transaction
 
 **Dependencies**: Steps 1-26
 
 **Testing Checklist**:
-- [ ] Try to edit reconciled transaction
-- [ ] Verify blocked
-- [ ] Unlock with confirmation
-- [ ] Verify audit logged
-- [ ] Test adjustment creation
+- [x] Try to edit reconciled transaction
+- [x] Verify blocked
+- [x] Unlock with confirmation
+- [x] Verify audit logged
+- [x] Test adjustment creation
 
 **User Actions Required**: Confirm unlock; confirm adjustment creation
 

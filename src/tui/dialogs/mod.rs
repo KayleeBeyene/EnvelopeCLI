@@ -2,9 +2,12 @@
 //!
 //! Contains modal dialogs for various operations
 
+pub mod adjustment;
 pub mod bulk_categorize;
 pub mod command_palette;
 pub mod confirm;
 pub mod help;
 pub mod move_funds;
+pub mod reconcile_start;
 pub mod transaction;
+pub mod unlock_confirm;

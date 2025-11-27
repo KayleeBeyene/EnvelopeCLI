@@ -149,6 +149,7 @@ fn handle_main_panel_key(app: &mut App, key: KeyEvent) -> Result<()> {
         ActiveView::Register => handle_register_view_key(app, key),
         ActiveView::Budget => handle_budget_view_key(app, key),
         ActiveView::Reports => handle_reports_view_key(app, key),
+        ActiveView::Reconcile => handle_reconcile_view_key(app, key),
     }
 }
 
@@ -355,6 +356,13 @@ fn handle_reports_view_key(_app: &mut App, _key: KeyEvent) -> Result<()> {
     Ok(())
 }
 
+/// Handle keys in the reconcile view
+fn handle_reconcile_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
+    // Delegate to the reconcile view's key handler
+    super::views::reconcile::handle_key(app, key.code);
+    Ok(())
+}
+
 /// Handle keys in editing mode
 fn handle_editing_key(app: &mut App, key: KeyEvent) -> Result<()> {
     match key.code {
@@ -434,6 +442,47 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
         }
         ActiveDialog::BulkCategorize => {
             super::dialogs::bulk_categorize::handle_key(app, key);
+        }
+        ActiveDialog::ReconcileStart => {
+            match key.code {
+                KeyCode::Esc => {
+                    app.close_dialog();
+                }
+                KeyCode::Enter => {
+                    // Start reconciliation
+                    app.close_dialog();
+                    app.switch_view(ActiveView::Reconcile);
+                }
+                _ => {
+                    super::dialogs::reconcile_start::handle_key(app, key.code);
+                }
+            }
+        }
+        ActiveDialog::UnlockConfirm(_) => {
+            match key.code {
+                KeyCode::Char('y') | KeyCode::Char('Y') => {
+                    // Unlock the transaction
+                    app.close_dialog();
+                }
+                KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
+                    app.close_dialog();
+                }
+                _ => {}
+            }
+        }
+        ActiveDialog::Adjustment => {
+            match key.code {
+                KeyCode::Esc => {
+                    app.close_dialog();
+                }
+                KeyCode::Enter => {
+                    // Create adjustment
+                    app.close_dialog();
+                }
+                _ => {
+                    super::dialogs::adjustment::handle_key(app, key.code);
+                }
+            }
         }
         ActiveDialog::None => {}
     }

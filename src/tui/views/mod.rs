@@ -1,10 +1,11 @@
 //! TUI Views module
 //!
-//! Contains all the main views: accounts, register, budget, reports,
+//! Contains all the main views: accounts, register, budget, reports, reconcile,
 //! as well as the sidebar and status bar.
 
 pub mod account_list;
 pub mod budget;
+pub mod reconcile;
 pub mod register;
 pub mod sidebar;
 pub mod status_bar;
@@ -37,6 +38,9 @@ pub fn render(frame: &mut Frame, app: &mut App) {
             // Reports view placeholder
             render_placeholder(frame, layout.main, "Reports");
         }
+        ActiveView::Reconcile => {
+            reconcile::render(frame, app, layout.main);
+        }
     }
 
     // Render status bar
@@ -68,6 +72,15 @@ fn render_dialog(frame: &mut Frame, app: &mut App) {
         }
         ActiveDialog::BulkCategorize => {
             dialogs::bulk_categorize::render(frame, app);
+        }
+        ActiveDialog::ReconcileStart => {
+            dialogs::reconcile_start::render(frame, app);
+        }
+        ActiveDialog::UnlockConfirm(state) => {
+            dialogs::unlock_confirm::render(frame, state);
+        }
+        ActiveDialog::Adjustment => {
+            dialogs::adjustment::render(frame, app);
         }
         ActiveDialog::None => {}
     }
