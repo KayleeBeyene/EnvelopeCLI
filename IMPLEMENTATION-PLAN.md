@@ -42,7 +42,7 @@ HOW TO USE THIS DOCUMENT:
 
 | Phase | Steps | Description | Status |
 |-------|-------|-------------|--------|
-| 1. Foundation | 1-5 | Project setup, data models, storage, audit, backup | Not Started |
+| 1. Foundation | 1-5 | Project setup, data models, storage, audit, backup | In Progress |
 | 2. Core Budget | 6-10 | Accounts, categories, periods, allocation, rollover | Not Started |
 | 3. Transactions | 11-16 | CRUD, payees, splits, transfers, CSV import | Not Started |
 | 4. TUI | 17-25 | Framework, views, dialogs, command palette, help | Not Started |
@@ -56,29 +56,29 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 1: Project Initialization & Configuration
 
-- [ ] **STEP 1 COMPLETE**
+- [x] **STEP 1 COMPLETE**
 
 **Objective**: Set up the Rust project structure with all dependencies, establish the configuration system, and create the data directory structure.
 
 **Implementation Details**: Initialize Cargo project with workspace structure. Configure dependencies: `clap` (CLI), `ratatui` + `crossterm` (TUI), `serde` + `serde_json` (serialization), `uuid`, `chrono`, `thiserror`, `anyhow`, `directories`. Create config loading/saving with XDG-compliant paths (~/.envelope/).
 
 **Files to Create/Modify**:
-- [ ] `Cargo.toml`: Project metadata, dependencies (clap, ratatui, crossterm, serde, serde_json, uuid, chrono, thiserror, anyhow, directories, argon2, aes-gcm)
-- [ ] `src/main.rs`: Entry point with basic CLI skeleton using clap
-- [ ] `src/lib.rs`: Library root, module declarations
-- [ ] `src/config/mod.rs`: Config module exports
-- [ ] `src/config/settings.rs`: Settings struct with serde, budget period preference, encryption toggle
-- [ ] `src/config/paths.rs`: XDG path resolution for ~/.envelope/, data/, backups/
-- [ ] `src/error.rs`: Custom error types using thiserror (EnvelopeError enum)
-- [ ] `.gitignore`: Rust ignores, test data directories
-- [ ] `README.md`: Basic project overview
+- [x] `Cargo.toml`: Project metadata, dependencies (clap, ratatui, crossterm, serde, serde_json, uuid, chrono, thiserror, anyhow, directories, argon2, aes-gcm)
+- [x] `src/main.rs`: Entry point with basic CLI skeleton using clap
+- [x] `src/lib.rs`: Library root, module declarations
+- [x] `src/config/mod.rs`: Config module exports
+- [x] `src/config/settings.rs`: Settings struct with serde, budget period preference, encryption toggle
+- [x] `src/config/paths.rs`: XDG path resolution for ~/.envelope/, data/, backups/
+- [x] `src/error.rs`: Custom error types using thiserror (EnvelopeError enum)
+- [x] `.gitignore`: Rust ignores, test data directories
+- [x] `README.md`: Basic project overview
 
 **Dependencies**: None (first step)
 
 **Testing Checklist**:
-- [ ] `cargo build` succeeds
-- [ ] `cargo run -- --help` shows CLI skeleton
-- [ ] Config file created on first run
+- [x] `cargo build` succeeds
+- [x] `cargo run -- --help` shows CLI skeleton
+- [x] Config file created on first run
 
 **User Actions Required**: Confirm Rust as the implementation language; approve directory structure (~/.envelope/)
 
