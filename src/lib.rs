@@ -31,12 +31,12 @@ pub mod cli;
 pub mod config;
 pub mod display;
 pub mod error;
+pub mod export;     // Step 30: Full Data Export
 pub mod models;
+pub mod reports;    // Steps 28-29: Reports
 pub mod services;
 pub mod storage;
 pub mod tui;        // Phase 4: TUI
-// pub mod export;    // Step 30
-// pub mod reports;   // Step 28+
 // pub mod crypto;    // Step 31
 // pub mod setup;     // Step 32
 

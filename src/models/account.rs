@@ -10,7 +10,7 @@ use super::ids::AccountId;
 use super::money::Money;
 
 /// Type of financial account
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountType {
     /// Checking account

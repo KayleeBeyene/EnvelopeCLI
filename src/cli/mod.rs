@@ -7,14 +7,18 @@ pub mod account;
 pub mod backup;
 pub mod budget;
 pub mod category;
+pub mod export;
 pub mod payee;
 pub mod reconcile;
+pub mod report;
 pub mod transaction;
 
 pub use account::{handle_account_command, AccountCommands};
 pub use backup::{handle_backup_command, BackupCommands};
 pub use budget::{handle_budget_command, BudgetCommands};
 pub use category::{handle_category_command, CategoryCommands};
+pub use export::{handle_export_command, ExportCommands};
 pub use payee::{handle_payee_command, PayeeCommands};
 pub use reconcile::{handle_reconcile_command, ReconcileCommands};
+pub use report::{handle_report_command, ReportCommands};
 pub use transaction::{handle_transaction_command, TransactionCommands};

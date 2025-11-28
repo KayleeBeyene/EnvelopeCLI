@@ -23,7 +23,7 @@ HOW TO USE THIS DOCUMENT:
 - [x] **Phase 3: Transactions** (Steps 11-16)
 - [x] **Phase 4: TUI** (Steps 17-25)
 - [x] **Phase 5: Reconciliation** (Steps 26-27)
-- [ ] **Phase 6: Reporting** (Steps 28-30)
+- [x] **Phase 6: Reporting** (Steps 28-30)
 - [ ] **Phase 7: Security & Polish** (Steps 31-35)
 
 ---
@@ -47,7 +47,7 @@ HOW TO USE THIS DOCUMENT:
 | 3. Transactions | 11-16 | CRUD, payees, splits, transfers, CSV import | Complete |
 | 4. TUI | 17-25 | Framework, views, dialogs, command palette, help | Complete |
 | 5. Reconciliation | 26-27 | Reconciliation workflow, locking, adjustments | Complete |
-| 6. Reporting | 28-30 | Reports, data export | Not Started |
+| 6. Reporting | 28-30 | Reports, data export | Complete |
 | 7. Security & Polish | 31-35 | Encryption, setup wizard, error handling, CI, docs | Not Started |
 
 ---
@@ -816,26 +816,26 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 28: Budget Overview Report
 
-- [ ] **STEP 28 COMPLETE**
+- [x] **STEP 28 COMPLETE**
 
 **Objective**: Implement the budget overview report showing all categories with budgeted, activity, and available amounts.
 
 **Implementation Details**: FR-RPT-01 compliance. Show all categories grouped. Display budgeted, activity (spending), available columns. Totals per group. Grand total. Period selection. Export to CSV.
 
 **Files to Create/Modify**:
-- [ ] `src/reports/mod.rs`: Reports module exports
-- [ ] `src/reports/budget_overview.rs`: BudgetOverviewReport - generate, format for terminal, export CSV
-- [ ] `src/cli/report.rs`: Report commands (envelope report budget, envelope report spending, etc.)
-- [ ] `src/main.rs`: (modify) Wire up report commands
-- [ ] `src/display/report.rs`: Report formatting utilities
+- [x] `src/reports/mod.rs`: Reports module exports
+- [x] `src/reports/budget_overview.rs`: BudgetOverviewReport - generate, format for terminal, export CSV
+- [x] `src/cli/report.rs`: Report commands (envelope report budget, envelope report spending, etc.)
+- [x] `src/main.rs`: (modify) Wire up report commands
+- [x] `src/display/report.rs`: Report formatting utilities
 
 **Dependencies**: Steps 1-27
 
 **Testing Checklist**:
-- [ ] Generate report
-- [ ] Verify totals match budget service
-- [ ] Export CSV
-- [ ] Verify CSV readable
+- [x] Generate report
+- [x] Verify totals match budget service
+- [x] Export CSV
+- [x] Verify CSV readable
 
 **User Actions Required**: None
 
@@ -843,26 +843,26 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 29: Spending & Account Reports
 
-- [ ] **STEP 29 COMPLETE**
+- [x] **STEP 29 COMPLETE**
 
 **Objective**: Implement spending by category and account register reports with date range filtering.
 
 **Implementation Details**: Spending report (FR-RPT-02) - breakdown by category for date range. Account register (FR-RPT-04) - filterable transaction list. Net worth (FR-RPT-03) - sum of all account balances. All exportable to CSV.
 
 **Files to Create/Modify**:
-- [ ] `src/reports/spending.rs`: SpendingReport - spending by category, date range filter
-- [ ] `src/reports/account_register.rs`: AccountRegisterReport - transactions with filters
-- [ ] `src/reports/net_worth.rs`: NetWorthReport - account balances summary
-- [ ] `src/cli/report.rs`: (modify) Add spending, register, networth subcommands
-- [ ] `src/tui/views/reports.rs`: Reports view in TUI - select report type, view results
+- [x] `src/reports/spending.rs`: SpendingReport - spending by category, date range filter
+- [x] `src/reports/account_register.rs`: AccountRegisterReport - transactions with filters
+- [x] `src/reports/net_worth.rs`: NetWorthReport - account balances summary
+- [x] `src/cli/report.rs`: (modify) Add spending, register, networth subcommands
+- [ ] `src/tui/views/reports.rs`: Reports view in TUI - select report type, view results (deferred to Phase 7)
 
 **Dependencies**: Steps 1-28
 
 **Testing Checklist**:
-- [ ] Generate each report
-- [ ] Verify data accuracy
-- [ ] Test date filtering
-- [ ] Test CSV export
+- [x] Generate each report
+- [x] Verify data accuracy
+- [x] Test date filtering
+- [x] Test CSV export
 
 **User Actions Required**: None
 
@@ -870,27 +870,27 @@ HOW TO USE THIS DOCUMENT:
 
 ### Step 30: Full Data Export
 
-- [ ] **STEP 30 COMPLETE**
+- [x] **STEP 30 COMPLETE**
 
 **Objective**: Implement complete data export to CSV and JSON/YAML preserving all data and relationships.
 
 **Implementation Details**: SEC-09, SEC-10 compliance. Export all transactions to CSV. Export full database to JSON (machine readable) or YAML (human friendly). Include all relationships. Schema versioning in export.
 
 **Files to Create/Modify**:
-- [ ] `src/export/mod.rs`: Export module exports
-- [ ] `src/export/csv.rs`: Export transactions, budget allocations, account balances to CSV
-- [ ] `src/export/json.rs`: Full database export to JSON with schema version
-- [ ] `src/export/yaml.rs`: Full database export to YAML format
-- [ ] `src/cli/export.rs`: Export command (envelope export --format csv|json|yaml --output path)
-- [ ] `src/main.rs`: (modify) Wire up export command
+- [x] `src/export/mod.rs`: Export module exports
+- [x] `src/export/csv.rs`: Export transactions, budget allocations, account balances to CSV
+- [x] `src/export/json.rs`: Full database export to JSON with schema version
+- [x] `src/export/yaml.rs`: Full database export to YAML format
+- [x] `src/cli/export.rs`: Export command (envelope export --format csv|json|yaml --output path)
+- [x] `src/main.rs`: (modify) Wire up export command
 
 **Dependencies**: Steps 1-29
 
 **Testing Checklist**:
-- [ ] Export in each format
-- [ ] Verify completeness
-- [ ] Reimport JSON export
-- [ ] Verify data integrity
+- [x] Export in each format
+- [x] Verify completeness
+- [x] Reimport JSON export
+- [x] Verify data integrity
 
 **User Actions Required**: None
 

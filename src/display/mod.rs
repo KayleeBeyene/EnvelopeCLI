@@ -5,10 +5,15 @@
 
 pub mod account;
 pub mod category;
+pub mod report;
 pub mod transaction;
 
 pub use account::{format_account_details, format_account_list};
 pub use category::{format_category_details, format_category_tree, format_group_details, format_group_list};
+pub use report::{
+    double_separator, format_bar, format_header, format_money_colored, format_percentage,
+    left_align, right_align, separator, truncate,
+};
 pub use transaction::{
     format_transaction_details, format_transaction_list_by_account, format_transaction_register,
     format_transaction_row, format_transaction_short,

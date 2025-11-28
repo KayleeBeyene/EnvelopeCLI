@@ -179,6 +179,17 @@ impl BudgetRepository {
         })?;
         Ok(allocations.len())
     }
+
+    /// Get all allocations
+    pub fn get_all(&self) -> Result<Vec<BudgetAllocation>, EnvelopeError> {
+        let allocations = self.allocations.read().map_err(|e| {
+            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
+        })?;
+
+        let mut list: Vec<_> = allocations.values().cloned().collect();
+        list.sort_by(|a, b| a.period.cmp(&b.period));
+        Ok(list)
+    }
 }
 
 #[cfg(test)]

@@ -50,6 +50,10 @@ pub enum EnvelopeError {
     #[error("Import error: {0}")]
     Import(String),
 
+    /// Export errors
+    #[error("Export error: {0}")]
+    Export(String),
+
     /// Encryption errors
     #[error("Encryption error: {0}")]
     Encryption(String),
