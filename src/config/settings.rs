@@ -6,6 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::paths::EnvelopePaths;
+use crate::crypto::key_derivation::KeyDerivationParams;
 use crate::error::EnvelopeError;
 
 /// Budget period type preference
@@ -39,6 +40,23 @@ impl Default for BackupRetention {
     }
 }
 
+/// Encryption settings
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct EncryptionSettings {
+    /// Whether encryption is enabled
+    #[serde(default)]
+    pub enabled: bool,
+
+    /// Key derivation parameters (salt, memory cost, etc.)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub key_params: Option<KeyDerivationParams>,
+
+    /// Verification hash to check if passphrase is correct
+    /// (This is a hash of "envelope_verify" encrypted with the key)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub verification_hash: Option<String>,
+}
+
 /// User settings for EnvelopeCLI
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
@@ -50,9 +68,13 @@ pub struct Settings {
     #[serde(default)]
     pub budget_period_type: BudgetPeriodType,
 
-    /// Whether encryption is enabled
+    /// Whether encryption is enabled (legacy field for backwards compat)
     #[serde(default)]
     pub encryption_enabled: bool,
+
+    /// Full encryption settings
+    #[serde(default)]
+    pub encryption: EncryptionSettings,
 
     /// Backup retention policy
     #[serde(default)]
@@ -69,6 +91,10 @@ pub struct Settings {
     /// First day of week (0 = Sunday, 1 = Monday)
     #[serde(default = "default_first_day_of_week")]
     pub first_day_of_week: u8,
+
+    /// Whether initial setup has been completed
+    #[serde(default)]
+    pub setup_completed: bool,
 }
 
 fn default_schema_version() -> u32 {
@@ -93,15 +119,22 @@ impl Default for Settings {
             schema_version: default_schema_version(),
             budget_period_type: BudgetPeriodType::default(),
             encryption_enabled: false,
+            encryption: EncryptionSettings::default(),
             backup_retention: BackupRetention::default(),
             currency_symbol: default_currency(),
             date_format: default_date_format(),
             first_day_of_week: default_first_day_of_week(),
+            setup_completed: false,
         }
     }
 }
 
 impl Settings {
+    /// Check if encryption is enabled (using new encryption field)
+    pub fn is_encryption_enabled(&self) -> bool {
+        self.encryption.enabled || self.encryption_enabled
+    }
+
     /// Load settings from disk, or create default settings if file doesn't exist
     pub fn load_or_create(paths: &EnvelopePaths) -> Result<Self, EnvelopeError> {
         let settings_path = paths.settings_file();

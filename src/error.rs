@@ -121,6 +121,146 @@ impl EnvelopeError {
     pub fn is_validation(&self) -> bool {
         matches!(self, Self::Validation(_))
     }
+
+    /// Check if this is a recoverable error (can retry)
+    pub fn is_recoverable(&self) -> bool {
+        matches!(
+            self,
+            Self::Io(_) | Self::Storage(_) | Self::Validation(_) | Self::Encryption(_)
+        )
+    }
+
+    /// Check if this is a fatal error (should exit)
+    pub fn is_fatal(&self) -> bool {
+        matches!(self, Self::Config(_))
+    }
+
+    /// Get a user-friendly message for this error
+    pub fn user_message(&self) -> String {
+        match self {
+            Self::Config(msg) => format!("Configuration problem: {}", msg),
+            Self::Io(msg) => format!("Could not access file: {}", msg),
+            Self::Json(msg) => format!("Data file is corrupted: {}", msg),
+            Self::Validation(msg) => msg.clone(),
+            Self::NotFound { entity_type, identifier } => {
+                format!("{} '{}' was not found", entity_type, identifier)
+            }
+            Self::Duplicate { entity_type, identifier } => {
+                format!("{} '{}' already exists", entity_type, identifier)
+            }
+            Self::Budget(msg) => msg.clone(),
+            Self::Reconciliation(msg) => msg.clone(),
+            Self::Import(msg) => format!("Import failed: {}", msg),
+            Self::Export(msg) => format!("Export failed: {}", msg),
+            Self::Encryption(msg) => format!("Encryption error: {}", msg),
+            Self::Locked(msg) => format!("Cannot modify locked transaction: {}", msg),
+            Self::InsufficientFunds { category, needed, available } => {
+                format!(
+                    "'{}' doesn't have enough funds (need ${:.2}, have ${:.2})",
+                    category,
+                    *needed as f64 / 100.0,
+                    *available as f64 / 100.0
+                )
+            }
+            Self::Storage(msg) => format!("Storage error: {}", msg),
+            Self::Tui(msg) => format!("Display error: {}", msg),
+        }
+    }
+
+    /// Get recovery suggestions for this error
+    pub fn recovery_suggestions(&self) -> Vec<&'static str> {
+        match self {
+            Self::Config(_) => vec![
+                "Check ~/.envelope/config.json for syntax errors",
+                "Run 'envelope init' to reset configuration",
+            ],
+            Self::Io(_) => vec![
+                "Check file permissions",
+                "Ensure the disk has free space",
+                "Try closing other programs that might be using the files",
+            ],
+            Self::Json(_) => vec![
+                "The data file may be corrupted",
+                "Restore from backup: 'envelope backup restore'",
+            ],
+            Self::Validation(_) => vec!["Check your input and try again"],
+            Self::NotFound { entity_type, .. } => {
+                match *entity_type {
+                    "Account" => vec!["Run 'envelope account list' to see available accounts"],
+                    "Category" => vec!["Run 'envelope category list' to see available categories"],
+                    "Transaction" => vec!["Check the transaction ID and try again"],
+                    _ => vec!["Check that the item exists"],
+                }
+            }
+            Self::Duplicate { .. } => vec!["Use a different name", "Edit the existing item instead"],
+            Self::Budget(_) => vec!["Check your budget allocations", "Review 'Available to Budget'"],
+            Self::Reconciliation(_) => vec![
+                "Review the reconciliation difference",
+                "Check for missing transactions",
+            ],
+            Self::Import(_) => vec![
+                "Check the CSV file format",
+                "Ensure column mapping is correct",
+            ],
+            Self::Export(_) => vec![
+                "Check write permissions to the output path",
+                "Ensure there is enough disk space",
+            ],
+            Self::Encryption(_) => vec![
+                "Verify your passphrase",
+                "Note: There is no password recovery",
+            ],
+            Self::Locked(_) => vec![
+                "Use 'envelope transaction unlock' to edit",
+                "This will require confirmation",
+            ],
+            Self::InsufficientFunds { .. } => vec![
+                "Move funds from another category",
+                "Assign more funds to this category",
+            ],
+            Self::Storage(_) => vec![
+                "Check the data directory is accessible",
+                "Try with elevated permissions",
+            ],
+            Self::Tui(_) => vec!["Try resizing your terminal", "Use CLI commands instead"],
+        }
+    }
+
+    /// Get the exit code for this error
+    pub fn exit_code(&self) -> i32 {
+        match self {
+            Self::Config(_) => 1,
+            Self::Io(_) => 2,
+            Self::Json(_) => 3,
+            Self::Validation(_) => 4,
+            Self::NotFound { .. } => 5,
+            Self::Duplicate { .. } => 6,
+            Self::Budget(_) => 7,
+            Self::Reconciliation(_) => 8,
+            Self::Import(_) => 9,
+            Self::Export(_) => 10,
+            Self::Encryption(_) => 11,
+            Self::Locked(_) => 12,
+            Self::InsufficientFunds { .. } => 13,
+            Self::Storage(_) => 14,
+            Self::Tui(_) => 15,
+        }
+    }
+}
+
+/// Format an error for CLI output with suggestions
+pub fn format_cli_error(error: &EnvelopeError) -> String {
+    let mut output = format!("Error: {}\n", error.user_message());
+
+    let suggestions = error.recovery_suggestions();
+    if !suggestions.is_empty() {
+        output.push_str("\nSuggestions:\n");
+        for suggestion in suggestions {
+            output.push_str(&format!("  - {}\n", suggestion));
+        }
+    }
+
+    output
 }
 
 // Implement From traits for common error types

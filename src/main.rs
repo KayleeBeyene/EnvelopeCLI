@@ -3,8 +3,9 @@ use clap::{Parser, Subcommand};
 
 use envelope::cli::{
     handle_account_command, handle_backup_command, handle_budget_command, handle_category_command,
-    handle_export_command, handle_import_command, handle_payee_command, handle_reconcile_command,
-    handle_report_command, handle_transaction_command, handle_transfer_command,
+    handle_encrypt_command, handle_export_command, handle_import_command, handle_payee_command,
+    handle_reconcile_command, handle_report_command, handle_transaction_command,
+    handle_transfer_command,
 };
 use envelope::config::{paths::EnvelopePaths, settings::Settings};
 use envelope::storage::Storage;
@@ -66,6 +67,10 @@ enum Commands {
     #[command(subcommand)]
     Export(envelope::cli::ExportCommands),
 
+    /// Encryption management commands
+    #[command(subcommand)]
+    Encrypt(envelope::cli::EncryptCommands),
+
     /// Transfer between accounts
     Transfer {
         /// Source account name
@@ -103,7 +108,7 @@ fn main() -> Result<()> {
 
     // Initialize paths and settings
     let paths = EnvelopePaths::new()?;
-    let settings = Settings::load_or_create(&paths)?;
+    let mut settings = Settings::load_or_create(&paths)?;
 
     // Initialize storage
     let mut storage = Storage::new(paths.clone())?;
@@ -141,6 +146,9 @@ fn main() -> Result<()> {
         Some(Commands::Export(cmd)) => {
             handle_export_command(&storage, cmd)?;
         }
+        Some(Commands::Encrypt(cmd)) => {
+            handle_encrypt_command(&paths, &mut settings, &storage, cmd)?;
+        }
         Some(Commands::Transfer {
             from,
             to,
@@ -176,7 +184,7 @@ fn main() -> Result<()> {
             println!();
             println!("Settings:");
             println!("  Budget period type: {:?}", settings.budget_period_type);
-            println!("  Encryption enabled: {}", settings.encryption_enabled);
+            println!("  Encryption enabled: {}", settings.is_encryption_enabled());
         }
         None => {
             println!("EnvelopeCLI - Terminal-based zero-based budgeting");

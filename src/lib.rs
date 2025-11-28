@@ -29,15 +29,15 @@ pub mod audit;
 pub mod backup;
 pub mod cli;
 pub mod config;
+pub mod crypto;     // Step 31: Encryption at Rest
 pub mod display;
 pub mod error;
 pub mod export;     // Step 30: Full Data Export
 pub mod models;
 pub mod reports;    // Steps 28-29: Reports
 pub mod services;
+pub mod setup;      // Step 32: First-Run Setup Wizard
 pub mod storage;
 pub mod tui;        // Phase 4: TUI
-// pub mod crypto;    // Step 31
-// pub mod setup;     // Step 32
 
 pub use error::EnvelopeError;
