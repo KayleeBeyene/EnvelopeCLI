@@ -149,6 +149,20 @@ fn handle_sidebar_key(app: &mut App, key: KeyEvent) -> Result<()> {
             app.show_archived = !app.show_archived;
         }
 
+        // Add new account
+        KeyCode::Char('a') | KeyCode::Char('n') => {
+            app.open_dialog(ActiveDialog::AddAccount);
+        }
+
+        // Edit selected account
+        KeyCode::Char('e') => {
+            if let Ok(accounts) = app.storage.accounts.get_active() {
+                if let Some(account) = accounts.get(app.selected_account_index) {
+                    app.open_dialog(ActiveDialog::EditAccount(account.id));
+                }
+            }
+        }
+
         _ => {}
     }
 
@@ -198,6 +212,18 @@ fn handle_accounts_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
         KeyCode::Enter => {
             // Switch to register view for selected account
             app.switch_view(ActiveView::Register);
+        }
+        // Add new account
+        KeyCode::Char('a') | KeyCode::Char('n') => {
+            app.open_dialog(ActiveDialog::AddAccount);
+        }
+        // Edit selected account
+        KeyCode::Char('e') => {
+            if let Ok(accounts) = app.storage.accounts.get_active() {
+                if let Some(account) = accounts.get(app.selected_account_index) {
+                    app.open_dialog(ActiveDialog::EditAccount(account.id));
+                }
+            }
         }
         _ => {}
     }
@@ -565,6 +591,9 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
         }
         ActiveDialog::EditBudget => {
             super::dialogs::edit_budget::handle_key(app, key);
+        }
+        ActiveDialog::AddAccount | ActiveDialog::EditAccount(_) => {
+            super::dialogs::account::handle_key(app, key);
         }
         ActiveDialog::None => {}
     }

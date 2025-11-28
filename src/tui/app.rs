@@ -7,6 +7,7 @@ use crate::config::settings::Settings;
 use crate::models::{AccountId, BudgetPeriod, CategoryId, TransactionId};
 use crate::storage::Storage;
 
+use super::dialogs::account::AccountFormState;
 use super::dialogs::adjustment::AdjustmentDialogState;
 use super::dialogs::bulk_categorize::BulkCategorizeState;
 use super::dialogs::edit_budget::EditBudgetState;
@@ -51,6 +52,8 @@ pub enum ActiveDialog {
     None,
     AddTransaction,
     EditTransaction(TransactionId),
+    AddAccount,
+    EditAccount(AccountId),
     MoveFunds,
     CommandPalette,
     Help,
@@ -153,6 +156,9 @@ pub struct App<'a> {
 
     /// Edit budget dialog state
     pub edit_budget_state: EditBudgetState,
+
+    /// Account form dialog state
+    pub account_form: AccountFormState,
 }
 
 impl<'a> App<'a> {
@@ -196,6 +202,7 @@ impl<'a> App<'a> {
             reconcile_start_state: ReconcileStartState::new(),
             adjustment_dialog_state: AdjustmentDialogState::default(),
             edit_budget_state: EditBudgetState::new(),
+            account_form: AccountFormState::new(),
         }
     }
 
@@ -361,6 +368,22 @@ impl<'a> App<'a> {
                         TransactionFormState::from_transaction(&txn, &categories);
                     self.transaction_form
                         .set_focus(super::dialogs::transaction::TransactionField::Date);
+                }
+                self.input_mode = InputMode::Editing;
+            }
+            ActiveDialog::AddAccount => {
+                // Reset form for new account
+                self.account_form = AccountFormState::new();
+                self.account_form
+                    .set_focus(super::dialogs::account::AccountField::Name);
+                self.input_mode = InputMode::Editing;
+            }
+            ActiveDialog::EditAccount(account_id) => {
+                // Load account data into form
+                if let Ok(Some(account)) = self.storage.accounts.get(*account_id) {
+                    self.account_form = AccountFormState::from_account(&account);
+                    self.account_form
+                        .set_focus(super::dialogs::account::AccountField::Name);
                 }
                 self.input_mode = InputMode::Editing;
             }

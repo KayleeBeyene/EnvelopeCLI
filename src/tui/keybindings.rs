@@ -87,6 +87,12 @@ pub static KEYBINDINGS: &[Keybinding] = &[
     },
     // Sidebar
     Keybinding {
+        key: KeyCode::Char('a'),
+        modifiers: KeyModifiers::NONE,
+        description: "Add account",
+        context: KeyContext::Sidebar,
+    },
+    Keybinding {
         key: KeyCode::Enter,
         modifiers: KeyModifiers::NONE,
         description: "Select account",

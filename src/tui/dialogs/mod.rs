@@ -2,6 +2,7 @@
 //!
 //! Contains modal dialogs for various operations
 
+pub mod account;
 pub mod adjustment;
 pub mod bulk_categorize;
 pub mod command_palette;
