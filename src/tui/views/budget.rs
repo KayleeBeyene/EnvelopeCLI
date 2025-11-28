@@ -10,6 +10,7 @@ use ratatui::{
     Frame,
 };
 
+use crate::models::TargetCadence;
 use crate::services::{BudgetService, CategoryService};
 use crate::tui::app::{App, FocusedPanel};
 use crate::tui::layout::BudgetLayout;
@@ -130,8 +131,27 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
 
             // Get target for this category
             let target = budget_service.get_target(category.id).ok().flatten();
+
+            // Target indicator for category name
+            let target_indicator = if target.is_some() { "◉ " } else { "  " };
+
+            // Build target display with progress for ByDate goals
             let target_display = match &target {
-                Some(t) => format!("{} {}", t.amount, t.cadence),
+                Some(t) => {
+                    match &t.cadence {
+                        TargetCadence::ByDate { target_date } => {
+                            // For ByDate goals, show progress
+                            let progress_pct = if t.amount.cents() > 0 {
+                                let saved = summary.available.cents().max(0);
+                                ((saved as f64 / t.amount.cents() as f64) * 100.0).min(100.0)
+                            } else {
+                                0.0
+                            };
+                            format!("{} by {} ({:.0}%)", t.amount, target_date.format("%b %Y"), progress_pct)
+                        }
+                        _ => format!("{} {}", t.amount, t.cadence),
+                    }
+                }
                 None => "—".to_string(),
             };
 
@@ -161,7 +181,7 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
             };
 
             rows.push(Row::new(vec![
-                Cell::from(format!("  {}", category.name)),
+                Cell::from(format!("{}{}", target_indicator, category.name)),
                 Cell::from(format!("{}", summary.budgeted)),
                 Cell::from(format!("{}", summary.activity)).style(activity_style),
                 Cell::from(format!("{}", summary.available)).style(available_style),
@@ -181,11 +201,11 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
 
     // Column widths
     let widths = [
-        ratatui::layout::Constraint::Min(20),    // Category name
+        ratatui::layout::Constraint::Min(20),    // Category name (with target indicator)
         ratatui::layout::Constraint::Length(14), // Budgeted
         ratatui::layout::Constraint::Length(14), // Activity
         ratatui::layout::Constraint::Length(14), // Available
-        ratatui::layout::Constraint::Length(26), // Target
+        ratatui::layout::Constraint::Length(30), // Target (wider for ByDate progress)
     ];
 
     // Header row
