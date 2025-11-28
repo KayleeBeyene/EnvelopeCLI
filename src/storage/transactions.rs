@@ -44,15 +44,18 @@ impl TransactionRepository {
     pub fn load(&self) -> Result<(), EnvelopeError> {
         let file_data: TransactionData = read_json(&self.path)?;
 
-        let mut data = self.data.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
-        let mut by_account = self.by_account.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
-        let mut by_category = self.by_category.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut data = self
+            .data
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
+        let mut by_account = self
+            .by_account
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
+        let mut by_category = self
+            .by_category
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         data.clear();
         by_account.clear();
@@ -81,9 +84,10 @@ impl TransactionRepository {
 
     /// Save transactions to disk
     pub fn save(&self) -> Result<(), EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut transactions: Vec<_> = data.values().cloned().collect();
         transactions.sort_by(|a, b| b.date.cmp(&a.date).then(b.created_at.cmp(&a.created_at)));
@@ -94,18 +98,20 @@ impl TransactionRepository {
 
     /// Get a transaction by ID
     pub fn get(&self, id: TransactionId) -> Result<Option<Transaction>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         Ok(data.get(&id).cloned())
     }
 
     /// Get all transactions
     pub fn get_all(&self) -> Result<Vec<Transaction>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut transactions: Vec<_> = data.values().cloned().collect();
         transactions.sort_by(|a, b| b.date.cmp(&a.date));
@@ -114,36 +120,43 @@ impl TransactionRepository {
 
     /// Get transactions for an account
     pub fn get_by_account(&self, account_id: AccountId) -> Result<Vec<Transaction>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
-        let by_account = self.by_account.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
+        let by_account = self
+            .by_account
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
-        let ids = by_account.get(&account_id).map(|v| v.as_slice()).unwrap_or(&[]);
-        let mut transactions: Vec<_> = ids
-            .iter()
-            .filter_map(|id| data.get(id).cloned())
-            .collect();
+        let ids = by_account
+            .get(&account_id)
+            .map(|v| v.as_slice())
+            .unwrap_or(&[]);
+        let mut transactions: Vec<_> = ids.iter().filter_map(|id| data.get(id).cloned()).collect();
         transactions.sort_by(|a, b| b.date.cmp(&a.date));
         Ok(transactions)
     }
 
     /// Get transactions for a category
-    pub fn get_by_category(&self, category_id: CategoryId) -> Result<Vec<Transaction>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
-        let by_category = self.by_category.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+    pub fn get_by_category(
+        &self,
+        category_id: CategoryId,
+    ) -> Result<Vec<Transaction>, EnvelopeError> {
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
+        let by_category = self
+            .by_category
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
-        let ids = by_category.get(&category_id).map(|v| v.as_slice()).unwrap_or(&[]);
-        let mut transactions: Vec<_> = ids
-            .iter()
-            .filter_map(|id| data.get(id).cloned())
-            .collect();
+        let ids = by_category
+            .get(&category_id)
+            .map(|v| v.as_slice())
+            .unwrap_or(&[]);
+        let mut transactions: Vec<_> = ids.iter().filter_map(|id| data.get(id).cloned()).collect();
         transactions.sort_by(|a, b| b.date.cmp(&a.date));
         Ok(transactions)
     }
@@ -163,15 +176,18 @@ impl TransactionRepository {
 
     /// Insert or update a transaction
     pub fn upsert(&self, txn: Transaction) -> Result<(), EnvelopeError> {
-        let mut data = self.data.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
-        let mut by_account = self.by_account.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
-        let mut by_category = self.by_category.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut data = self
+            .data
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
+        let mut by_account = self
+            .by_account
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
+        let mut by_category = self
+            .by_category
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         // Remove from old indexes if updating
         if let Some(old) = data.get(&txn.id) {
@@ -196,7 +212,10 @@ impl TransactionRepository {
             by_category.entry(cat_id).or_default().push(txn.id);
         }
         for split in &txn.splits {
-            by_category.entry(split.category_id).or_default().push(txn.id);
+            by_category
+                .entry(split.category_id)
+                .or_default()
+                .push(txn.id);
         }
 
         data.insert(txn.id, txn);
@@ -205,15 +224,18 @@ impl TransactionRepository {
 
     /// Delete a transaction
     pub fn delete(&self, id: TransactionId) -> Result<bool, EnvelopeError> {
-        let mut data = self.data.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
-        let mut by_account = self.by_account.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
-        let mut by_category = self.by_category.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut data = self
+            .data
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
+        let mut by_account = self
+            .by_account
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
+        let mut by_category = self
+            .by_category
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         if let Some(txn) = data.remove(&id) {
             // Remove from indexes
@@ -238,9 +260,10 @@ impl TransactionRepository {
 
     /// Find transaction by import ID
     pub fn find_by_import_id(&self, import_id: &str) -> Result<Option<Transaction>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         Ok(data
             .values()
@@ -250,9 +273,10 @@ impl TransactionRepository {
 
     /// Count transactions
     pub fn count(&self) -> Result<usize, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         Ok(data.len())
     }
@@ -303,9 +327,12 @@ mod tests {
         let account2 = AccountId::new();
         let date = NaiveDate::from_ymd_opt(2025, 1, 15).unwrap();
 
-        repo.upsert(Transaction::new(account1, date, Money::from_cents(-100))).unwrap();
-        repo.upsert(Transaction::new(account1, date, Money::from_cents(-200))).unwrap();
-        repo.upsert(Transaction::new(account2, date, Money::from_cents(-300))).unwrap();
+        repo.upsert(Transaction::new(account1, date, Money::from_cents(-100)))
+            .unwrap();
+        repo.upsert(Transaction::new(account1, date, Money::from_cents(-200)))
+            .unwrap();
+        repo.upsert(Transaction::new(account2, date, Money::from_cents(-300)))
+            .unwrap();
 
         let account1_txns = repo.get_by_account(account1).unwrap();
         assert_eq!(account1_txns.len(), 2);
@@ -364,22 +391,27 @@ mod tests {
             account_id,
             NaiveDate::from_ymd_opt(2025, 1, 10).unwrap(),
             Money::from_cents(-100),
-        )).unwrap();
+        ))
+        .unwrap();
         repo.upsert(Transaction::new(
             account_id,
             NaiveDate::from_ymd_opt(2025, 1, 15).unwrap(),
             Money::from_cents(-200),
-        )).unwrap();
+        ))
+        .unwrap();
         repo.upsert(Transaction::new(
             account_id,
             NaiveDate::from_ymd_opt(2025, 1, 20).unwrap(),
             Money::from_cents(-300),
-        )).unwrap();
+        ))
+        .unwrap();
 
-        let range = repo.get_by_date_range(
-            NaiveDate::from_ymd_opt(2025, 1, 12).unwrap(),
-            NaiveDate::from_ymd_opt(2025, 1, 18).unwrap(),
-        ).unwrap();
+        let range = repo
+            .get_by_date_range(
+                NaiveDate::from_ymd_opt(2025, 1, 12).unwrap(),
+                NaiveDate::from_ymd_opt(2025, 1, 18).unwrap(),
+            )
+            .unwrap();
 
         assert_eq!(range.len(), 1);
         assert_eq!(range[0].amount.cents(), -200);

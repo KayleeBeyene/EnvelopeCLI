@@ -179,7 +179,11 @@ impl FullExport {
 }
 
 /// Export the full database to JSON
-pub fn export_full_json<W: Write>(storage: &Storage, writer: &mut W, pretty: bool) -> EnvelopeResult<()> {
+pub fn export_full_json<W: Write>(
+    storage: &Storage,
+    writer: &mut W,
+    pretty: bool,
+) -> EnvelopeResult<()> {
     let export = FullExport::from_storage(storage)?;
 
     if pretty {
@@ -194,13 +198,13 @@ pub fn export_full_json<W: Write>(storage: &Storage, writer: &mut W, pretty: boo
 
 /// Import from a JSON export (for verification/restore)
 pub fn import_from_json(json_str: &str) -> EnvelopeResult<FullExport> {
-    let export: FullExport =
-        serde_json::from_str(json_str).map_err(|e| crate::error::EnvelopeError::Import(e.to_string()))?;
+    let export: FullExport = serde_json::from_str(json_str)
+        .map_err(|e| crate::error::EnvelopeError::Import(e.to_string()))?;
 
     // Validate the import
     export
         .validate()
-        .map_err(|e| crate::error::EnvelopeError::Import(e))?;
+        .map_err(crate::error::EnvelopeError::Import)?;
 
     Ok(export)
 }

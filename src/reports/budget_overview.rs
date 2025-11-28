@@ -204,10 +204,7 @@ impl BudgetOverviewReport {
             // Group total
             output.push_str(&format!(
                 "  {:<28} {:>12} {:>12} {:>12}\n",
-                "Group Total:",
-                group.total_budgeted,
-                group.total_activity,
-                group.total_available
+                "Group Total:", group.total_budgeted, group.total_activity, group.total_available
             ));
         }
 
@@ -330,7 +327,11 @@ mod tests {
         storage.categories.save().unwrap();
 
         // Create account with starting balance
-        let account = Account::with_starting_balance("Checking", AccountType::Checking, Money::from_cents(100000));
+        let account = Account::with_starting_balance(
+            "Checking",
+            AccountType::Checking,
+            Money::from_cents(100000),
+        );
         storage.accounts.upsert(account.clone()).unwrap();
         storage.accounts.save().unwrap();
 

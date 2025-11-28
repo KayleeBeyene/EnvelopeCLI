@@ -162,7 +162,10 @@ fn main() -> Result<()> {
             handle_import_command(&storage, &file, &account)?;
         }
         Some(Commands::Init) => {
-            println!("Initializing EnvelopeCLI at: {}", paths.data_dir().display());
+            println!(
+                "Initializing EnvelopeCLI at: {}",
+                paths.data_dir().display()
+            );
             envelope::storage::init::initialize_storage(&paths)?;
             settings.save(&paths)?;
             println!("Initialization complete!");

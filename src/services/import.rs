@@ -210,7 +210,6 @@ impl<'a> ImportService<'a> {
         Self { storage }
     }
 
-
     /// Parse a CSV from a reader into transactions
     pub fn parse_csv_from_reader<R: std::io::Read>(
         &self,
@@ -334,13 +333,7 @@ impl<'a> ImportService<'a> {
 
         // Try common alternative formats
         let formats = [
-            "%Y-%m-%d",
-            "%m/%d/%Y",
-            "%m/%d/%y",
-            "%d/%m/%Y",
-            "%d/%m/%y",
-            "%Y/%m/%d",
-            "%m-%d-%Y",
+            "%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y", "%d/%m/%Y", "%d/%m/%y", "%Y/%m/%d", "%m-%d-%Y",
             "%d-%m-%Y",
         ];
 
@@ -399,8 +392,8 @@ impl<'a> ImportService<'a> {
         // Handle parentheses as negative (accounting format)
         let (is_negative, value) = if cleaned.starts_with('(') && cleaned.ends_with(')') {
             (true, &cleaned[1..cleaned.len() - 1])
-        } else if cleaned.starts_with('-') {
-            (true, &cleaned[1..])
+        } else if let Some(stripped) = cleaned.strip_prefix('-') {
+            (true, stripped)
         } else {
             (false, cleaned.as_str())
         };
@@ -422,7 +415,11 @@ impl<'a> ImportService<'a> {
         let existing_txns = self.storage.transactions.get_by_account(account_id)?;
         let existing_import_ids: HashMap<_, _> = existing_txns
             .iter()
-            .filter_map(|t| t.import_id.as_ref().map(|id| (id.clone(), t.id.to_string())))
+            .filter_map(|t| {
+                t.import_id
+                    .as_ref()
+                    .map(|id| (id.clone(), t.id.to_string()))
+            })
             .collect();
 
         for result in parsed {
@@ -508,10 +505,9 @@ impl<'a> ImportService<'a> {
                         }
                         Err(e) => {
                             result.errors += 1;
-                            result.error_messages.insert(
-                                entry.transaction.row_number,
-                                e.to_string(),
-                            );
+                            result
+                                .error_messages
+                                .insert(entry.transaction.row_number, e.to_string());
                         }
                     }
                 }
@@ -532,8 +528,6 @@ impl<'a> ImportService<'a> {
 
         Ok(result)
     }
-
-
 }
 
 #[cfg(test)]
@@ -564,11 +558,14 @@ mod tests {
         let (_temp_dir, storage) = create_test_storage();
         let service = ImportService::new(&storage);
 
-        let csv_data = "Date,Amount,Description\n2025-01-15,-50.00,Test Store\n2025-01-16,100.00,Paycheck";
+        let csv_data =
+            "Date,Amount,Description\n2025-01-15,-50.00,Test Store\n2025-01-16,100.00,Paycheck";
         let mapping = ColumnMapping::new();
         let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
 
-        let results = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
+        let results = service
+            .parse_csv_from_reader(&mut reader, &mapping)
+            .unwrap();
         assert_eq!(results.len(), 2);
 
         let txn1 = results[0].as_ref().unwrap();
@@ -590,7 +587,9 @@ mod tests {
         let mapping = ColumnMapping::separate_inout(0, 1, 2, 3);
         let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
 
-        let results = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
+        let results = service
+            .parse_csv_from_reader(&mut reader, &mapping)
+            .unwrap();
         assert_eq!(results.len(), 2);
 
         let txn1 = results[0].as_ref().unwrap();
@@ -609,7 +608,9 @@ mod tests {
         let csv_data = "Date,Amount,Description\n01/15/2025,-50.00,Test";
         let mapping = ColumnMapping::new().with_date_format("%m/%d/%Y");
         let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
-        let results = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
+        let results = service
+            .parse_csv_from_reader(&mut reader, &mapping)
+            .unwrap();
         assert_eq!(
             results[0].as_ref().unwrap().date,
             NaiveDate::from_ymd_opt(2025, 1, 15).unwrap()
@@ -625,7 +626,9 @@ mod tests {
         let mapping = ColumnMapping::new();
         let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
 
-        let results = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
+        let results = service
+            .parse_csv_from_reader(&mut reader, &mapping)
+            .unwrap();
         let txn = results[0].as_ref().unwrap();
         assert_eq!(txn.amount.cents(), -5000);
     }
@@ -640,7 +643,9 @@ mod tests {
         let csv_data = "Date,Amount,Description\n2025-01-15,-50.00,Test Store";
         let mapping = ColumnMapping::new();
         let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
-        let parsed = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
+        let parsed = service
+            .parse_csv_from_reader(&mut reader, &mapping)
+            .unwrap();
 
         let preview1 = service.generate_preview(&parsed, account_id).unwrap();
         assert_eq!(preview1[0].status, ImportStatus::New);
@@ -661,7 +666,9 @@ mod tests {
         let service = ImportService::new(&storage);
 
         let header_str = "Transaction Date,Debit,Credit,Description,Notes";
-        let mut reader = csv::ReaderBuilder::new().has_headers(false).from_reader(header_str.as_bytes());
+        let mut reader = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .from_reader(header_str.as_bytes());
         let headers = reader.headers().unwrap().clone();
         let mapping = service.detect_mapping_from_headers(&headers);
 
@@ -679,10 +686,13 @@ mod tests {
         let account_id = setup_test_account(&storage);
         let service = ImportService::new(&storage);
 
-        let csv_data = "Date,Amount,Description\n2025-01-15,-50.00,Store 1\n2025-01-16,-25.00,Store 2";
+        let csv_data =
+            "Date,Amount,Description\n2025-01-15,-50.00,Store 1\n2025-01-16,-25.00,Store 2";
         let mapping = ColumnMapping::new();
         let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
-        let parsed = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
+        let parsed = service
+            .parse_csv_from_reader(&mut reader, &mapping)
+            .unwrap();
         let preview = service.generate_preview(&parsed, account_id).unwrap();
 
         let result = service

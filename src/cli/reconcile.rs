@@ -75,7 +75,11 @@ pub fn handle_reconcile_command(storage: &Storage, cmd: ReconcileCommands) -> En
     let category_service = CategoryService::new(storage);
 
     match cmd {
-        ReconcileCommands::Start { account, balance, date } => {
+        ReconcileCommands::Start {
+            account,
+            balance,
+            date,
+        } => {
             let account = account_service
                 .find(&account)?
                 .ok_or_else(|| EnvelopeError::account_not_found(&account))?;
@@ -97,13 +101,25 @@ pub fn handle_reconcile_command(storage: &Storage, cmd: ReconcileCommands) -> En
             println!("Statement Balance: {}", statement_balance);
             println!();
             println!("Current Status:");
-            println!("  Starting reconciled balance: {}", session.starting_cleared_balance);
-            println!("  Current cleared balance:     {}", summary.current_cleared_balance);
+            println!(
+                "  Starting reconciled balance: {}",
+                session.starting_cleared_balance
+            );
+            println!(
+                "  Current cleared balance:     {}",
+                summary.current_cleared_balance
+            );
             println!("  Difference:                  {}", summary.difference);
             println!();
             println!("Transactions:");
-            println!("  Cleared (ready to reconcile): {}", summary.cleared_transactions.len());
-            println!("  Pending (uncleared):          {}", summary.uncleared_transactions.len());
+            println!(
+                "  Cleared (ready to reconcile): {}",
+                summary.cleared_transactions.len()
+            );
+            println!(
+                "  Pending (uncleared):          {}",
+                summary.uncleared_transactions.len()
+            );
 
             if !summary.cleared_transactions.is_empty() {
                 println!();
@@ -137,19 +153,25 @@ pub fn handle_reconcile_command(storage: &Storage, cmd: ReconcileCommands) -> En
             if summary.can_complete {
                 println!("Ready to complete! Run 'envelope reconcile complete' to finish.");
             } else {
-                println!("Difference is {}. Clear/unclear transactions until difference is $0.00", summary.difference);
+                println!(
+                    "Difference is {}. Clear/unclear transactions until difference is $0.00",
+                    summary.difference
+                );
                 println!("Or use 'envelope reconcile adjust' to create an adjustment transaction.");
             }
         }
 
-        ReconcileCommands::Status { account, balance, date } => {
+        ReconcileCommands::Status {
+            account,
+            balance,
+            date,
+        } => {
             let account = account_service
                 .find(&account)?
                 .ok_or_else(|| EnvelopeError::account_not_found(&account))?;
 
-            let statement_balance = Money::parse(&balance).map_err(|e| {
-                EnvelopeError::Validation(format!("Invalid balance: {}", e))
-            })?;
+            let statement_balance = Money::parse(&balance)
+                .map_err(|e| EnvelopeError::Validation(format!("Invalid balance: {}", e)))?;
 
             let statement_date = parse_date_or_today(date.as_deref())?;
 
@@ -179,10 +201,7 @@ pub fn handle_reconcile_command(storage: &Storage, cmd: ReconcileCommands) -> En
                 EnvelopeError::Validation(format!("Invalid transaction ID: {}", id))
             })?)?;
 
-            println!(
-                "Cleared: {} {} {}",
-                txn.date, txn.payee_name, txn.amount
-            );
+            println!("Cleared: {} {} {}", txn.date, txn.payee_name, txn.amount);
         }
 
         ReconcileCommands::Unclear { id } => {
@@ -190,20 +209,20 @@ pub fn handle_reconcile_command(storage: &Storage, cmd: ReconcileCommands) -> En
                 EnvelopeError::Validation(format!("Invalid transaction ID: {}", id))
             })?)?;
 
-            println!(
-                "Uncleared: {} {} {}",
-                txn.date, txn.payee_name, txn.amount
-            );
+            println!("Uncleared: {} {} {}", txn.date, txn.payee_name, txn.amount);
         }
 
-        ReconcileCommands::Complete { account, balance, date } => {
+        ReconcileCommands::Complete {
+            account,
+            balance,
+            date,
+        } => {
             let account = account_service
                 .find(&account)?
                 .ok_or_else(|| EnvelopeError::account_not_found(&account))?;
 
-            let statement_balance = Money::parse(&balance).map_err(|e| {
-                EnvelopeError::Validation(format!("Invalid balance: {}", e))
-            })?;
+            let statement_balance = Money::parse(&balance)
+                .map_err(|e| EnvelopeError::Validation(format!("Invalid balance: {}", e)))?;
 
             let statement_date = parse_date_or_today(date.as_deref())?;
 
@@ -214,17 +233,24 @@ pub fn handle_reconcile_command(storage: &Storage, cmd: ReconcileCommands) -> En
             println!("  Account: {}", account.name);
             println!("  Statement date: {}", statement_date);
             println!("  Statement balance: {}", statement_balance);
-            println!("  Transactions reconciled: {}", result.transactions_reconciled);
+            println!(
+                "  Transactions reconciled: {}",
+                result.transactions_reconciled
+            );
         }
 
-        ReconcileCommands::Adjust { account, balance, date, category } => {
+        ReconcileCommands::Adjust {
+            account,
+            balance,
+            date,
+            category,
+        } => {
             let account = account_service
                 .find(&account)?
                 .ok_or_else(|| EnvelopeError::account_not_found(&account))?;
 
-            let statement_balance = Money::parse(&balance).map_err(|e| {
-                EnvelopeError::Validation(format!("Invalid balance: {}", e))
-            })?;
+            let statement_balance = Money::parse(&balance)
+                .map_err(|e| EnvelopeError::Validation(format!("Invalid balance: {}", e)))?;
 
             let statement_date = parse_date_or_today(date.as_deref())?;
 
@@ -240,7 +266,10 @@ pub fn handle_reconcile_command(storage: &Storage, cmd: ReconcileCommands) -> En
             let session = service.start(account.id, statement_date, statement_balance)?;
             let summary = service.get_summary(&session)?;
 
-            println!("Creating adjustment transaction for: {}", summary.difference);
+            println!(
+                "Creating adjustment transaction for: {}",
+                summary.difference
+            );
 
             let result = service.complete_with_adjustment(&session, category_id)?;
 
@@ -249,9 +278,15 @@ pub fn handle_reconcile_command(storage: &Storage, cmd: ReconcileCommands) -> En
             println!("  Account: {}", account.name);
             println!("  Statement date: {}", statement_date);
             println!("  Statement balance: {}", statement_balance);
-            println!("  Transactions reconciled: {}", result.transactions_reconciled);
+            println!(
+                "  Transactions reconciled: {}",
+                result.transactions_reconciled
+            );
             if result.adjustment_created {
-                println!("  Adjustment created: {}", result.adjustment_amount.unwrap());
+                println!(
+                    "  Adjustment created: {}",
+                    result.adjustment_amount.unwrap()
+                );
             }
         }
     }

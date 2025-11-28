@@ -23,14 +23,14 @@ pub fn handle_transfer_command(
     let transfer_service = TransferService::new(storage);
 
     // Find source account
-    let from_account = account_service.find(from)?.ok_or_else(|| {
-        EnvelopeError::account_not_found(from)
-    })?;
+    let from_account = account_service
+        .find(from)?
+        .ok_or_else(|| EnvelopeError::account_not_found(from))?;
 
     // Find destination account
-    let to_account = account_service.find(to)?.ok_or_else(|| {
-        EnvelopeError::account_not_found(to)
-    })?;
+    let to_account = account_service
+        .find(to)?
+        .ok_or_else(|| EnvelopeError::account_not_found(to))?;
 
     // Parse amount
     let amount = Money::parse(amount).map_err(|e| {
@@ -52,17 +52,18 @@ pub fn handle_transfer_command(
         chrono::Local::now().date_naive()
     };
 
-    let result = transfer_service.create_transfer(
-        from_account.id,
-        to_account.id,
-        amount,
-        date,
-        memo,
-    )?;
+    let result =
+        transfer_service.create_transfer(from_account.id, to_account.id, amount, date, memo)?;
 
     println!("Transfer created:");
-    println!("  From: {} ({})", from_account.name, result.from_transaction.amount);
-    println!("  To:   {} ({})", to_account.name, result.to_transaction.amount);
+    println!(
+        "  From: {} ({})",
+        from_account.name, result.from_transaction.amount
+    );
+    println!(
+        "  To:   {} ({})",
+        to_account.name, result.to_transaction.amount
+    );
     println!("  Date: {}", date);
 
     Ok(())

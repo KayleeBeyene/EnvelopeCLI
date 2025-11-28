@@ -71,25 +71,26 @@ impl BackupManager {
     /// Returns the path to the created backup file.
     pub fn create_backup(&self) -> EnvelopeResult<PathBuf> {
         // Ensure backup directory exists
-        fs::create_dir_all(&self.backup_dir).map_err(|e| {
-            EnvelopeError::Io(format!("Failed to create backup directory: {}", e))
-        })?;
+        fs::create_dir_all(&self.backup_dir)
+            .map_err(|e| EnvelopeError::Io(format!("Failed to create backup directory: {}", e)))?;
 
         let now = Utc::now();
-        let filename = format!("backup-{}-{:03}.json", now.format("%Y%m%d-%H%M%S"), now.timestamp_subsec_millis());
+        let filename = format!(
+            "backup-{}-{:03}.json",
+            now.format("%Y%m%d-%H%M%S"),
+            now.timestamp_subsec_millis()
+        );
         let backup_path = self.backup_dir.join(&filename);
 
         // Read all data files
         let archive = self.create_archive(now)?;
 
         // Write backup file
-        let json = serde_json::to_string_pretty(&archive).map_err(|e| {
-            EnvelopeError::Json(format!("Failed to serialize backup: {}", e))
-        })?;
+        let json = serde_json::to_string_pretty(&archive)
+            .map_err(|e| EnvelopeError::Json(format!("Failed to serialize backup: {}", e)))?;
 
-        fs::write(&backup_path, json).map_err(|e| {
-            EnvelopeError::Io(format!("Failed to write backup file: {}", e))
-        })?;
+        fs::write(&backup_path, json)
+            .map_err(|e| EnvelopeError::Io(format!("Failed to write backup file: {}", e)))?;
 
         Ok(backup_path)
     }
@@ -114,15 +115,14 @@ impl BackupManager {
 
         let mut backups = Vec::new();
 
-        for entry in fs::read_dir(&self.backup_dir).map_err(|e| {
-            EnvelopeError::Io(format!("Failed to read backup directory: {}", e))
-        })? {
-            let entry = entry.map_err(|e| {
-                EnvelopeError::Io(format!("Failed to read directory entry: {}", e))
-            })?;
+        for entry in fs::read_dir(&self.backup_dir)
+            .map_err(|e| EnvelopeError::Io(format!("Failed to read backup directory: {}", e)))?
+        {
+            let entry = entry
+                .map_err(|e| EnvelopeError::Io(format!("Failed to read directory entry: {}", e)))?;
 
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "json") {
+            if path.extension().is_some_and(|ext| ext == "json") {
                 if let Some(info) = self.parse_backup_info(&path) {
                     backups.push(info);
                 }
@@ -173,20 +173,20 @@ impl BackupManager {
         let mut deleted = Vec::new();
 
         // Separate daily and monthly backups
-        let (monthly, daily): (Vec<_>, Vec<_>) = backups
-            .into_iter()
-            .partition(|b| b.is_monthly);
+        let (monthly, daily): (Vec<_>, Vec<_>) = backups.into_iter().partition(|b| b.is_monthly);
 
         // Keep only the configured number of daily backups
         for backup in daily.into_iter().skip(self.retention.daily_count as usize) {
-            fs::remove_file(&backup.path).map_err(|e| {
-                EnvelopeError::Io(format!("Failed to delete old backup: {}", e))
-            })?;
+            fs::remove_file(&backup.path)
+                .map_err(|e| EnvelopeError::Io(format!("Failed to delete old backup: {}", e)))?;
             deleted.push(backup.path);
         }
 
         // Keep only the configured number of monthly backups
-        for backup in monthly.into_iter().skip(self.retention.monthly_count as usize) {
+        for backup in monthly
+            .into_iter()
+            .skip(self.retention.monthly_count as usize)
+        {
             fs::remove_file(&backup.path).map_err(|e| {
                 EnvelopeError::Io(format!("Failed to delete old monthly backup: {}", e))
             })?;
@@ -231,13 +231,11 @@ fn read_json_value(path: &Path) -> EnvelopeResult<serde_json::Value> {
         return Ok(serde_json::Value::Object(serde_json::Map::new()));
     }
 
-    let contents = fs::read_to_string(path).map_err(|e| {
-        EnvelopeError::Io(format!("Failed to read file for backup: {}", e))
-    })?;
+    let contents = fs::read_to_string(path)
+        .map_err(|e| EnvelopeError::Io(format!("Failed to read file for backup: {}", e)))?;
 
-    serde_json::from_str(&contents).map_err(|e| {
-        EnvelopeError::Json(format!("Failed to parse JSON for backup: {}", e))
-    })
+    serde_json::from_str(&contents)
+        .map_err(|e| EnvelopeError::Json(format!("Failed to parse JSON for backup: {}", e)))
 }
 
 /// Parse a backup timestamp from the filename date part

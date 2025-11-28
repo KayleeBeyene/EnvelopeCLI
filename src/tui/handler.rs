@@ -90,7 +90,10 @@ fn handle_normal_key(app: &mut App, key: KeyEvent) -> Result<()> {
 /// Handle keys when sidebar is focused
 fn handle_sidebar_key(app: &mut App, key: KeyEvent) -> Result<()> {
     // Get account count for bounds checking
-    let account_count = app.storage.accounts.get_active()
+    let account_count = app
+        .storage
+        .accounts
+        .get_active()
         .map(|a| a.len())
         .unwrap_or(0);
 
@@ -155,7 +158,10 @@ fn handle_main_panel_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
 /// Handle keys in the accounts view
 fn handle_accounts_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
-    let account_count = app.storage.accounts.get_active()
+    let account_count = app
+        .storage
+        .accounts
+        .get_active()
         .map(|a| a.len())
         .unwrap_or(0);
 
@@ -190,7 +196,9 @@ fn handle_accounts_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
 fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
     // Get transaction count for the selected account
     let txn_count = if let Some(account_id) = app.selected_account {
-        app.storage.transactions.get_by_account(account_id)
+        app.storage
+            .transactions
+            .get_by_account(account_id)
             .map(|t| t.len())
             .unwrap_or(0)
     } else {
@@ -270,7 +278,9 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
         // Delete transaction
         KeyCode::Char('d') if key.modifiers.contains(KeyModifiers::CONTROL) => {
             if app.selected_transaction.is_some() {
-                app.open_dialog(ActiveDialog::Confirm("Delete this transaction?".to_string()));
+                app.open_dialog(ActiveDialog::Confirm(
+                    "Delete this transaction?".to_string(),
+                ));
             }
         }
 
@@ -303,7 +313,10 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
 /// Handle keys in the budget view
 fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
     // Get category count
-    let category_count = app.storage.categories.get_all_categories()
+    let category_count = app
+        .storage
+        .categories
+        .get_all_categories()
         .map(|c| c.len())
         .unwrap_or(0);
 

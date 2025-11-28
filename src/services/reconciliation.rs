@@ -95,8 +95,14 @@ impl<'a> ReconciliationService<'a> {
     }
 
     /// Get the current state of a reconciliation session
-    pub fn get_summary(&self, session: &ReconciliationSession) -> EnvelopeResult<ReconciliationSummary> {
-        let transactions = self.storage.transactions.get_by_account(session.account_id)?;
+    pub fn get_summary(
+        &self,
+        session: &ReconciliationSession,
+    ) -> EnvelopeResult<ReconciliationSummary> {
+        let transactions = self
+            .storage
+            .transactions
+            .get_by_account(session.account_id)?;
 
         let mut uncleared_transactions = Vec::new();
         let mut cleared_transactions = Vec::new();
@@ -136,7 +142,10 @@ impl<'a> ReconciliationService<'a> {
     }
 
     /// Get uncleared transactions for an account (both pending and cleared but not reconciled)
-    pub fn get_uncleared_transactions(&self, account_id: AccountId) -> EnvelopeResult<Vec<Transaction>> {
+    pub fn get_uncleared_transactions(
+        &self,
+        account_id: AccountId,
+    ) -> EnvelopeResult<Vec<Transaction>> {
         let transactions = self.storage.transactions.get_by_account(account_id)?;
         let mut result: Vec<Transaction> = transactions
             .into_iter()
@@ -178,14 +187,20 @@ impl<'a> ReconciliationService<'a> {
             Some(format!("{} {}", txn.date, txn.payee_name)),
             &before,
             &txn,
-            Some(format!("status: {} -> Cleared (reconciliation)", before.status)),
+            Some(format!(
+                "status: {} -> Cleared (reconciliation)",
+                before.status
+            )),
         )?;
 
         Ok(txn)
     }
 
     /// Unclear a transaction during reconciliation
-    pub fn unclear_transaction(&self, transaction_id: TransactionId) -> EnvelopeResult<Transaction> {
+    pub fn unclear_transaction(
+        &self,
+        transaction_id: TransactionId,
+    ) -> EnvelopeResult<Transaction> {
         let mut txn = self
             .storage
             .transactions
@@ -210,14 +225,20 @@ impl<'a> ReconciliationService<'a> {
             Some(format!("{} {}", txn.date, txn.payee_name)),
             &before,
             &txn,
-            Some(format!("status: {} -> Pending (reconciliation)", before.status)),
+            Some(format!(
+                "status: {} -> Pending (reconciliation)",
+                before.status
+            )),
         )?;
 
         Ok(txn)
     }
 
     /// Complete reconciliation when difference is zero
-    pub fn complete(&self, session: &ReconciliationSession) -> EnvelopeResult<ReconciliationResult> {
+    pub fn complete(
+        &self,
+        session: &ReconciliationSession,
+    ) -> EnvelopeResult<ReconciliationResult> {
         let summary = self.get_summary(session)?;
 
         if !summary.can_complete {
@@ -503,7 +524,10 @@ mod tests {
         // Verify account reconciliation info updated
         let updated_account = storage.accounts.get(account.id).unwrap().unwrap();
         assert_eq!(updated_account.last_reconciled_date, Some(statement_date));
-        assert_eq!(updated_account.last_reconciled_balance, Some(statement_balance));
+        assert_eq!(
+            updated_account.last_reconciled_balance,
+            Some(statement_balance)
+        );
     }
 
     #[test]

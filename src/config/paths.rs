@@ -100,17 +100,14 @@ impl EnvelopePaths {
     /// - Data directory (~/.envelope/data/)
     /// - Backup directory (~/.envelope/backups/)
     pub fn ensure_directories(&self) -> Result<(), EnvelopeError> {
-        std::fs::create_dir_all(&self.base_dir).map_err(|e| {
-            EnvelopeError::Io(format!("Failed to create base directory: {}", e))
-        })?;
+        std::fs::create_dir_all(&self.base_dir)
+            .map_err(|e| EnvelopeError::Io(format!("Failed to create base directory: {}", e)))?;
 
-        std::fs::create_dir_all(self.data_dir()).map_err(|e| {
-            EnvelopeError::Io(format!("Failed to create data directory: {}", e))
-        })?;
+        std::fs::create_dir_all(self.data_dir())
+            .map_err(|e| EnvelopeError::Io(format!("Failed to create data directory: {}", e)))?;
 
-        std::fs::create_dir_all(self.backup_dir()).map_err(|e| {
-            EnvelopeError::Io(format!("Failed to create backup directory: {}", e))
-        })?;
+        std::fs::create_dir_all(self.backup_dir())
+            .map_err(|e| EnvelopeError::Io(format!("Failed to create backup directory: {}", e)))?;
 
         Ok(())
     }
@@ -159,10 +156,7 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let paths = EnvelopePaths::with_base_dir(temp_dir.path().to_path_buf());
 
-        assert_eq!(
-            paths.settings_file(),
-            temp_dir.path().join("config.json")
-        );
+        assert_eq!(paths.settings_file(), temp_dir.path().join("config.json"));
         assert_eq!(
             paths.accounts_file(),
             temp_dir.path().join("data").join("accounts.json")

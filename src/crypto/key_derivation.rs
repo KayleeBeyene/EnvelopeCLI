@@ -79,9 +79,8 @@ impl Drop for DerivedKey {
 /// Derive an encryption key from a passphrase
 pub fn derive_key(passphrase: &str, params: &KeyDerivationParams) -> EnvelopeResult<DerivedKey> {
     // Parse the salt
-    let salt = SaltString::from_b64(&params.salt).map_err(|e| {
-        EnvelopeError::Encryption(format!("Invalid salt: {}", e))
-    })?;
+    let salt = SaltString::from_b64(&params.salt)
+        .map_err(|e| EnvelopeError::Encryption(format!("Invalid salt: {}", e)))?;
 
     // Configure Argon2id with custom params
     let argon2_params = Params::new(
@@ -92,7 +91,11 @@ pub fn derive_key(passphrase: &str, params: &KeyDerivationParams) -> EnvelopeRes
     )
     .map_err(|e| EnvelopeError::Encryption(format!("Invalid Argon2 parameters: {}", e)))?;
 
-    let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, argon2_params);
+    let argon2 = Argon2::new(
+        argon2::Algorithm::Argon2id,
+        argon2::Version::V0x13,
+        argon2_params,
+    );
 
     // Derive the key by hashing the password
     let hash = argon2

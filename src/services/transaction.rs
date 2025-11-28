@@ -364,7 +364,10 @@ impl<'a> TransactionService<'a> {
                 self.storage.log_delete(
                     EntityType::Transaction,
                     linked_id.to_string(),
-                    Some(format!("{} {} (linked)", linked_txn.date, linked_txn.payee_name)),
+                    Some(format!(
+                        "{} {} (linked)",
+                        linked_txn.date, linked_txn.payee_name
+                    )),
                     &linked_txn,
                 )?;
             }
@@ -529,7 +532,10 @@ impl<'a> TransactionService<'a> {
             Some(format!("{} {}", txn.date, txn.payee_name)),
             &before,
             &txn,
-            Some(format!("added split: {} to category {}", amount, category_id)),
+            Some(format!(
+                "added split: {} to category {}",
+                amount, category_id
+            )),
         )?;
 
         Ok(txn)
@@ -762,9 +768,7 @@ mod tests {
         assert_eq!(filtered.len(), 3);
 
         // Limit results
-        let limited = service
-            .list(TransactionFilter::new().limit(2))
-            .unwrap();
+        let limited = service.list(TransactionFilter::new().limit(2)).unwrap();
         assert_eq!(limited.len(), 2);
     }
 
@@ -899,7 +903,14 @@ mod tests {
 
         // Now update should work
         let updated = service
-            .update(txn.id, None, Some(Money::from_cents(-7500)), None, None, None)
+            .update(
+                txn.id,
+                None,
+                Some(Money::from_cents(-7500)),
+                None,
+                None,
+                None,
+            )
             .unwrap();
         assert_eq!(updated.amount.cents(), -7500);
     }
@@ -940,7 +951,11 @@ mod tests {
         // Set splits using set_splits to add multiple splits at once
         let splits = vec![
             Split::new(category_id, Money::from_cents(-6000)),
-            Split::with_memo(category2_id, Money::from_cents(-4000), "Cleaning supplies".to_string()),
+            Split::with_memo(
+                category2_id,
+                Money::from_cents(-4000),
+                "Cleaning supplies".to_string(),
+            ),
         ];
 
         let final_txn = service.set_splits(txn.id, splits).unwrap();

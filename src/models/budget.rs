@@ -294,7 +294,8 @@ mod tests {
         let carryover = Money::from_cents(10000);
         let activity = Money::from_cents(-30000); // Spent $300
 
-        let summary = CategoryBudgetSummary::new(category_id, period, budgeted, carryover, activity);
+        let summary =
+            CategoryBudgetSummary::new(category_id, period, budgeted, carryover, activity);
 
         assert_eq!(summary.budgeted.cents(), 50000);
         assert_eq!(summary.carryover.cents(), 10000);
@@ -311,7 +312,8 @@ mod tests {
         let carryover = Money::zero();
         let activity = Money::from_cents(-60000); // Overspent by $100
 
-        let summary = CategoryBudgetSummary::new(category_id, period, budgeted, carryover, activity);
+        let summary =
+            CategoryBudgetSummary::new(category_id, period, budgeted, carryover, activity);
 
         assert!(summary.is_overspent());
         assert_eq!(summary.available.cents(), -10000);

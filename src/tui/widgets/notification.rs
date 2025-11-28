@@ -113,7 +113,7 @@ impl Notification {
     pub fn remaining_fraction(&self) -> f64 {
         let elapsed = self.created_at.elapsed().as_secs_f64();
         let total = self.duration_secs as f64;
-        (1.0 - elapsed / total).max(0.0).min(1.0)
+        (1.0 - elapsed / total).clamp(0.0, 1.0)
     }
 }
 

@@ -27,7 +27,10 @@ pub struct AllocationKey {
 
 impl AllocationKey {
     pub fn new(category_id: CategoryId, period: BudgetPeriod) -> Self {
-        Self { category_id, period }
+        Self {
+            category_id,
+            period,
+        }
     }
 }
 
@@ -50,9 +53,10 @@ impl BudgetRepository {
     pub fn load(&self) -> Result<(), EnvelopeError> {
         let file_data: BudgetData = read_json(&self.path)?;
 
-        let mut allocations = self.allocations.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut allocations = self
+            .allocations
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         allocations.clear();
         for alloc in file_data.allocations {
@@ -65,14 +69,13 @@ impl BudgetRepository {
 
     /// Save allocations to disk
     pub fn save(&self) -> Result<(), EnvelopeError> {
-        let allocations = self.allocations.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let allocations = self
+            .allocations
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut alloc_list: Vec<_> = allocations.values().cloned().collect();
-        alloc_list.sort_by(|a, b| {
-            a.period.cmp(&b.period)
-        });
+        alloc_list.sort_by(|a, b| a.period.cmp(&b.period));
 
         let file_data = BudgetData {
             allocations: alloc_list,
@@ -87,9 +90,10 @@ impl BudgetRepository {
         category_id: CategoryId,
         period: &BudgetPeriod,
     ) -> Result<Option<BudgetAllocation>, EnvelopeError> {
-        let allocations = self.allocations.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let allocations = self
+            .allocations
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let key = AllocationKey::new(category_id, period.clone());
         Ok(allocations.get(&key).cloned())
@@ -109,10 +113,14 @@ impl BudgetRepository {
     }
 
     /// Get all allocations for a period
-    pub fn get_for_period(&self, period: &BudgetPeriod) -> Result<Vec<BudgetAllocation>, EnvelopeError> {
-        let allocations = self.allocations.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+    pub fn get_for_period(
+        &self,
+        period: &BudgetPeriod,
+    ) -> Result<Vec<BudgetAllocation>, EnvelopeError> {
+        let allocations = self
+            .allocations
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         Ok(allocations
             .values()
@@ -122,10 +130,14 @@ impl BudgetRepository {
     }
 
     /// Get all allocations for a category
-    pub fn get_for_category(&self, category_id: CategoryId) -> Result<Vec<BudgetAllocation>, EnvelopeError> {
-        let allocations = self.allocations.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+    pub fn get_for_category(
+        &self,
+        category_id: CategoryId,
+    ) -> Result<Vec<BudgetAllocation>, EnvelopeError> {
+        let allocations = self
+            .allocations
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut list: Vec<_> = allocations
             .values()
@@ -138,9 +150,10 @@ impl BudgetRepository {
 
     /// Insert or update an allocation
     pub fn upsert(&self, allocation: BudgetAllocation) -> Result<(), EnvelopeError> {
-        let mut allocations = self.allocations.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut allocations = self
+            .allocations
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         let key = AllocationKey::new(allocation.category_id, allocation.period.clone());
         allocations.insert(key, allocation);
@@ -153,9 +166,10 @@ impl BudgetRepository {
         category_id: CategoryId,
         period: &BudgetPeriod,
     ) -> Result<bool, EnvelopeError> {
-        let mut allocations = self.allocations.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut allocations = self
+            .allocations
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         let key = AllocationKey::new(category_id, period.clone());
         Ok(allocations.remove(&key).is_some())
@@ -163,9 +177,10 @@ impl BudgetRepository {
 
     /// Delete all allocations for a category
     pub fn delete_for_category(&self, category_id: CategoryId) -> Result<usize, EnvelopeError> {
-        let mut allocations = self.allocations.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut allocations = self
+            .allocations
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         let initial_count = allocations.len();
         allocations.retain(|k, _| k.category_id != category_id);
@@ -174,17 +189,19 @@ impl BudgetRepository {
 
     /// Count allocations
     pub fn count(&self) -> Result<usize, EnvelopeError> {
-        let allocations = self.allocations.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let allocations = self
+            .allocations
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
         Ok(allocations.len())
     }
 
     /// Get all allocations
     pub fn get_all(&self) -> Result<Vec<BudgetAllocation>, EnvelopeError> {
-        let allocations = self.allocations.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let allocations = self
+            .allocations
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut list: Vec<_> = allocations.values().cloned().collect();
         list.sort_by(|a, b| a.period.cmp(&b.period));
@@ -224,11 +241,8 @@ mod tests {
         let category_id = CategoryId::new();
         let period = test_period();
 
-        let alloc = BudgetAllocation::with_budget(
-            category_id,
-            period.clone(),
-            Money::from_cents(50000),
-        );
+        let alloc =
+            BudgetAllocation::with_budget(category_id, period.clone(), Money::from_cents(50000));
 
         repo.upsert(alloc).unwrap();
 
@@ -249,7 +263,8 @@ mod tests {
         assert_eq!(alloc.budgeted.cents(), 0);
 
         // Now insert
-        let alloc2 = BudgetAllocation::with_budget(category_id, period.clone(), Money::from_cents(100));
+        let alloc2 =
+            BudgetAllocation::with_budget(category_id, period.clone(), Money::from_cents(100));
         repo.upsert(alloc2).unwrap();
 
         // Should return the inserted value
@@ -267,9 +282,24 @@ mod tests {
         let jan = BudgetPeriod::monthly(2025, 1);
         let feb = BudgetPeriod::monthly(2025, 2);
 
-        repo.upsert(BudgetAllocation::with_budget(cat1, jan.clone(), Money::from_cents(100))).unwrap();
-        repo.upsert(BudgetAllocation::with_budget(cat2, jan.clone(), Money::from_cents(200))).unwrap();
-        repo.upsert(BudgetAllocation::with_budget(cat1, feb.clone(), Money::from_cents(300))).unwrap();
+        repo.upsert(BudgetAllocation::with_budget(
+            cat1,
+            jan.clone(),
+            Money::from_cents(100),
+        ))
+        .unwrap();
+        repo.upsert(BudgetAllocation::with_budget(
+            cat2,
+            jan.clone(),
+            Money::from_cents(200),
+        ))
+        .unwrap();
+        repo.upsert(BudgetAllocation::with_budget(
+            cat1,
+            feb.clone(),
+            Money::from_cents(300),
+        ))
+        .unwrap();
 
         let jan_allocs = repo.get_for_period(&jan).unwrap();
         assert_eq!(jan_allocs.len(), 2);
@@ -285,7 +315,8 @@ mod tests {
 
         let category_id = CategoryId::new();
         let period = test_period();
-        let alloc = BudgetAllocation::with_budget(category_id, period.clone(), Money::from_cents(50000));
+        let alloc =
+            BudgetAllocation::with_budget(category_id, period.clone(), Money::from_cents(50000));
 
         repo.upsert(alloc).unwrap();
         repo.save().unwrap();
@@ -306,7 +337,8 @@ mod tests {
 
         let category_id = CategoryId::new();
         let period = test_period();
-        let alloc = BudgetAllocation::with_budget(category_id, period.clone(), Money::from_cents(100));
+        let alloc =
+            BudgetAllocation::with_budget(category_id, period.clone(), Money::from_cents(100));
 
         repo.upsert(alloc).unwrap();
         assert_eq!(repo.count().unwrap(), 1);
@@ -325,9 +357,12 @@ mod tests {
         let jan = BudgetPeriod::monthly(2025, 1);
         let feb = BudgetPeriod::monthly(2025, 2);
 
-        repo.upsert(BudgetAllocation::new(cat1, jan.clone())).unwrap();
-        repo.upsert(BudgetAllocation::new(cat1, feb.clone())).unwrap();
-        repo.upsert(BudgetAllocation::new(cat2, jan.clone())).unwrap();
+        repo.upsert(BudgetAllocation::new(cat1, jan.clone()))
+            .unwrap();
+        repo.upsert(BudgetAllocation::new(cat1, feb.clone()))
+            .unwrap();
+        repo.upsert(BudgetAllocation::new(cat2, jan.clone()))
+            .unwrap();
 
         assert_eq!(repo.count().unwrap(), 3);
 

@@ -20,7 +20,7 @@ pub use init::initialize_storage;
 pub use payees::PayeeRepository;
 pub use transactions::TransactionRepository;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::audit::{AuditEntry, AuditLogger, EntityType};
 use crate::backup::{BackupManager, RestoreManager, RestoreResult};
@@ -96,7 +96,14 @@ impl Storage {
         after: &T,
         diff_summary: Option<String>,
     ) -> EnvelopeResult<()> {
-        let entry = AuditEntry::update(entity_type, entity_id, entity_name, before, after, diff_summary);
+        let entry = AuditEntry::update(
+            entity_type,
+            entity_id,
+            entity_name,
+            before,
+            after,
+            diff_summary,
+        );
         self.audit.log(&entry)
     }
 
@@ -165,7 +172,7 @@ impl Storage {
     ///
     /// WARNING: This will overwrite all current data.
     /// It's recommended to create a backup before restoring.
-    pub fn restore_from_backup(&mut self, backup_path: &PathBuf) -> EnvelopeResult<RestoreResult> {
+    pub fn restore_from_backup(&mut self, backup_path: &Path) -> EnvelopeResult<RestoreResult> {
         let restore_manager = RestoreManager::new(self.paths.clone());
         let result = restore_manager.restore_from_file(backup_path)?;
 
@@ -196,8 +203,7 @@ impl Storage {
 
         // Check if we need to create a backup
         if let Some(latest) = manager.get_latest_backup()? {
-            let age = chrono::Utc::now()
-                .signed_duration_since(latest.created_at);
+            let age = chrono::Utc::now().signed_duration_since(latest.created_at);
 
             // Skip if last backup was less than 60 seconds ago
             if age.num_seconds() < 60 {

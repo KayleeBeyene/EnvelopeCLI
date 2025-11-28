@@ -64,8 +64,9 @@ impl AuditLogger {
             .map_err(|e| EnvelopeError::Io(format!("Failed to open audit log: {}", e)))?;
 
         for entry in entries {
-            let json = serde_json::to_string(entry)
-                .map_err(|e| EnvelopeError::Json(format!("Failed to serialize audit entry: {}", e)))?;
+            let json = serde_json::to_string(entry).map_err(|e| {
+                EnvelopeError::Json(format!("Failed to serialize audit entry: {}", e))
+            })?;
 
             writeln!(file, "{}", json)
                 .map_err(|e| EnvelopeError::Io(format!("Failed to write audit entry: {}", e)))?;
@@ -93,7 +94,11 @@ impl AuditLogger {
 
         for (line_num, line) in reader.lines().enumerate() {
             let line = line.map_err(|e| {
-                EnvelopeError::Io(format!("Failed to read audit log line {}: {}", line_num + 1, e))
+                EnvelopeError::Io(format!(
+                    "Failed to read audit log line {}: {}",
+                    line_num + 1,
+                    e
+                ))
             })?;
 
             // Skip empty lines

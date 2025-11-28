@@ -9,6 +9,6 @@ pub mod csv;
 pub mod json;
 pub mod yaml;
 
-pub use csv::{export_transactions_csv, export_allocations_csv, export_accounts_csv};
+pub use csv::{export_accounts_csv, export_allocations_csv, export_transactions_csv};
 pub use json::{export_full_json, FullExport, EXPORT_SCHEMA_VERSION};
 pub use yaml::export_full_yaml;

@@ -73,8 +73,8 @@ impl<'a> TransferService<'a> {
         // Create the outflow transaction (from source)
         let mut from_txn = Transaction::new(from_account_id, date, -amount);
         from_txn.payee_name = format!("Transfer to {}", to_account.name);
-        if let Some(ref m) = memo {
-            from_txn.memo = m.clone();
+        if let Some(m) = &memo {
+            from_txn.memo.clone_from(m);
         }
 
         // Create the inflow transaction (to destination)
@@ -173,9 +173,9 @@ impl<'a> TransferService<'a> {
             )));
         }
 
-        let linked_id = txn
-            .transfer_transaction_id
-            .ok_or_else(|| EnvelopeError::Validation("Transfer has no linked transaction".into()))?;
+        let linked_id = txn.transfer_transaction_id.ok_or_else(|| {
+            EnvelopeError::Validation("Transfer has no linked transaction".into())
+        })?;
 
         let mut linked_txn = self
             .storage
@@ -286,9 +286,9 @@ impl<'a> TransferService<'a> {
             )));
         }
 
-        let linked_id = txn
-            .transfer_transaction_id
-            .ok_or_else(|| EnvelopeError::Validation("Transfer has no linked transaction".into()))?;
+        let linked_id = txn.transfer_transaction_id.ok_or_else(|| {
+            EnvelopeError::Validation("Transfer has no linked transaction".into())
+        })?;
 
         let mut linked_txn = self
             .storage
@@ -373,9 +373,9 @@ impl<'a> TransferService<'a> {
             )));
         }
 
-        let linked_id = txn
-            .transfer_transaction_id
-            .ok_or_else(|| EnvelopeError::Validation("Transfer has no linked transaction".into()))?;
+        let linked_id = txn.transfer_transaction_id.ok_or_else(|| {
+            EnvelopeError::Validation("Transfer has no linked transaction".into())
+        })?;
 
         let linked_txn = self
             .storage

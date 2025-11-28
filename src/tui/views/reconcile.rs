@@ -120,9 +120,9 @@ pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(5),  // Header with statement info
-            Constraint::Min(10),    // Transaction list
-            Constraint::Length(4),  // Summary/status bar
+            Constraint::Length(5), // Header with statement info
+            Constraint::Min(10),   // Transaction list
+            Constraint::Length(4), // Summary/status bar
         ])
         .split(area);
 
@@ -149,7 +149,11 @@ fn render_header(frame: &mut Frame, app: &App, area: Rect) {
 
     let block = Block::default()
         .title(format!(" Reconcile: {} ", account_name))
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::DarkGray));
 
@@ -158,28 +162,32 @@ fn render_header(frame: &mut Frame, app: &App, area: Rect) {
 
     let content_chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(50),
-            Constraint::Percentage(50),
-        ])
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(inner);
 
     // Statement date
     let date_style = if !state.in_transaction_phase && state.active_field == 0 {
-        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD)
     } else {
         Style::default().fg(Color::White)
     };
 
     let date_text = Paragraph::new(vec![
-        Line::from(Span::styled("Statement Date:", Style::default().fg(Color::DarkGray))),
+        Line::from(Span::styled(
+            "Statement Date:",
+            Style::default().fg(Color::DarkGray),
+        )),
         Line::from(Span::styled(&state.statement_date, date_style)),
     ]);
     frame.render_widget(date_text, content_chunks[0]);
 
     // Statement balance
     let balance_style = if !state.in_transaction_phase && state.active_field == 1 {
-        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD)
     } else {
         Style::default().fg(Color::White)
     };
@@ -191,7 +199,10 @@ fn render_header(frame: &mut Frame, app: &App, area: Rect) {
     };
 
     let balance_text = Paragraph::new(vec![
-        Line::from(Span::styled("Statement Balance:", Style::default().fg(Color::DarkGray))),
+        Line::from(Span::styled(
+            "Statement Balance:",
+            Style::default().fg(Color::DarkGray),
+        )),
         Line::from(Span::styled(balance_display, balance_style)),
     ]);
     frame.render_widget(balance_text, content_chunks[1]);
@@ -289,7 +300,9 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
     let cleared_balance = state.calculate_cleared_balance();
 
     let difference_style = if state.difference.is_zero() {
-        Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::Green)
+            .add_modifier(Modifier::BOLD)
     } else {
         Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)
     };
@@ -318,7 +331,10 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
     // Cleared balance
     let cleared_text = Paragraph::new(vec![Line::from(vec![
         Span::styled("Cleared: ", Style::default().fg(Color::DarkGray)),
-        Span::styled(format!("{}", cleared_balance), Style::default().fg(Color::White)),
+        Span::styled(
+            format!("{}", cleared_balance),
+            Style::default().fg(Color::White),
+        ),
     ])]);
     frame.render_widget(cleared_text, summary_chunks[0]);
 
@@ -331,8 +347,14 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
 
     // Transaction counts
     let count_text = Paragraph::new(vec![Line::from(vec![
-        Span::styled(format!("{} cleared  ", cleared_count), Style::default().fg(Color::Green)),
-        Span::styled(format!("{} pending", pending_count), Style::default().fg(Color::DarkGray)),
+        Span::styled(
+            format!("{} cleared  ", cleared_count),
+            Style::default().fg(Color::Green),
+        ),
+        Span::styled(
+            format!("{} pending", pending_count),
+            Style::default().fg(Color::DarkGray),
+        ),
     ])]);
     frame.render_widget(count_text, summary_chunks[2]);
 }
@@ -354,11 +376,8 @@ pub fn handle_key(app: &mut App, key: crossterm::event::KeyCode) -> bool {
         }
         KeyCode::Tab => {
             // Toggle between header and transaction phases
-            if !state.in_transaction_phase && state.parsed_balance.is_some() {
-                state.in_transaction_phase = true;
-            } else {
-                state.in_transaction_phase = false;
-            }
+            state.in_transaction_phase =
+                !state.in_transaction_phase && state.parsed_balance.is_some();
             true
         }
         KeyCode::Char(' ') if state.in_transaction_phase => {

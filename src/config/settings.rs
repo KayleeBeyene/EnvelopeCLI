@@ -140,9 +140,8 @@ impl Settings {
         let settings_path = paths.settings_file();
 
         if settings_path.exists() {
-            let contents = std::fs::read_to_string(&settings_path).map_err(|e| {
-                EnvelopeError::Io(format!("Failed to read settings file: {}", e))
-            })?;
+            let contents = std::fs::read_to_string(&settings_path)
+                .map_err(|e| EnvelopeError::Io(format!("Failed to read settings file: {}", e)))?;
 
             let settings: Settings = serde_json::from_str(&contents).map_err(|e| {
                 EnvelopeError::Config(format!("Failed to parse settings file: {}", e))
@@ -163,13 +162,11 @@ impl Settings {
         paths.ensure_directories()?;
 
         let settings_path = paths.settings_file();
-        let contents = serde_json::to_string_pretty(self).map_err(|e| {
-            EnvelopeError::Config(format!("Failed to serialize settings: {}", e))
-        })?;
+        let contents = serde_json::to_string_pretty(self)
+            .map_err(|e| EnvelopeError::Config(format!("Failed to serialize settings: {}", e)))?;
 
-        std::fs::write(&settings_path, contents).map_err(|e| {
-            EnvelopeError::Io(format!("Failed to write settings file: {}", e))
-        })?;
+        std::fs::write(&settings_path, contents)
+            .map_err(|e| EnvelopeError::Io(format!("Failed to write settings file: {}", e)))?;
 
         Ok(())
     }
@@ -194,9 +191,11 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let paths = EnvelopePaths::with_base_dir(temp_dir.path().to_path_buf());
 
-        let mut settings = Settings::default();
-        settings.budget_period_type = BudgetPeriodType::Weekly;
-        settings.encryption_enabled = true;
+        let settings = Settings {
+            budget_period_type: BudgetPeriodType::Weekly,
+            encryption_enabled: true,
+            ..Default::default()
+        };
 
         settings.save(&paths).unwrap();
 

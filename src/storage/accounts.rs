@@ -36,9 +36,10 @@ impl AccountRepository {
     pub fn load(&self) -> Result<(), EnvelopeError> {
         let file_data: AccountData = read_json(&self.path)?;
 
-        let mut data = self.data.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut data = self
+            .data
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         data.clear();
         for account in file_data.accounts {
@@ -50,9 +51,10 @@ impl AccountRepository {
 
     /// Save accounts to disk
     pub fn save(&self) -> Result<(), EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let file_data = AccountData {
             accounts: data.values().cloned().collect(),
@@ -63,18 +65,20 @@ impl AccountRepository {
 
     /// Get an account by ID
     pub fn get(&self, id: AccountId) -> Result<Option<Account>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         Ok(data.get(&id).cloned())
     }
 
     /// Get all accounts
     pub fn get_all(&self) -> Result<Vec<Account>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut accounts: Vec<_> = data.values().cloned().collect();
         accounts.sort_by(|a, b| a.sort_order.cmp(&b.sort_order).then(a.name.cmp(&b.name)));
@@ -89,9 +93,10 @@ impl AccountRepository {
 
     /// Get an account by name (case-insensitive)
     pub fn get_by_name(&self, name: &str) -> Result<Option<Account>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let name_lower = name.to_lowercase();
         Ok(data
@@ -102,9 +107,10 @@ impl AccountRepository {
 
     /// Insert or update an account
     pub fn upsert(&self, account: Account) -> Result<(), EnvelopeError> {
-        let mut data = self.data.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut data = self
+            .data
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         data.insert(account.id, account);
         Ok(())
@@ -112,39 +118,47 @@ impl AccountRepository {
 
     /// Delete an account
     pub fn delete(&self, id: AccountId) -> Result<bool, EnvelopeError> {
-        let mut data = self.data.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut data = self
+            .data
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         Ok(data.remove(&id).is_some())
     }
 
     /// Check if an account exists
     pub fn exists(&self, id: AccountId) -> Result<bool, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         Ok(data.contains_key(&id))
     }
 
     /// Check if an account name is already taken
-    pub fn name_exists(&self, name: &str, exclude_id: Option<AccountId>) -> Result<bool, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+    pub fn name_exists(
+        &self,
+        name: &str,
+        exclude_id: Option<AccountId>,
+    ) -> Result<bool, EnvelopeError> {
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let name_lower = name.to_lowercase();
-        Ok(data.values().any(|a| {
-            a.name.to_lowercase() == name_lower && Some(a.id) != exclude_id
-        }))
+        Ok(data
+            .values()
+            .any(|a| a.name.to_lowercase() == name_lower && Some(a.id) != exclude_id))
     }
 
     /// Count accounts
     pub fn count(&self) -> Result<usize, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         Ok(data.len())
     }

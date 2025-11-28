@@ -32,7 +32,11 @@ pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
 fn render_header(frame: &mut Frame, area: Rect) {
     let block = Block::default()
         .title(" Envelope ")
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::DarkGray));
 
@@ -120,7 +124,7 @@ fn render_view_switcher(frame: &mut Frame, app: &mut App, area: Rect) {
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::DarkGray));
 
-    let views = vec![
+    let views = [
         ("1", "Accounts", ActiveView::Accounts),
         ("2", "Budget", ActiveView::Budget),
         ("3", "Reports", ActiveView::Reports),

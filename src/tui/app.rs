@@ -44,8 +44,9 @@ pub enum InputMode {
 }
 
 /// Currently active dialog (if any)
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum ActiveDialog {
+    #[default]
     None,
     AddTransaction,
     EditTransaction(TransactionId),
@@ -57,12 +58,6 @@ pub enum ActiveDialog {
     ReconcileStart,
     UnlockConfirm(UnlockConfirmState),
     Adjustment,
-}
-
-impl Default for ActiveDialog {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 /// Main application state
@@ -251,20 +246,25 @@ impl<'a> App<'a> {
             ActiveDialog::AddTransaction => {
                 // Reset form for new transaction
                 self.transaction_form = TransactionFormState::new();
-                self.transaction_form.set_focus(super::dialogs::transaction::TransactionField::Date);
+                self.transaction_form
+                    .set_focus(super::dialogs::transaction::TransactionField::Date);
                 self.input_mode = InputMode::Editing;
             }
             ActiveDialog::EditTransaction(txn_id) => {
                 // Load transaction data into form
                 if let Ok(Some(txn)) = self.storage.transactions.get(*txn_id) {
-                    let categories: Vec<_> = self.storage.categories
+                    let categories: Vec<_> = self
+                        .storage
+                        .categories
                         .get_all_categories()
                         .unwrap_or_default()
                         .iter()
                         .map(|c| (c.id, c.name.clone()))
                         .collect();
-                    self.transaction_form = TransactionFormState::from_transaction(&txn, &categories);
-                    self.transaction_form.set_focus(super::dialogs::transaction::TransactionField::Date);
+                    self.transaction_form =
+                        TransactionFormState::from_transaction(&txn, &categories);
+                    self.transaction_form
+                        .set_focus(super::dialogs::transaction::TransactionField::Date);
                 }
                 self.input_mode = InputMode::Editing;
             }

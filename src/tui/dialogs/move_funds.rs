@@ -145,8 +145,7 @@ impl MoveFundsState {
             return Err("Enter an amount to move".into());
         }
 
-        let amount = Money::parse(&self.amount_input)
-            .map_err(|_| "Invalid amount format")?;
+        let amount = Money::parse(&self.amount_input).map_err(|_| "Invalid amount format")?;
 
         if amount.is_zero() {
             return Err("Amount must be greater than zero".into());
@@ -169,7 +168,11 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 
     let block = Block::default()
         .title(" Move Funds ")
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
 
@@ -187,18 +190,18 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1),  // Title
-            Constraint::Length(1),  // Spacer
-            Constraint::Length(1),  // From label
-            Constraint::Length(6),  // From list
-            Constraint::Length(1),  // To label
-            Constraint::Length(6),  // To list
-            Constraint::Length(1),  // Amount label
-            Constraint::Length(1),  // Amount input
-            Constraint::Length(1),  // Spacer
-            Constraint::Length(1),  // Error/success
-            Constraint::Length(1),  // Hints
-            Constraint::Min(0),     // Remaining
+            Constraint::Length(1), // Title
+            Constraint::Length(1), // Spacer
+            Constraint::Length(1), // From label
+            Constraint::Length(6), // From list
+            Constraint::Length(1), // To label
+            Constraint::Length(6), // To list
+            Constraint::Length(1), // Amount label
+            Constraint::Length(1), // Amount input
+            Constraint::Length(1), // Spacer
+            Constraint::Length(1), // Error/success
+            Constraint::Length(1), // Hints
+            Constraint::Min(0),    // Remaining
         ])
         .split(inner);
 
@@ -209,7 +212,9 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     // Title
     let title = Line::from(Span::styled(
         "Move Budget Between Categories",
-        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+        Style::default()
+            .fg(Color::White)
+            .add_modifier(Modifier::BOLD),
     ));
     frame.render_widget(Paragraph::new(title), chunks[0]);
 
@@ -278,6 +283,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 }
 
 /// Render a category selection field
+#[allow(clippy::too_many_arguments)]
 fn render_category_field(
     frame: &mut Frame,
     categories: &[crate::models::Category],
@@ -289,7 +295,9 @@ fn render_category_field(
     list_area: Rect,
 ) {
     let label_style = if focused {
-        Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::Cyan)
+            .add_modifier(Modifier::BOLD)
     } else {
         Style::default().fg(Color::Cyan)
     };
@@ -362,7 +370,9 @@ fn render_amount_field(
     input_area: Rect,
 ) {
     let label_style = if focused {
-        Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::Cyan)
+            .add_modifier(Modifier::BOLD)
     } else {
         Style::default().fg(Color::Cyan)
     };
@@ -384,7 +394,10 @@ fn render_amount_field(
         let cursor_in_amount = cursor;
         let (before, after) = amount.split_at(cursor_in_amount.min(amount.len()));
 
-        spans.push(Span::styled(before.to_string(), Style::default().fg(Color::White)));
+        spans.push(Span::styled(
+            before.to_string(),
+            Style::default().fg(Color::White),
+        ));
 
         let cursor_char = after.chars().next().unwrap_or(' ');
         spans.push(Span::styled(
@@ -393,7 +406,10 @@ fn render_amount_field(
         ));
 
         if after.len() > 1 {
-            spans.push(Span::styled(after[1..].to_string(), Style::default().fg(Color::White)));
+            spans.push(Span::styled(
+                after[1..].to_string(),
+                Style::default().fg(Color::White),
+            ));
         }
     } else {
         spans.push(Span::styled(display, Style::default().fg(Color::Gray)));
@@ -556,7 +572,10 @@ fn execute_move(app: &mut App) {
                 .map(|c| c.name)
                 .unwrap_or_else(|| "Unknown".into());
 
-            app.set_status(format!("Moved {} from '{}' to '{}'", amount, from_name, to_name));
+            app.set_status(format!(
+                "Moved {} from '{}' to '{}'",
+                amount, from_name, to_name
+            ));
             app.move_funds_state.reset();
             app.close_dialog();
         }

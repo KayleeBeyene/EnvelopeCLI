@@ -18,14 +18,18 @@ pub fn export_full_yaml<W: Write>(storage: &Storage, writer: &mut W) -> Envelope
         .map_err(|e| crate::error::EnvelopeError::Export(e.to_string()))?;
     writeln!(writer, "# App Version: {}", export.app_version)
         .map_err(|e| crate::error::EnvelopeError::Export(e.to_string()))?;
-    writeln!(writer, "#")
-        .map_err(|e| crate::error::EnvelopeError::Export(e.to_string()))?;
-    writeln!(writer, "# This file can be used to restore your budget data.")
-        .map_err(|e| crate::error::EnvelopeError::Export(e.to_string()))?;
-    writeln!(writer, "# Keep it secure - it contains all your financial data.")
-        .map_err(|e| crate::error::EnvelopeError::Export(e.to_string()))?;
-    writeln!(writer)
-        .map_err(|e| crate::error::EnvelopeError::Export(e.to_string()))?;
+    writeln!(writer, "#").map_err(|e| crate::error::EnvelopeError::Export(e.to_string()))?;
+    writeln!(
+        writer,
+        "# This file can be used to restore your budget data."
+    )
+    .map_err(|e| crate::error::EnvelopeError::Export(e.to_string()))?;
+    writeln!(
+        writer,
+        "# Keep it secure - it contains all your financial data."
+    )
+    .map_err(|e| crate::error::EnvelopeError::Export(e.to_string()))?;
+    writeln!(writer).map_err(|e| crate::error::EnvelopeError::Export(e.to_string()))?;
 
     // Serialize to YAML
     serde_yaml::to_writer(writer, &export)
@@ -36,13 +40,13 @@ pub fn export_full_yaml<W: Write>(storage: &Storage, writer: &mut W) -> Envelope
 
 /// Import from a YAML export
 pub fn import_from_yaml(yaml_str: &str) -> EnvelopeResult<FullExport> {
-    let export: FullExport =
-        serde_yaml::from_str(yaml_str).map_err(|e| crate::error::EnvelopeError::Import(e.to_string()))?;
+    let export: FullExport = serde_yaml::from_str(yaml_str)
+        .map_err(|e| crate::error::EnvelopeError::Import(e.to_string()))?;
 
     // Validate the import
     export
         .validate()
-        .map_err(|e| crate::error::EnvelopeError::Import(e))?;
+        .map_err(crate::error::EnvelopeError::Import)?;
 
     Ok(export)
 }

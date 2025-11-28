@@ -39,12 +39,14 @@ impl CategoryRepository {
     pub fn load(&self) -> Result<(), EnvelopeError> {
         let file_data: CategoryData = read_json(&self.path)?;
 
-        let mut groups = self.groups.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
-        let mut categories = self.categories.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut groups = self
+            .groups
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
+        let mut categories = self
+            .categories
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         groups.clear();
         categories.clear();
@@ -62,12 +64,14 @@ impl CategoryRepository {
 
     /// Save categories to disk
     pub fn save(&self) -> Result<(), EnvelopeError> {
-        let groups = self.groups.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
-        let categories = self.categories.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let groups = self
+            .groups
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
+        let categories = self
+            .categories
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut group_list: Vec<_> = groups.values().cloned().collect();
         group_list.sort_by_key(|g| g.sort_order);
@@ -87,18 +91,20 @@ impl CategoryRepository {
 
     /// Get a group by ID
     pub fn get_group(&self, id: CategoryGroupId) -> Result<Option<CategoryGroup>, EnvelopeError> {
-        let groups = self.groups.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let groups = self
+            .groups
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         Ok(groups.get(&id).cloned())
     }
 
     /// Get all groups
     pub fn get_all_groups(&self) -> Result<Vec<CategoryGroup>, EnvelopeError> {
-        let groups = self.groups.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let groups = self
+            .groups
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut list: Vec<_> = groups.values().cloned().collect();
         list.sort_by_key(|g| g.sort_order);
@@ -107,9 +113,10 @@ impl CategoryRepository {
 
     /// Get a group by name
     pub fn get_group_by_name(&self, name: &str) -> Result<Option<CategoryGroup>, EnvelopeError> {
-        let groups = self.groups.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let groups = self
+            .groups
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let name_lower = name.to_lowercase();
         Ok(groups
@@ -120,19 +127,25 @@ impl CategoryRepository {
 
     /// Insert or update a group
     pub fn upsert_group(&self, group: CategoryGroup) -> Result<(), EnvelopeError> {
-        let mut groups = self.groups.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut groups = self
+            .groups
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         groups.insert(group.id, group);
         Ok(())
     }
 
     /// Delete a group (and optionally its categories)
-    pub fn delete_group(&self, id: CategoryGroupId, delete_categories: bool) -> Result<bool, EnvelopeError> {
-        let mut groups = self.groups.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+    pub fn delete_group(
+        &self,
+        id: CategoryGroupId,
+        delete_categories: bool,
+    ) -> Result<bool, EnvelopeError> {
+        let mut groups = self
+            .groups
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         if delete_categories {
             let mut categories = self.categories.write().map_err(|e| {
@@ -148,18 +161,20 @@ impl CategoryRepository {
 
     /// Get a category by ID
     pub fn get_category(&self, id: CategoryId) -> Result<Option<Category>, EnvelopeError> {
-        let categories = self.categories.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let categories = self
+            .categories
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         Ok(categories.get(&id).cloned())
     }
 
     /// Get all categories
     pub fn get_all_categories(&self) -> Result<Vec<Category>, EnvelopeError> {
-        let categories = self.categories.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let categories = self
+            .categories
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut list: Vec<_> = categories.values().cloned().collect();
         list.sort_by_key(|c| (c.sort_order, c.name.clone()));
@@ -167,10 +182,14 @@ impl CategoryRepository {
     }
 
     /// Get categories in a group
-    pub fn get_categories_in_group(&self, group_id: CategoryGroupId) -> Result<Vec<Category>, EnvelopeError> {
-        let categories = self.categories.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+    pub fn get_categories_in_group(
+        &self,
+        group_id: CategoryGroupId,
+    ) -> Result<Vec<Category>, EnvelopeError> {
+        let categories = self
+            .categories
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut list: Vec<_> = categories
             .values()
@@ -183,9 +202,10 @@ impl CategoryRepository {
 
     /// Get a category by name
     pub fn get_category_by_name(&self, name: &str) -> Result<Option<Category>, EnvelopeError> {
-        let categories = self.categories.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let categories = self
+            .categories
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let name_lower = name.to_lowercase();
         Ok(categories
@@ -196,9 +216,10 @@ impl CategoryRepository {
 
     /// Insert or update a category
     pub fn upsert_category(&self, category: Category) -> Result<(), EnvelopeError> {
-        let mut categories = self.categories.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut categories = self
+            .categories
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         categories.insert(category.id, category);
         Ok(())
@@ -206,26 +227,29 @@ impl CategoryRepository {
 
     /// Delete a category
     pub fn delete_category(&self, id: CategoryId) -> Result<bool, EnvelopeError> {
-        let mut categories = self.categories.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut categories = self
+            .categories
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         Ok(categories.remove(&id).is_some())
     }
 
     /// Count groups
     pub fn group_count(&self) -> Result<usize, EnvelopeError> {
-        let groups = self.groups.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let groups = self
+            .groups
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
         Ok(groups.len())
     }
 
     /// Count categories
     pub fn category_count(&self) -> Result<usize, EnvelopeError> {
-        let categories = self.categories.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let categories = self
+            .categories
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
         Ok(categories.len())
     }
 }

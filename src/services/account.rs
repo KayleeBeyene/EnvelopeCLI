@@ -42,7 +42,9 @@ impl<'a> AccountService<'a> {
         // Validate name is not empty
         let name = name.trim();
         if name.is_empty() {
-            return Err(EnvelopeError::Validation("Account name cannot be empty".into()));
+            return Err(EnvelopeError::Validation(
+                "Account name cannot be empty".into(),
+            ));
         }
 
         // Check for duplicate name
@@ -112,7 +114,10 @@ impl<'a> AccountService<'a> {
     }
 
     /// Get all accounts with their computed balances
-    pub fn list_with_balances(&self, include_archived: bool) -> EnvelopeResult<Vec<AccountSummary>> {
+    pub fn list_with_balances(
+        &self,
+        include_archived: bool,
+    ) -> EnvelopeResult<Vec<AccountSummary>> {
         let accounts = self.list(include_archived)?;
         let mut summaries = Vec::with_capacity(accounts.len());
 
@@ -178,7 +183,12 @@ impl<'a> AccountService<'a> {
         let transactions = self.storage.transactions.get_by_account(account_id)?;
         let cleared_total: Money = transactions
             .iter()
-            .filter(|t| matches!(t.status, TransactionStatus::Cleared | TransactionStatus::Reconciled))
+            .filter(|t| {
+                matches!(
+                    t.status,
+                    TransactionStatus::Cleared | TransactionStatus::Reconciled
+                )
+            })
             .map(|t| t.amount)
             .sum();
 
@@ -199,7 +209,9 @@ impl<'a> AccountService<'a> {
         if let Some(new_name) = name {
             let new_name = new_name.trim();
             if new_name.is_empty() {
-                return Err(EnvelopeError::Validation("Account name cannot be empty".into()));
+                return Err(EnvelopeError::Validation(
+                    "Account name cannot be empty".into(),
+                ));
             }
 
             // Check for duplicate name (excluding self)
@@ -252,7 +264,9 @@ impl<'a> AccountService<'a> {
             .ok_or_else(|| EnvelopeError::account_not_found(id.to_string()))?;
 
         if account.archived {
-            return Err(EnvelopeError::Validation("Account is already archived".into()));
+            return Err(EnvelopeError::Validation(
+                "Account is already archived".into(),
+            ));
         }
 
         let before = account.clone();
@@ -342,7 +356,12 @@ mod tests {
         let service = AccountService::new(&storage);
 
         let account = service
-            .create("Checking", AccountType::Checking, Money::from_cents(100000), true)
+            .create(
+                "Checking",
+                AccountType::Checking,
+                Money::from_cents(100000),
+                true,
+            )
             .unwrap();
 
         assert_eq!(account.name, "Checking");
@@ -439,19 +458,30 @@ mod tests {
         let service = AccountService::new(&storage);
 
         let account = service
-            .create("Test", AccountType::Checking, Money::from_cents(100000), true)
+            .create(
+                "Test",
+                AccountType::Checking,
+                Money::from_cents(100000),
+                true,
+            )
             .unwrap();
 
         // Add some transactions
         use crate::models::Transaction;
         use chrono::NaiveDate;
 
-        let txn1 =
-            Transaction::new(account.id, NaiveDate::from_ymd_opt(2025, 1, 15).unwrap(), Money::from_cents(-5000));
+        let txn1 = Transaction::new(
+            account.id,
+            NaiveDate::from_ymd_opt(2025, 1, 15).unwrap(),
+            Money::from_cents(-5000),
+        );
         storage.transactions.upsert(txn1).unwrap();
 
-        let mut txn2 =
-            Transaction::new(account.id, NaiveDate::from_ymd_opt(2025, 1, 16).unwrap(), Money::from_cents(20000));
+        let mut txn2 = Transaction::new(
+            account.id,
+            NaiveDate::from_ymd_opt(2025, 1, 16).unwrap(),
+            Money::from_cents(20000),
+        );
         txn2.clear();
         storage.transactions.upsert(txn2).unwrap();
 

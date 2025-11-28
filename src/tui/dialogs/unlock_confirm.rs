@@ -39,7 +39,11 @@ pub fn render(frame: &mut Frame, state: &UnlockConfirmState) {
 
     let block = Block::default()
         .title(" Unlock Reconciled Transaction ")
-        .title_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Yellow));
 

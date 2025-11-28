@@ -79,18 +79,16 @@ impl SpendingReport {
         let categories = category_service.list_categories()?;
 
         // Get transactions in date range
-        let transactions = storage.transactions.get_by_date_range(start_date, end_date)?;
+        let transactions = storage
+            .transactions
+            .get_by_date_range(start_date, end_date)?;
 
         // Build category lookup
-        let _category_map: HashMap<CategoryId, _> = categories
-            .iter()
-            .map(|c| (c.id, c.clone()))
-            .collect();
+        let _category_map: HashMap<CategoryId, _> =
+            categories.iter().map(|c| (c.id, c.clone())).collect();
 
-        let _group_map: HashMap<CategoryGroupId, _> = groups
-            .iter()
-            .map(|g| (g.id, g.clone()))
-            .collect();
+        let _group_map: HashMap<CategoryGroupId, _> =
+            groups.iter().map(|g| (g.id, g.clone())).collect();
 
         // Aggregate spending by category
         let mut category_spending: HashMap<CategoryId, (Money, usize)> = HashMap::new();
@@ -102,30 +100,28 @@ impl SpendingReport {
         for txn in &transactions {
             if txn.amount.is_positive() {
                 total_income += txn.amount;
-            } else {
-                if txn.is_split() {
-                    // Handle split transactions
-                    for split in &txn.splits {
-                        let entry = category_spending
-                            .entry(split.category_id)
-                            .or_insert((Money::zero(), 0));
-                        entry.0 += split.amount;
-                        entry.1 += 1;
-                        total_spending += split.amount;
-                    }
-                } else if let Some(cat_id) = txn.category_id {
+            } else if txn.is_split() {
+                // Handle split transactions
+                for split in &txn.splits {
                     let entry = category_spending
-                        .entry(cat_id)
+                        .entry(split.category_id)
                         .or_insert((Money::zero(), 0));
-                    entry.0 += txn.amount;
+                    entry.0 += split.amount;
                     entry.1 += 1;
-                    total_spending += txn.amount;
-                } else if !txn.is_transfer() {
-                    // Uncategorized (excluding transfers)
-                    uncategorized_spending += txn.amount;
-                    uncategorized_count += 1;
-                    total_spending += txn.amount;
+                    total_spending += split.amount;
                 }
+            } else if let Some(cat_id) = txn.category_id {
+                let entry = category_spending
+                    .entry(cat_id)
+                    .or_insert((Money::zero(), 0));
+                entry.0 += txn.amount;
+                entry.1 += 1;
+                total_spending += txn.amount;
+            } else if !txn.is_transfer() {
+                // Uncategorized (excluding transfers)
+                uncategorized_spending += txn.amount;
+                uncategorized_count += 1;
+                total_spending += txn.amount;
             }
         }
 
@@ -152,7 +148,8 @@ impl SpendingReport {
                         let percentage = if total_abs_spending.is_zero() {
                             0.0
                         } else {
-                            (spending.abs().cents() as f64 / total_abs_spending.cents() as f64) * 100.0
+                            (spending.abs().cents() as f64 / total_abs_spending.cents() as f64)
+                                * 100.0
                         };
 
                         let cat_spending = SpendingByCategory {
@@ -220,7 +217,10 @@ impl SpendingReport {
         output.push('\n');
         output.push_str(&format!("Total Spending: {}\n", self.total_spending.abs()));
         output.push_str(&format!("Total Income: {}\n", self.total_income));
-        output.push_str(&format!("Total Transactions: {}\n\n", self.total_transactions));
+        output.push_str(&format!(
+            "Total Transactions: {}\n\n",
+            self.total_transactions
+        ));
 
         // Column headers
         output.push_str(&format!(
@@ -337,11 +337,7 @@ impl SpendingReport {
 
     /// Get top spending categories
     pub fn top_categories(&self, limit: usize) -> Vec<&SpendingByCategory> {
-        let mut all_categories: Vec<_> = self
-            .groups
-            .iter()
-            .flat_map(|g| &g.categories)
-            .collect();
+        let mut all_categories: Vec<_> = self.groups.iter().flat_map(|g| &g.categories).collect();
 
         // Sort by spending (most spending first - remember spending is negative)
         all_categories.sort_by(|a, b| a.total_spending.cmp(&b.total_spending));

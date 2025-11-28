@@ -19,6 +19,8 @@ pub use category::CategoryService;
 pub use import::{ColumnMapping, ImportPreviewEntry, ImportResult, ImportService, ImportStatus};
 pub use payee::PayeeService;
 pub use period::PeriodService;
-pub use reconciliation::{ReconciliationResult, ReconciliationService, ReconciliationSession, ReconciliationSummary};
+pub use reconciliation::{
+    ReconciliationResult, ReconciliationService, ReconciliationSession, ReconciliationSummary,
+};
 pub use transaction::{CreateTransactionInput, TransactionFilter, TransactionService};
 pub use transfer::TransferService;

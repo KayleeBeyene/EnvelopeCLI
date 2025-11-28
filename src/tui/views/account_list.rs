@@ -28,7 +28,11 @@ pub fn render_main(frame: &mut Frame, app: &mut App, area: Rect) {
 fn render_header(frame: &mut Frame, area: Rect) {
     let block = Block::default()
         .title(" All Accounts ")
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::DarkGray));
 
@@ -38,7 +42,11 @@ fn render_header(frame: &mut Frame, area: Rect) {
 /// Render account table
 fn render_account_table(frame: &mut Frame, app: &mut App, area: Rect) {
     let is_focused = app.focused_panel == FocusedPanel::Main;
-    let border_color = if is_focused { Color::Cyan } else { Color::DarkGray };
+    let border_color = if is_focused {
+        Color::Cyan
+    } else {
+        Color::DarkGray
+    };
 
     let block = Block::default()
         .borders(Borders::ALL)
@@ -93,7 +101,11 @@ fn render_account_table(frame: &mut Frame, app: &mut App, area: Rect) {
                 Cell::from(format!("{}", summary.balance)).style(balance_style),
                 Cell::from(format!("{}", summary.cleared_balance)).style(cleared_style),
                 Cell::from(format!("{}", summary.uncleared_count)),
-                Cell::from(if summary.account.on_budget { "Yes" } else { "No" }),
+                Cell::from(if summary.account.on_budget {
+                    "Yes"
+                } else {
+                    "No"
+                }),
             ])
         })
         .collect();

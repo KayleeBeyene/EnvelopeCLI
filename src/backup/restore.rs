@@ -27,13 +27,11 @@ impl RestoreManager {
     /// It's recommended to create a backup before restoring.
     pub fn restore_from_file(&self, backup_path: &Path) -> EnvelopeResult<RestoreResult> {
         // Read and parse the backup
-        let contents = fs::read_to_string(backup_path).map_err(|e| {
-            EnvelopeError::Io(format!("Failed to read backup file: {}", e))
-        })?;
+        let contents = fs::read_to_string(backup_path)
+            .map_err(|e| EnvelopeError::Io(format!("Failed to read backup file: {}", e)))?;
 
-        let archive: BackupArchive = serde_json::from_str(&contents).map_err(|e| {
-            EnvelopeError::Json(format!("Failed to parse backup file: {}", e))
-        })?;
+        let archive: BackupArchive = serde_json::from_str(&contents)
+            .map_err(|e| EnvelopeError::Json(format!("Failed to parse backup file: {}", e)))?;
 
         self.restore_from_archive(&archive)
     }
@@ -47,12 +45,10 @@ impl RestoreManager {
 
         // Restore accounts
         if !archive.accounts.is_null() {
-            let json = serde_json::to_string_pretty(&archive.accounts).map_err(|e| {
-                EnvelopeError::Json(format!("Failed to serialize accounts: {}", e))
-            })?;
-            fs::write(self.paths.accounts_file(), json).map_err(|e| {
-                EnvelopeError::Io(format!("Failed to restore accounts: {}", e))
-            })?;
+            let json = serde_json::to_string_pretty(&archive.accounts)
+                .map_err(|e| EnvelopeError::Json(format!("Failed to serialize accounts: {}", e)))?;
+            fs::write(self.paths.accounts_file(), json)
+                .map_err(|e| EnvelopeError::Io(format!("Failed to restore accounts: {}", e)))?;
             result.accounts_restored = true;
         }
 
@@ -61,31 +57,26 @@ impl RestoreManager {
             let json = serde_json::to_string_pretty(&archive.transactions).map_err(|e| {
                 EnvelopeError::Json(format!("Failed to serialize transactions: {}", e))
             })?;
-            fs::write(self.paths.transactions_file(), json).map_err(|e| {
-                EnvelopeError::Io(format!("Failed to restore transactions: {}", e))
-            })?;
+            fs::write(self.paths.transactions_file(), json)
+                .map_err(|e| EnvelopeError::Io(format!("Failed to restore transactions: {}", e)))?;
             result.transactions_restored = true;
         }
 
         // Restore budget (categories, groups, allocations)
         if !archive.budget.is_null() {
-            let json = serde_json::to_string_pretty(&archive.budget).map_err(|e| {
-                EnvelopeError::Json(format!("Failed to serialize budget: {}", e))
-            })?;
-            fs::write(self.paths.budget_file(), json).map_err(|e| {
-                EnvelopeError::Io(format!("Failed to restore budget: {}", e))
-            })?;
+            let json = serde_json::to_string_pretty(&archive.budget)
+                .map_err(|e| EnvelopeError::Json(format!("Failed to serialize budget: {}", e)))?;
+            fs::write(self.paths.budget_file(), json)
+                .map_err(|e| EnvelopeError::Io(format!("Failed to restore budget: {}", e)))?;
             result.budget_restored = true;
         }
 
         // Restore payees
         if !archive.payees.is_null() {
-            let json = serde_json::to_string_pretty(&archive.payees).map_err(|e| {
-                EnvelopeError::Json(format!("Failed to serialize payees: {}", e))
-            })?;
-            fs::write(self.paths.payees_file(), json).map_err(|e| {
-                EnvelopeError::Io(format!("Failed to restore payees: {}", e))
-            })?;
+            let json = serde_json::to_string_pretty(&archive.payees)
+                .map_err(|e| EnvelopeError::Json(format!("Failed to serialize payees: {}", e)))?;
+            fs::write(self.paths.payees_file(), json)
+                .map_err(|e| EnvelopeError::Io(format!("Failed to restore payees: {}", e)))?;
             result.payees_restored = true;
         }
 
@@ -97,13 +88,11 @@ impl RestoreManager {
 
     /// Validate a backup file without restoring it
     pub fn validate_backup(&self, backup_path: &Path) -> EnvelopeResult<ValidationResult> {
-        let contents = fs::read_to_string(backup_path).map_err(|e| {
-            EnvelopeError::Io(format!("Failed to read backup file: {}", e))
-        })?;
+        let contents = fs::read_to_string(backup_path)
+            .map_err(|e| EnvelopeError::Io(format!("Failed to read backup file: {}", e)))?;
 
-        let archive: BackupArchive = serde_json::from_str(&contents).map_err(|e| {
-            EnvelopeError::Json(format!("Failed to parse backup file: {}", e))
-        })?;
+        let archive: BackupArchive = serde_json::from_str(&contents)
+            .map_err(|e| EnvelopeError::Json(format!("Failed to parse backup file: {}", e)))?;
 
         Ok(ValidationResult {
             is_valid: true,

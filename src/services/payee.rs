@@ -23,7 +23,9 @@ impl<'a> PayeeService<'a> {
     pub fn create(&self, name: &str) -> EnvelopeResult<Payee> {
         let name = name.trim();
         if name.is_empty() {
-            return Err(EnvelopeError::Validation("Payee name cannot be empty".into()));
+            return Err(EnvelopeError::Validation(
+                "Payee name cannot be empty".into(),
+            ));
         }
 
         // Check for duplicate
@@ -65,7 +67,9 @@ impl<'a> PayeeService<'a> {
     ) -> EnvelopeResult<Payee> {
         let name = name.trim();
         if name.is_empty() {
-            return Err(EnvelopeError::Validation("Payee name cannot be empty".into()));
+            return Err(EnvelopeError::Validation(
+                "Payee name cannot be empty".into(),
+            ));
         }
 
         // Verify category exists
@@ -270,7 +274,9 @@ impl<'a> PayeeService<'a> {
     pub fn rename(&self, id: PayeeId, new_name: &str) -> EnvelopeResult<Payee> {
         let new_name = new_name.trim();
         if new_name.is_empty() {
-            return Err(EnvelopeError::Validation("Payee name cannot be empty".into()));
+            return Err(EnvelopeError::Validation(
+                "Payee name cannot be empty".into(),
+            ));
         }
 
         let mut payee = self
@@ -413,9 +419,7 @@ mod tests {
             .unwrap();
 
         // Check suggested category
-        let suggested = service
-            .get_suggested_category("Learning Store")
-            .unwrap();
+        let suggested = service.get_suggested_category("Learning Store").unwrap();
         assert_eq!(suggested, Some(category_id));
     }
 
@@ -428,9 +432,7 @@ mod tests {
         let payee = service.create("Test Payee").unwrap();
         assert!(payee.default_category_id.is_none());
 
-        let updated = service
-            .set_default_category(payee.id, category_id)
-            .unwrap();
+        let updated = service.set_default_category(payee.id, category_id).unwrap();
         assert_eq!(updated.default_category_id, Some(category_id));
         assert!(updated.manual);
     }

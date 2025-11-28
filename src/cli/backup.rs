@@ -82,8 +82,7 @@ pub fn handle_backup_command(
             println!();
 
             for (i, backup) in backups.iter().enumerate() {
-                let age = chrono::Utc::now()
-                    .signed_duration_since(backup.created_at);
+                let age = chrono::Utc::now().signed_duration_since(backup.created_at);
                 let age_str = format_duration(age);
 
                 let monthly_marker = if backup.is_monthly { " [monthly]" } else { "" };
@@ -124,7 +123,10 @@ pub fn handle_backup_command(
             println!("Backup Information");
             println!("==================");
             println!("File: {}", backup_path.display());
-            println!("Created: {}", validation.backup_date.format("%Y-%m-%d %H:%M:%S UTC"));
+            println!(
+                "Created: {}",
+                validation.backup_date.format("%Y-%m-%d %H:%M:%S UTC")
+            );
             println!("Schema version: {}", validation.schema_version);
             println!("Status: {}", validation.summary());
             println!();
@@ -170,16 +172,42 @@ pub fn handle_backup_command(
             println!("==============");
             println!("File: {}", backup_path.display());
             println!("Size: {}", format_size(metadata.len()));
-            println!("Created: {}", validation.backup_date.format("%Y-%m-%d %H:%M:%S UTC"));
+            println!(
+                "Created: {}",
+                validation.backup_date.format("%Y-%m-%d %H:%M:%S UTC")
+            );
             println!("Schema version: {}", validation.schema_version);
             println!();
             println!("Contents:");
-            println!("  Accounts:     {}", if validation.has_accounts { "Yes" } else { "No" });
-            println!("  Transactions: {}", if validation.has_transactions { "Yes" } else { "No" });
-            println!("  Budget:       {}", if validation.has_budget { "Yes" } else { "No" });
-            println!("  Payees:       {}", if validation.has_payees { "Yes" } else { "No" });
+            println!(
+                "  Accounts:     {}",
+                if validation.has_accounts { "Yes" } else { "No" }
+            );
+            println!(
+                "  Transactions: {}",
+                if validation.has_transactions {
+                    "Yes"
+                } else {
+                    "No"
+                }
+            );
+            println!(
+                "  Budget:       {}",
+                if validation.has_budget { "Yes" } else { "No" }
+            );
+            println!(
+                "  Payees:       {}",
+                if validation.has_payees { "Yes" } else { "No" }
+            );
             println!();
-            println!("Status: {}", if validation.is_complete() { "Complete" } else { "Partial" });
+            println!(
+                "Status: {}",
+                if validation.is_complete() {
+                    "Complete"
+                } else {
+                    "Partial"
+                }
+            );
         }
 
         BackupCommands::Prune { force } => {
@@ -187,29 +215,43 @@ pub fn handle_backup_command(
             let retention = settings.backup_retention.clone();
 
             // Calculate how many would be deleted
-            let (monthly, daily): (Vec<_>, Vec<_>) = backups
-                .iter()
-                .partition(|b| b.is_monthly);
+            let (monthly, daily): (Vec<_>, Vec<_>) = backups.iter().partition(|b| b.is_monthly);
 
             let daily_to_delete = daily.len().saturating_sub(retention.daily_count as usize);
-            let monthly_to_delete = monthly.len().saturating_sub(retention.monthly_count as usize);
+            let monthly_to_delete = monthly
+                .len()
+                .saturating_sub(retention.monthly_count as usize);
             let total_to_delete = daily_to_delete + monthly_to_delete;
 
             if total_to_delete == 0 {
                 println!("No backups to prune.");
-                println!("Current retention policy: {} daily, {} monthly",
-                    retention.daily_count, retention.monthly_count);
-                println!("You have {} daily and {} monthly backups.", daily.len(), monthly.len());
+                println!(
+                    "Current retention policy: {} daily, {} monthly",
+                    retention.daily_count, retention.monthly_count
+                );
+                println!(
+                    "You have {} daily and {} monthly backups.",
+                    daily.len(),
+                    monthly.len()
+                );
                 return Ok(());
             }
 
             println!("Prune Summary");
             println!("=============");
-            println!("Retention policy: {} daily, {} monthly",
-                retention.daily_count, retention.monthly_count);
-            println!("Current backups: {} daily, {} monthly", daily.len(), monthly.len());
-            println!("To be deleted: {} daily, {} monthly ({} total)",
-                daily_to_delete, monthly_to_delete, total_to_delete);
+            println!(
+                "Retention policy: {} daily, {} monthly",
+                retention.daily_count, retention.monthly_count
+            );
+            println!(
+                "Current backups: {} daily, {} monthly",
+                daily.len(),
+                monthly.len()
+            );
+            println!(
+                "To be deleted: {} daily, {} monthly ({} total)",
+                daily_to_delete, monthly_to_delete, total_to_delete
+            );
             println!();
 
             if !force {
@@ -234,13 +276,12 @@ fn resolve_backup_path(
 ) -> EnvelopeResult<PathBuf> {
     // Handle "latest" keyword
     if backup.eq_ignore_ascii_case("latest") {
-        return manager
-            .get_latest_backup()?
-            .map(|b| b.path)
-            .ok_or_else(|| crate::error::EnvelopeError::NotFound {
+        return manager.get_latest_backup()?.map(|b| b.path).ok_or_else(|| {
+            crate::error::EnvelopeError::NotFound {
                 entity_type: "Backup",
                 identifier: "latest".to_string(),
-            });
+            }
+        });
     }
 
     // Check if it's a full path

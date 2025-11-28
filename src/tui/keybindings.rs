@@ -85,7 +85,6 @@ pub static KEYBINDINGS: &[Keybinding] = &[
         description: "Move up",
         context: KeyContext::Global,
     },
-
     // Sidebar
     Keybinding {
         key: KeyCode::Enter,
@@ -117,7 +116,6 @@ pub static KEYBINDINGS: &[Keybinding] = &[
         description: "Toggle archived",
         context: KeyContext::Sidebar,
     },
-
     // Register
     Keybinding {
         key: KeyCode::Char('a'),
@@ -167,7 +165,6 @@ pub static KEYBINDINGS: &[Keybinding] = &[
         description: "Go to bottom",
         context: KeyContext::Register,
     },
-
     // Budget
     Keybinding {
         key: KeyCode::Char('['),
@@ -187,7 +184,6 @@ pub static KEYBINDINGS: &[Keybinding] = &[
         description: "Move funds",
         context: KeyContext::Budget,
     },
-
     // Dialog
     Keybinding {
         key: KeyCode::Esc,

@@ -85,8 +85,8 @@ impl Money {
         let s = s.trim();
 
         // Handle negative sign at start
-        let (negative, s) = if s.starts_with('-') {
-            (true, &s[1..])
+        let (negative, s) = if let Some(stripped) = s.strip_prefix('-') {
+            (true, stripped)
         } else {
             (false, s)
         };
@@ -110,10 +110,12 @@ impl Money {
             let cents_str = parts[1];
             let cents: i64 = match cents_str.len() {
                 0 => 0,
-                1 => cents_str
-                    .parse::<i64>()
-                    .map_err(|_| MoneyParseError::InvalidFormat(s.to_string()))?
-                    * 10,
+                1 => {
+                    cents_str
+                        .parse::<i64>()
+                        .map_err(|_| MoneyParseError::InvalidFormat(s.to_string()))?
+                        * 10
+                }
                 _ => cents_str[..2]
                     .parse()
                     .map_err(|_| MoneyParseError::InvalidFormat(s.to_string()))?,
@@ -133,7 +135,12 @@ impl Money {
     /// Format with a currency symbol
     pub fn format_with_symbol(&self, symbol: &str) -> String {
         if self.is_negative() {
-            format!("-{}{}.{:02}", symbol, self.dollars().abs(), self.cents_part())
+            format!(
+                "-{}{}.{:02}",
+                symbol,
+                self.dollars().abs(),
+                self.cents_part()
+            )
         } else {
             format!("{}{}.{:02}", symbol, self.dollars(), self.cents_part())
         }

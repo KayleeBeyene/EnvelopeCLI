@@ -88,8 +88,8 @@ fn render_dialog(frame: &mut Frame, app: &mut App) {
 
 /// Render a placeholder for unimplemented views
 fn render_placeholder(frame: &mut Frame, area: ratatui::layout::Rect, name: &str) {
-    use ratatui::widgets::{Block, Borders, Paragraph};
     use ratatui::style::{Color, Style};
+    use ratatui::widgets::{Block, Borders, Paragraph};
 
     let block = Block::default()
         .title(name)

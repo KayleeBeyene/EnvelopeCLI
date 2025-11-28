@@ -142,10 +142,16 @@ impl EnvelopeError {
             Self::Io(msg) => format!("Could not access file: {}", msg),
             Self::Json(msg) => format!("Data file is corrupted: {}", msg),
             Self::Validation(msg) => msg.clone(),
-            Self::NotFound { entity_type, identifier } => {
+            Self::NotFound {
+                entity_type,
+                identifier,
+            } => {
                 format!("{} '{}' was not found", entity_type, identifier)
             }
-            Self::Duplicate { entity_type, identifier } => {
+            Self::Duplicate {
+                entity_type,
+                identifier,
+            } => {
                 format!("{} '{}' already exists", entity_type, identifier)
             }
             Self::Budget(msg) => msg.clone(),
@@ -154,7 +160,11 @@ impl EnvelopeError {
             Self::Export(msg) => format!("Export failed: {}", msg),
             Self::Encryption(msg) => format!("Encryption error: {}", msg),
             Self::Locked(msg) => format!("Cannot modify locked transaction: {}", msg),
-            Self::InsufficientFunds { category, needed, available } => {
+            Self::InsufficientFunds {
+                category,
+                needed,
+                available,
+            } => {
                 format!(
                     "'{}' doesn't have enough funds (need ${:.2}, have ${:.2})",
                     category,
@@ -184,16 +194,19 @@ impl EnvelopeError {
                 "Restore from backup: 'envelope backup restore'",
             ],
             Self::Validation(_) => vec!["Check your input and try again"],
-            Self::NotFound { entity_type, .. } => {
-                match *entity_type {
-                    "Account" => vec!["Run 'envelope account list' to see available accounts"],
-                    "Category" => vec!["Run 'envelope category list' to see available categories"],
-                    "Transaction" => vec!["Check the transaction ID and try again"],
-                    _ => vec!["Check that the item exists"],
-                }
+            Self::NotFound { entity_type, .. } => match *entity_type {
+                "Account" => vec!["Run 'envelope account list' to see available accounts"],
+                "Category" => vec!["Run 'envelope category list' to see available categories"],
+                "Transaction" => vec!["Check the transaction ID and try again"],
+                _ => vec!["Check that the item exists"],
+            },
+            Self::Duplicate { .. } => {
+                vec!["Use a different name", "Edit the existing item instead"]
             }
-            Self::Duplicate { .. } => vec!["Use a different name", "Edit the existing item instead"],
-            Self::Budget(_) => vec!["Check your budget allocations", "Review 'Available to Budget'"],
+            Self::Budget(_) => vec![
+                "Check your budget allocations",
+                "Review 'Available to Budget'",
+            ],
             Self::Reconciliation(_) => vec![
                 "Review the reconciliation difference",
                 "Check for missing transactions",

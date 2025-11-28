@@ -222,7 +222,10 @@ mod tests {
         assert_eq!(entry.operation, Operation::Update);
         assert!(entry.before.is_some());
         assert!(entry.after.is_some());
-        assert_eq!(entry.diff_summary, Some("balance: 1000 -> 1500".to_string()));
+        assert_eq!(
+            entry.diff_summary,
+            Some("balance: 1000 -> 1500".to_string())
+        );
     }
 
     #[test]

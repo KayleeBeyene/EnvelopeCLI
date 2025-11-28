@@ -96,9 +96,7 @@ pub enum ReportCommands {
 /// Handle report commands
 pub fn handle_report_command(storage: &Storage, cmd: ReportCommands) -> EnvelopeResult<()> {
     match cmd {
-        ReportCommands::Budget { period, output } => {
-            handle_budget_report(storage, period, output)
-        }
+        ReportCommands::Budget { period, output } => handle_budget_report(storage, period, output),
         ReportCommands::Spending {
             start,
             end,
@@ -187,8 +185,7 @@ fn handle_spending_report(
         } else {
             // Default to start of current month
             let today = chrono::Local::now().date_naive();
-            NaiveDate::from_ymd_opt(today.year(), today.month(), 1)
-                .unwrap_or(today)
+            NaiveDate::from_ymd_opt(today.year(), today.month(), 1).unwrap_or(today)
         };
 
         let end_date = if let Some(e) = end {
@@ -221,28 +218,26 @@ fn handle_spending_report(
         let mut writer = BufWriter::new(file);
         report.export_csv(&mut writer)?;
         println!("Spending report exported to: {}", path.display());
-    } else {
-        if let Some(n) = top {
-            // Show top N categories only
-            println!(
-                "Top {} Spending Categories: {} to {}\n",
-                n, start_date, end_date
-            );
-            println!("{:<35} {:>12} {:>8}", "Category", "Amount", "%");
-            println!("{}", "-".repeat(60));
+    } else if let Some(n) = top {
+        // Show top N categories only
+        println!(
+            "Top {} Spending Categories: {} to {}\n",
+            n, start_date, end_date
+        );
+        println!("{:<35} {:>12} {:>8}", "Category", "Amount", "%");
+        println!("{}", "-".repeat(60));
 
-            for cat in report.top_categories(n) {
-                println!(
-                    "{:<35} {:>12} {:>7.1}%",
-                    cat.category_name,
-                    cat.total_spending.abs(),
-                    cat.percentage
-                );
-            }
-            println!("\nTotal Spending: {}", report.total_spending.abs());
-        } else {
-            println!("{}", report.format_terminal());
+        for cat in report.top_categories(n) {
+            println!(
+                "{:<35} {:>12} {:>7.1}%",
+                cat.category_name,
+                cat.total_spending.abs(),
+                cat.percentage
+            );
         }
+        println!("\nTotal Spending: {}", report.total_spending.abs());
+    } else {
+        println!("{}", report.format_terminal());
     }
 
     Ok(())
@@ -261,9 +256,9 @@ fn handle_register_report(
     let account_service = AccountService::new(storage);
 
     // Find account
-    let account = account_service.find(&account)?.ok_or_else(|| {
-        crate::error::EnvelopeError::account_not_found(&account)
-    })?;
+    let account = account_service
+        .find(&account)?
+        .ok_or_else(|| crate::error::EnvelopeError::account_not_found(&account))?;
 
     // Build filter
     let filter = RegisterFilter {

@@ -115,15 +115,19 @@ impl<'a> CategoryService<'a> {
     }
 
     /// Update a group's name
-    pub fn update_group(&self, id: CategoryGroupId, name: Option<&str>) -> EnvelopeResult<CategoryGroup> {
-        let mut group = self
-            .storage
-            .categories
-            .get_group(id)?
-            .ok_or_else(|| EnvelopeError::NotFound {
-                entity_type: "Category Group",
-                identifier: id.to_string(),
-            })?;
+    pub fn update_group(
+        &self,
+        id: CategoryGroupId,
+        name: Option<&str>,
+    ) -> EnvelopeResult<CategoryGroup> {
+        let mut group =
+            self.storage
+                .categories
+                .get_group(id)?
+                .ok_or_else(|| EnvelopeError::NotFound {
+                    entity_type: "Category Group",
+                    identifier: id.to_string(),
+                })?;
 
         let before = group.clone();
 
@@ -178,15 +182,19 @@ impl<'a> CategoryService<'a> {
     ///
     /// Automatically creates a backup before deletion if one hasn't been
     /// created recently.
-    pub fn delete_group(&self, id: CategoryGroupId, force_delete_categories: bool) -> EnvelopeResult<()> {
-        let group = self
-            .storage
-            .categories
-            .get_group(id)?
-            .ok_or_else(|| EnvelopeError::NotFound {
-                entity_type: "Category Group",
-                identifier: id.to_string(),
-            })?;
+    pub fn delete_group(
+        &self,
+        id: CategoryGroupId,
+        force_delete_categories: bool,
+    ) -> EnvelopeResult<()> {
+        let group =
+            self.storage
+                .categories
+                .get_group(id)?
+                .ok_or_else(|| EnvelopeError::NotFound {
+                    entity_type: "Category Group",
+                    identifier: id.to_string(),
+                })?;
 
         let categories = self.storage.categories.get_categories_in_group(id)?;
         if !categories.is_empty() && !force_delete_categories {
@@ -200,7 +208,9 @@ impl<'a> CategoryService<'a> {
         // Create automatic backup before destructive operation
         self.storage.backup_before_destructive()?;
 
-        self.storage.categories.delete_group(id, force_delete_categories)?;
+        self.storage
+            .categories
+            .delete_group(id, force_delete_categories)?;
         self.storage.categories.save()?;
 
         // Audit
@@ -230,10 +240,16 @@ impl<'a> CategoryService<'a> {
     // === Category Operations ===
 
     /// Create a new category in a group
-    pub fn create_category(&self, name: &str, group_id: CategoryGroupId) -> EnvelopeResult<Category> {
+    pub fn create_category(
+        &self,
+        name: &str,
+        group_id: CategoryGroupId,
+    ) -> EnvelopeResult<Category> {
         let name = name.trim();
         if name.is_empty() {
-            return Err(EnvelopeError::Validation("Category name cannot be empty".into()));
+            return Err(EnvelopeError::Validation(
+                "Category name cannot be empty".into(),
+            ));
         }
 
         // Verify group exists
@@ -245,7 +261,12 @@ impl<'a> CategoryService<'a> {
         }
 
         // Check for duplicate name (globally)
-        if self.storage.categories.get_category_by_name(name)?.is_some() {
+        if self
+            .storage
+            .categories
+            .get_category_by_name(name)?
+            .is_some()
+        {
             return Err(EnvelopeError::Duplicate {
                 entity_type: "Category",
                 identifier: name.to_string(),
@@ -308,7 +329,10 @@ impl<'a> CategoryService<'a> {
     }
 
     /// List categories in a group
-    pub fn list_categories_in_group(&self, group_id: CategoryGroupId) -> EnvelopeResult<Vec<Category>> {
+    pub fn list_categories_in_group(
+        &self,
+        group_id: CategoryGroupId,
+    ) -> EnvelopeResult<Vec<Category>> {
         self.storage.categories.get_categories_in_group(group_id)
     }
 
@@ -331,7 +355,9 @@ impl<'a> CategoryService<'a> {
         if let Some(new_name) = name {
             let new_name = new_name.trim();
             if new_name.is_empty() {
-                return Err(EnvelopeError::Validation("Category name cannot be empty".into()));
+                return Err(EnvelopeError::Validation(
+                    "Category name cannot be empty".into(),
+                ));
             }
 
             // Check for duplicate
@@ -388,7 +414,11 @@ impl<'a> CategoryService<'a> {
     }
 
     /// Move a category to a different group
-    pub fn move_category(&self, id: CategoryId, new_group_id: CategoryGroupId) -> EnvelopeResult<Category> {
+    pub fn move_category(
+        &self,
+        id: CategoryId,
+        new_group_id: CategoryGroupId,
+    ) -> EnvelopeResult<Category> {
         let mut category = self
             .storage
             .categories
@@ -411,7 +441,10 @@ impl<'a> CategoryService<'a> {
         category.move_to_group(new_group_id);
 
         // Update sort order to be last in new group
-        let categories = self.storage.categories.get_categories_in_group(new_group_id)?;
+        let categories = self
+            .storage
+            .categories
+            .get_categories_in_group(new_group_id)?;
         let max_order = categories.iter().map(|c| c.sort_order).max().unwrap_or(-1);
         category.sort_order = max_order + 1;
 
@@ -427,7 +460,9 @@ impl<'a> CategoryService<'a> {
             &category,
             Some(format!(
                 "moved from '{}' to '{}'",
-                old_group.map(|g| g.name).unwrap_or_else(|| "Unknown".into()),
+                old_group
+                    .map(|g| g.name)
+                    .unwrap_or_else(|| "Unknown".into()),
                 new_group.name
             )),
         )?;
@@ -467,7 +502,11 @@ impl<'a> CategoryService<'a> {
     }
 
     /// Reorder categories within a group
-    pub fn reorder_categories(&self, group_id: CategoryGroupId, order: &[CategoryId]) -> EnvelopeResult<()> {
+    pub fn reorder_categories(
+        &self,
+        group_id: CategoryGroupId,
+        order: &[CategoryId],
+    ) -> EnvelopeResult<()> {
         for (i, &id) in order.iter().enumerate() {
             if let Some(mut category) = self.storage.categories.get_category(id)? {
                 if category.group_id == group_id {

@@ -99,9 +99,9 @@ pub fn handle_payee_command(storage: &Storage, cmd: PayeeCommands) -> EnvelopeRe
         }
 
         PayeeCommands::Show { payee } => {
-            let p = service.find(&payee)?.ok_or_else(|| {
-                EnvelopeError::payee_not_found(&payee)
-            })?;
+            let p = service
+                .find(&payee)?
+                .ok_or_else(|| EnvelopeError::payee_not_found(&payee))?;
 
             println!("Payee: {}", p.name);
             println!("ID:    {}", p.id);
@@ -136,13 +136,13 @@ pub fn handle_payee_command(storage: &Storage, cmd: PayeeCommands) -> EnvelopeRe
         }
 
         PayeeCommands::SetCategory { payee, category } => {
-            let p = service.find(&payee)?.ok_or_else(|| {
-                EnvelopeError::payee_not_found(&payee)
-            })?;
+            let p = service
+                .find(&payee)?
+                .ok_or_else(|| EnvelopeError::payee_not_found(&payee))?;
 
-            let cat = category_service.find_category(&category)?.ok_or_else(|| {
-                EnvelopeError::category_not_found(&category)
-            })?;
+            let cat = category_service
+                .find_category(&category)?
+                .ok_or_else(|| EnvelopeError::category_not_found(&category))?;
 
             let updated = service.set_default_category(p.id, cat.id)?;
             println!(
@@ -152,9 +152,9 @@ pub fn handle_payee_command(storage: &Storage, cmd: PayeeCommands) -> EnvelopeRe
         }
 
         PayeeCommands::ClearCategory { payee } => {
-            let p = service.find(&payee)?.ok_or_else(|| {
-                EnvelopeError::payee_not_found(&payee)
-            })?;
+            let p = service
+                .find(&payee)?
+                .ok_or_else(|| EnvelopeError::payee_not_found(&payee))?;
 
             let updated = service.clear_default_category(p.id)?;
             println!(
@@ -164,9 +164,9 @@ pub fn handle_payee_command(storage: &Storage, cmd: PayeeCommands) -> EnvelopeRe
         }
 
         PayeeCommands::Delete { payee, force } => {
-            let p = service.find(&payee)?.ok_or_else(|| {
-                EnvelopeError::payee_not_found(&payee)
-            })?;
+            let p = service
+                .find(&payee)?
+                .ok_or_else(|| EnvelopeError::payee_not_found(&payee))?;
 
             if !force {
                 println!("About to delete payee: {}", p.name);
@@ -179,9 +179,9 @@ pub fn handle_payee_command(storage: &Storage, cmd: PayeeCommands) -> EnvelopeRe
         }
 
         PayeeCommands::Rename { payee, name } => {
-            let p = service.find(&payee)?.ok_or_else(|| {
-                EnvelopeError::payee_not_found(&payee)
-            })?;
+            let p = service
+                .find(&payee)?
+                .ok_or_else(|| EnvelopeError::payee_not_found(&payee))?;
 
             let old_name = p.name.clone();
             let renamed = service.rename(p.id, &name)?;

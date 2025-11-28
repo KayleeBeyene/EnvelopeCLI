@@ -8,7 +8,8 @@ use crate::services::category::CategoryGroupWithCategories;
 /// Format categories as a tree structure grouped by category group
 pub fn format_category_tree(groups_with_categories: &[CategoryGroupWithCategories]) -> String {
     if groups_with_categories.is_empty() {
-        return "No categories found.\n\nRun 'envelope init' to create default categories.".to_string();
+        return "No categories found.\n\nRun 'envelope init' to create default categories."
+            .to_string();
     }
 
     let mut output = String::new();
@@ -55,7 +56,10 @@ pub fn format_group_list(groups: &[CategoryGroup]) -> String {
 
     for group in groups {
         let hidden = if group.hidden { " (hidden)" } else { "" };
-        output.push_str(&format!("  {} - order: {}{}\n", group.name, group.sort_order, hidden));
+        output.push_str(&format!(
+            "  {} - order: {}{}\n",
+            group.name, group.sort_order, hidden
+        ));
     }
 
     output
@@ -77,12 +81,16 @@ pub fn format_category_list(categories: &[Category]) -> String {
     let mut output = String::new();
     output.push_str(&format!(
         "{:<width$}  {:>10}  {}\n",
-        "Category", "Goal", "ID",
+        "Category",
+        "Goal",
+        "ID",
         width = name_width
     ));
     output.push_str(&format!(
         "{:-<width$}  {:->10}  {:-<12}\n",
-        "", "", "",
+        "",
+        "",
+        "",
         width = name_width
     ));
 
@@ -115,11 +123,17 @@ pub fn format_category_details(category: &Category, group: Option<&CategoryGroup
         output.push_str(&format!("  Group:      {}\n", g.name));
     }
 
-    output.push_str(&format!("  Hidden:     {}\n", if category.hidden { "Yes" } else { "No" }));
+    output.push_str(&format!(
+        "  Hidden:     {}\n",
+        if category.hidden { "Yes" } else { "No" }
+    ));
     output.push_str(&format!("  Sort Order: {}\n", category.sort_order));
 
     if let Some(goal) = category.goal_amount {
-        output.push_str(&format!("  Goal:       {}\n", crate::models::Money::from_cents(goal)));
+        output.push_str(&format!(
+            "  Goal:       {}\n",
+            crate::models::Money::from_cents(goal)
+        ));
     }
 
     if !category.notes.is_empty() {
@@ -127,8 +141,14 @@ pub fn format_category_details(category: &Category, group: Option<&CategoryGroup
     }
 
     output.push('\n');
-    output.push_str(&format!("  Created:  {}\n", category.created_at.format("%Y-%m-%d %H:%M UTC")));
-    output.push_str(&format!("  Modified: {}\n", category.updated_at.format("%Y-%m-%d %H:%M UTC")));
+    output.push_str(&format!(
+        "  Created:  {}\n",
+        category.created_at.format("%Y-%m-%d %H:%M UTC")
+    ));
+    output.push_str(&format!(
+        "  Modified: {}\n",
+        category.updated_at.format("%Y-%m-%d %H:%M UTC")
+    ));
 
     output
 }
@@ -139,7 +159,10 @@ pub fn format_group_details(group: &CategoryGroup, categories: &[Category]) -> S
 
     output.push_str(&format!("Category Group: {}\n", group.name));
     output.push_str(&format!("  ID:         {}\n", group.id));
-    output.push_str(&format!("  Hidden:     {}\n", if group.hidden { "Yes" } else { "No" }));
+    output.push_str(&format!(
+        "  Hidden:     {}\n",
+        if group.hidden { "Yes" } else { "No" }
+    ));
     output.push_str(&format!("  Sort Order: {}\n", group.sort_order));
     output.push_str(&format!("  Categories: {}\n", categories.len()));
 
@@ -151,8 +174,14 @@ pub fn format_group_details(group: &CategoryGroup, categories: &[Category]) -> S
     }
 
     output.push('\n');
-    output.push_str(&format!("  Created:  {}\n", group.created_at.format("%Y-%m-%d %H:%M UTC")));
-    output.push_str(&format!("  Modified: {}\n", group.updated_at.format("%Y-%m-%d %H:%M UTC")));
+    output.push_str(&format!(
+        "  Created:  {}\n",
+        group.created_at.format("%Y-%m-%d %H:%M UTC")
+    ));
+    output.push_str(&format!(
+        "  Modified: {}\n",
+        group.updated_at.format("%Y-%m-%d %H:%M UTC")
+    ));
 
     output
 }

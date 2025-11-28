@@ -288,10 +288,7 @@ mod tests {
         assert!(category.validate().is_ok());
 
         category.name = String::new();
-        assert_eq!(
-            category.validate(),
-            Err(CategoryValidationError::EmptyName)
-        );
+        assert_eq!(category.validate(), Err(CategoryValidationError::EmptyName));
 
         category.name = "Valid".to_string();
         category.goal_amount = Some(-100);

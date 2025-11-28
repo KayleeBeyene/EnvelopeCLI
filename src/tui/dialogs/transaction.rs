@@ -118,9 +118,7 @@ impl TransactionFormState {
             amount_input: TextInput::new()
                 .label("Amount")
                 .placeholder("0.00 (negative for expense)"),
-            memo_input: TextInput::new()
-                .label("Memo")
-                .placeholder("Optional note"),
+            memo_input: TextInput::new().label("Memo").placeholder("Optional note"),
             is_edit: false,
             error_message: None,
         }
@@ -133,23 +131,17 @@ impl TransactionFormState {
         state.date_input = TextInput::new()
             .label("Date")
             .content(txn.date.format("%Y-%m-%d").to_string());
-        state.payee_input = TextInput::new()
-            .label("Payee")
-            .content(&txn.payee_name);
+        state.payee_input = TextInput::new().label("Payee").content(&txn.payee_name);
         state.amount_input = TextInput::new()
             .label("Amount")
             .content(format!("{:.2}", txn.amount.cents() as f64 / 100.0));
-        state.memo_input = TextInput::new()
-            .label("Memo")
-            .content(&txn.memo);
+        state.memo_input = TextInput::new().label("Memo").content(&txn.memo);
 
         // Set category
         if let Some(cat_id) = txn.category_id {
             state.selected_category = Some(cat_id);
             if let Some((_, name)) = categories.iter().find(|(id, _)| *id == cat_id) {
-                state.category_input = TextInput::new()
-                    .label("Category")
-                    .content(name);
+                state.category_input = TextInput::new().label("Category").content(name);
             }
         }
 
@@ -230,8 +222,7 @@ impl TransactionFormState {
         let date = NaiveDate::parse_from_str(self.date_input.value(), "%Y-%m-%d")
             .map_err(|_| "Invalid date")?;
 
-        let amount = Money::parse(self.amount_input.value())
-            .map_err(|_| "Invalid amount")?;
+        let amount = Money::parse(self.amount_input.value()).map_err(|_| "Invalid amount")?;
 
         let mut txn = Transaction::with_details(
             account_id,
@@ -273,7 +264,11 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 
     let block = Block::default()
         .title(title)
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
 
@@ -328,23 +323,51 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     let error_message = app.transaction_form.error_message.clone();
 
     // Render date field
-    render_field_simple(frame, chunks[0], "Date", &date_value,
-        date_focused, date_cursor, &date_placeholder);
+    render_field_simple(
+        frame,
+        chunks[0],
+        "Date",
+        &date_value,
+        date_focused,
+        date_cursor,
+        &date_placeholder,
+    );
 
     // Render payee field
-    render_field_simple(frame, chunks[1], "Payee", &payee_value,
-        payee_focused, payee_cursor, &payee_placeholder);
+    render_field_simple(
+        frame,
+        chunks[1],
+        "Payee",
+        &payee_value,
+        payee_focused,
+        payee_cursor,
+        &payee_placeholder,
+    );
 
     // Render category field (needs app for category lookup)
     render_category_field(frame, app, chunks[2], chunks[3]);
 
     // Render amount field
-    render_field_simple(frame, chunks[4], "Amount", &amount_value,
-        amount_focused, amount_cursor, &amount_placeholder);
+    render_field_simple(
+        frame,
+        chunks[4],
+        "Amount",
+        &amount_value,
+        amount_focused,
+        amount_cursor,
+        &amount_placeholder,
+    );
 
     // Render memo field
-    render_field_simple(frame, chunks[5], "Memo", &memo_value,
-        memo_focused, memo_cursor, &memo_placeholder);
+    render_field_simple(
+        frame,
+        chunks[5],
+        "Memo",
+        &memo_value,
+        memo_focused,
+        memo_cursor,
+        &memo_placeholder,
+    );
 
     // Render error message if any
     if let Some(ref error) = error_message {
@@ -381,7 +404,9 @@ fn render_field_simple(
 ) {
     // Label
     let label_style = if focused {
-        Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::Cyan)
+            .add_modifier(Modifier::BOLD)
     } else {
         Style::default().fg(Color::Cyan)
     };
@@ -437,7 +462,9 @@ fn render_category_field(frame: &mut Frame, app: &mut App, input_area: Rect, dro
 
     // Render the input line
     let label_style = if focused {
-        Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::Cyan)
+            .add_modifier(Modifier::BOLD)
     } else {
         Style::default().fg(Color::Cyan)
     };
@@ -446,7 +473,8 @@ fn render_category_field(frame: &mut Frame, app: &mut App, input_area: Rect, dro
     let display_value = if let Some(cat_id) = form.selected_category {
         // Try to get category name
         if let Ok(categories) = app.storage.categories.get_all_categories() {
-            categories.iter()
+            categories
+                .iter()
                 .find(|c| c.id == cat_id)
                 .map(|c| c.name.clone())
                 .unwrap_or_else(|| form.category_input.value().to_string())
@@ -467,9 +495,7 @@ fn render_category_field(frame: &mut Frame, app: &mut App, input_area: Rect, dro
         Style::default().fg(Color::Gray)
     };
 
-    let mut spans = vec![
-        Span::styled(format!("{:>10}: ", "Category"), label_style),
-    ];
+    let mut spans = vec![Span::styled(format!("{:>10}: ", "Category"), label_style)];
 
     if focused && form.selected_category.is_none() {
         // Show input with cursor
@@ -490,7 +516,10 @@ fn render_category_field(frame: &mut Frame, app: &mut App, input_area: Rect, dro
     } else {
         spans.push(Span::styled(display_value, value_style));
         if focused && form.selected_category.is_some() {
-            spans.push(Span::styled(" (Backspace to clear)", Style::default().fg(Color::DarkGray)));
+            spans.push(Span::styled(
+                " (Backspace to clear)",
+                Style::default().fg(Color::DarkGray),
+            ));
         }
     }
 
@@ -521,8 +550,7 @@ fn render_category_dropdown(frame: &mut Frame, app: &mut App, area: Rect) {
         } else {
             "No matching categories"
         };
-        let text = Paragraph::new(hint)
-            .style(Style::default().fg(Color::DarkGray));
+        let text = Paragraph::new(hint).style(Style::default().fg(Color::DarkGray));
         frame.render_widget(text, area);
         return;
     }
@@ -546,7 +574,10 @@ fn render_category_dropdown(frame: &mut Frame, app: &mut App, area: Rect) {
         .highlight_symbol("▶ ");
 
     let mut state = ListState::default();
-    let idx = app.transaction_form.category_list_index.min(filtered.len().saturating_sub(1));
+    let idx = app
+        .transaction_form
+        .category_list_index
+        .min(filtered.len().saturating_sub(1));
     state.select(Some(idx));
 
     frame.render_stateful_widget(list, area, &mut state);
@@ -554,10 +585,7 @@ fn render_category_dropdown(frame: &mut Frame, app: &mut App, area: Rect) {
 
 /// Handle key input for the transaction dialog
 /// Returns true if the key was handled, false otherwise
-pub fn handle_key(
-    app: &mut App,
-    key: crossterm::event::KeyEvent,
-) -> bool {
+pub fn handle_key(app: &mut App, key: crossterm::event::KeyEvent) -> bool {
     use crossterm::event::{KeyCode, KeyModifiers};
 
     let form = &mut app.transaction_form;
@@ -584,7 +612,8 @@ pub fn handle_key(
 
         KeyCode::Enter => {
             // If in category dropdown and category is focused, select the category
-            if form.focused_field == TransactionField::Category && form.selected_category.is_none() {
+            if form.focused_field == TransactionField::Category && form.selected_category.is_none()
+            {
                 select_category_from_dropdown(app);
                 return true;
             }
@@ -597,7 +626,8 @@ pub fn handle_key(
         }
 
         KeyCode::Up => {
-            if form.focused_field == TransactionField::Category && form.selected_category.is_none() {
+            if form.focused_field == TransactionField::Category && form.selected_category.is_none()
+            {
                 if form.category_list_index > 0 {
                     form.category_list_index -= 1;
                 }
@@ -606,7 +636,8 @@ pub fn handle_key(
         }
 
         KeyCode::Down => {
-            if form.focused_field == TransactionField::Category && form.selected_category.is_none() {
+            if form.focused_field == TransactionField::Category && form.selected_category.is_none()
+            {
                 form.category_list_index += 1;
                 return true;
             }
@@ -616,7 +647,8 @@ pub fn handle_key(
             form.clear_error();
 
             // If category is selected and we're in category field, clear it
-            if form.focused_field == TransactionField::Category && form.selected_category.is_some() {
+            if form.focused_field == TransactionField::Category && form.selected_category.is_some()
+            {
                 form.selected_category = None;
                 form.category_input.clear();
                 return true;
@@ -657,7 +689,8 @@ pub fn handle_key(
             form.clear_error();
 
             // If category is selected and we're typing, clear it first
-            if form.focused_field == TransactionField::Category && form.selected_category.is_some() {
+            if form.focused_field == TransactionField::Category && form.selected_category.is_some()
+            {
                 form.selected_category = None;
                 form.category_input.clear();
             }
@@ -690,12 +723,13 @@ fn select_category_from_dropdown(app: &mut App) {
         .take(5)
         .collect();
 
-    let idx = app.transaction_form.category_list_index.min(filtered.len().saturating_sub(1));
+    let idx = app
+        .transaction_form
+        .category_list_index
+        .min(filtered.len().saturating_sub(1));
     if let Some(cat) = filtered.get(idx) {
         app.transaction_form.selected_category = Some(cat.id);
-        app.transaction_form.category_input = TextInput::new()
-            .label("Category")
-            .content(&cat.name);
+        app.transaction_form.category_input = TextInput::new().label("Category").content(&cat.name);
         app.transaction_form.next_field(); // Move to next field after selection
     }
 }
@@ -725,23 +759,30 @@ fn save_transaction(app: &mut App) -> Result<(), String> {
                 existing.memo = txn.memo;
                 existing.updated_at = chrono::Utc::now();
 
-                app.storage.transactions.upsert(existing)
+                app.storage
+                    .transactions
+                    .upsert(existing)
                     .map_err(|e| e.to_string())?;
             }
         }
     } else {
         // Create new transaction
-        app.storage.transactions.upsert(txn)
+        app.storage
+            .transactions
+            .upsert(txn)
             .map_err(|e| e.to_string())?;
     }
 
     // Save to disk
-    app.storage.transactions.save()
-        .map_err(|e| e.to_string())?;
+    app.storage.transactions.save().map_err(|e| e.to_string())?;
 
     // Close dialog
     app.close_dialog();
-    app.set_status(if is_edit { "Transaction updated" } else { "Transaction created" });
+    app.set_status(if is_edit {
+        "Transaction updated"
+    } else {
+        "Transaction created"
+    });
 
     Ok(())
 }

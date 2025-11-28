@@ -88,7 +88,10 @@ pub fn handle_account_command(storage: &Storage, cmd: AccountCommands) -> Envelo
             println!("Created account: {}", account.name);
             println!("  Type: {}", account.account_type);
             println!("  Starting Balance: {}", account.starting_balance);
-            println!("  On Budget: {}", if account.on_budget { "Yes" } else { "No" });
+            println!(
+                "  On Budget: {}",
+                if account.on_budget { "Yes" } else { "No" }
+            );
             println!("  ID: {}", account.id);
         }
 
@@ -98,18 +101,18 @@ pub fn handle_account_command(storage: &Storage, cmd: AccountCommands) -> Envelo
         }
 
         AccountCommands::Show { account } => {
-            let found = service.find(&account)?.ok_or_else(|| {
-                crate::error::EnvelopeError::account_not_found(&account)
-            })?;
+            let found = service
+                .find(&account)?
+                .ok_or_else(|| crate::error::EnvelopeError::account_not_found(&account))?;
 
             let summary = service.get_summary(&found)?;
             print!("{}", format_account_details(&summary));
         }
 
         AccountCommands::Edit { account, name } => {
-            let found = service.find(&account)?.ok_or_else(|| {
-                crate::error::EnvelopeError::account_not_found(&account)
-            })?;
+            let found = service
+                .find(&account)?
+                .ok_or_else(|| crate::error::EnvelopeError::account_not_found(&account))?;
 
             if name.is_none() {
                 println!("No changes specified. Use --name to change the account name.");
@@ -121,18 +124,18 @@ pub fn handle_account_command(storage: &Storage, cmd: AccountCommands) -> Envelo
         }
 
         AccountCommands::Archive { account } => {
-            let found = service.find(&account)?.ok_or_else(|| {
-                crate::error::EnvelopeError::account_not_found(&account)
-            })?;
+            let found = service
+                .find(&account)?
+                .ok_or_else(|| crate::error::EnvelopeError::account_not_found(&account))?;
 
             let archived = service.archive(found.id)?;
             println!("Archived account: {}", archived.name);
         }
 
         AccountCommands::Unarchive { account } => {
-            let found = service.find(&account)?.ok_or_else(|| {
-                crate::error::EnvelopeError::account_not_found(&account)
-            })?;
+            let found = service
+                .find(&account)?
+                .ok_or_else(|| crate::error::EnvelopeError::account_not_found(&account))?;
 
             let unarchived = service.unarchive(found.id)?;
             println!("Unarchived account: {}", unarchived.name);

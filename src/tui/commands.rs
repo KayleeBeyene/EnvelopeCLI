@@ -80,7 +80,6 @@ pub static COMMANDS: &[Command] = &[
         shortcut: Some("Enter"),
         action: CommandAction::ViewRegister,
     },
-
     // Transaction commands
     Command {
         name: "add-transaction",
@@ -106,7 +105,6 @@ pub static COMMANDS: &[Command] = &[
         shortcut: Some("c"),
         action: CommandAction::ClearTransaction,
     },
-
     // Budget commands
     Command {
         name: "move-funds",
@@ -132,7 +130,6 @@ pub static COMMANDS: &[Command] = &[
         shortcut: Some("["),
         action: CommandAction::PrevPeriod,
     },
-
     // Account commands
     Command {
         name: "add-account",
@@ -158,7 +155,6 @@ pub static COMMANDS: &[Command] = &[
         shortcut: Some("A"),
         action: CommandAction::ToggleArchived,
     },
-
     // Category commands
     Command {
         name: "add-category",
@@ -178,7 +174,6 @@ pub static COMMANDS: &[Command] = &[
         shortcut: None,
         action: CommandAction::DeleteCategory,
     },
-
     // General commands
     Command {
         name: "help",

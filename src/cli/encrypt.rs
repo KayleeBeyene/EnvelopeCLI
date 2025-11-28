@@ -6,7 +6,7 @@ use clap::Subcommand;
 
 use crate::config::{paths::EnvelopePaths, settings::Settings};
 use crate::crypto::{
-    derive_key, encrypt_string, decrypt_string, EncryptedData, KeyDerivationParams,
+    decrypt_string, derive_key, encrypt_string, EncryptedData, KeyDerivationParams,
 };
 use crate::error::{EnvelopeError, EnvelopeResult};
 use crate::storage::Storage;
@@ -80,8 +80,9 @@ fn enable_encryption(
 
     // Create verification hash
     let verification = encrypt_string("envelope_verify", &key)?;
-    let verification_json = serde_json::to_string(&verification)
-        .map_err(|e| EnvelopeError::Encryption(format!("Failed to serialize verification: {}", e)))?;
+    let verification_json = serde_json::to_string(&verification).map_err(|e| {
+        EnvelopeError::Encryption(format!("Failed to serialize verification: {}", e))
+    })?;
 
     // Update settings
     settings.encryption.enabled = true;
@@ -182,8 +183,9 @@ fn change_passphrase(paths: &EnvelopePaths, settings: &mut Settings) -> Envelope
 
     // Create new verification hash
     let verification = encrypt_string("envelope_verify", &new_key)?;
-    let verification_json = serde_json::to_string(&verification)
-        .map_err(|e| EnvelopeError::Encryption(format!("Failed to serialize verification: {}", e)))?;
+    let verification_json = serde_json::to_string(&verification).map_err(|e| {
+        EnvelopeError::Encryption(format!("Failed to serialize verification: {}", e))
+    })?;
 
     // Update settings
     settings.encryption.key_params = Some(new_key_params);
@@ -248,10 +250,16 @@ fn verify_passphrase(settings: &Settings) -> EnvelopeResult<()> {
 
 /// Internal passphrase verification
 fn verify_passphrase_internal(settings: &Settings, passphrase: &str) -> EnvelopeResult<()> {
-    let key_params = settings.encryption.key_params.as_ref()
+    let key_params = settings
+        .encryption
+        .key_params
+        .as_ref()
         .ok_or_else(|| EnvelopeError::Encryption("No key parameters found".to_string()))?;
 
-    let verification_json = settings.encryption.verification_hash.as_ref()
+    let verification_json = settings
+        .encryption
+        .verification_hash
+        .as_ref()
         .ok_or_else(|| EnvelopeError::Encryption("No verification hash found".to_string()))?;
 
     let encrypted: EncryptedData = serde_json::from_str(verification_json)
@@ -296,8 +304,14 @@ fn prompt_passphrase(prompt: &str) -> EnvelopeResult<String> {
 }
 
 /// Get the derived key from a passphrase and settings
-pub fn get_encryption_key(settings: &Settings, passphrase: &str) -> EnvelopeResult<crate::crypto::DerivedKey> {
-    let key_params = settings.encryption.key_params.as_ref()
+pub fn get_encryption_key(
+    settings: &Settings,
+    passphrase: &str,
+) -> EnvelopeResult<crate::crypto::DerivedKey> {
+    let key_params = settings
+        .encryption
+        .key_params
+        .as_ref()
         .ok_or_else(|| EnvelopeError::Encryption("No key parameters found".to_string()))?;
 
     derive_key(passphrase, key_params)

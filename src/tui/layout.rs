@@ -21,8 +21,8 @@ impl AppLayout {
         let vertical = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Min(3),     // Main area
-                Constraint::Length(1),  // Status bar
+                Constraint::Min(3),    // Main area
+                Constraint::Length(1), // Status bar
             ])
             .split(area);
 
@@ -59,9 +59,9 @@ impl SidebarLayout {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(3),  // Header
-                Constraint::Min(5),     // Accounts
-                Constraint::Length(5),  // View switcher
+                Constraint::Length(3), // Header
+                Constraint::Min(5),    // Accounts
+                Constraint::Length(5), // View switcher
             ])
             .split(area);
 
@@ -87,8 +87,8 @@ impl MainPanelLayout {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(3),  // Header
-                Constraint::Min(3),     // Content
+                Constraint::Length(3), // Header
+                Constraint::Min(3),    // Content
             ])
             .split(area);
 
@@ -113,8 +113,8 @@ impl BudgetLayout {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(3),  // ATB header
-                Constraint::Min(3),     // Categories
+                Constraint::Length(3), // ATB header
+                Constraint::Min(3),    // Categories
             ])
             .split(area);
 

@@ -26,7 +26,11 @@ pub fn generate_diff(before: &Value, after: &Value) -> Option<String> {
                         ));
                     }
                 } else {
-                    changes.push(format!("{}: {} -> (removed)", key, format_value(before_val)));
+                    changes.push(format!(
+                        "{}: {} -> (removed)",
+                        key,
+                        format_value(before_val)
+                    ));
                 }
             }
 
@@ -46,7 +50,11 @@ pub fn generate_diff(before: &Value, after: &Value) -> Option<String> {
         _ => {
             // For non-object values, just show the change
             if before != after {
-                Some(format!("{} -> {}", format_value(before), format_value(after)))
+                Some(format!(
+                    "{} -> {}",
+                    format_value(before),
+                    format_value(after)
+                ))
             } else {
                 None
             }
@@ -93,7 +101,11 @@ pub fn generate_detailed_diff(before: &Value, after: &Value, prefix: &str) -> Ve
                     if before_val != after_val {
                         // Recurse for nested objects
                         if before_val.is_object() && after_val.is_object() {
-                            changes.extend(generate_detailed_diff(before_val, after_val, &field_prefix));
+                            changes.extend(generate_detailed_diff(
+                                before_val,
+                                after_val,
+                                &field_prefix,
+                            ));
                         } else {
                             changes.push(format!(
                                 "{}: {} -> {}",
@@ -104,7 +116,11 @@ pub fn generate_detailed_diff(before: &Value, after: &Value, prefix: &str) -> Ve
                         }
                     }
                 } else {
-                    changes.push(format!("{}: {} -> (removed)", field_prefix, format_value(before_val)));
+                    changes.push(format!(
+                        "{}: {} -> (removed)",
+                        field_prefix,
+                        format_value(before_val)
+                    ));
                 }
             }
 
@@ -116,7 +132,11 @@ pub fn generate_detailed_diff(before: &Value, after: &Value, prefix: &str) -> Ve
                     } else {
                         format!("{}.{}", prefix, key)
                     };
-                    changes.push(format!("{}: (added) -> {}", field_prefix, format_value(after_val)));
+                    changes.push(format!(
+                        "{}: (added) -> {}",
+                        field_prefix,
+                        format_value(after_val)
+                    ));
                 }
             }
         }

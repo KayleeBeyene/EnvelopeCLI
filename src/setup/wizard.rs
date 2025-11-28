@@ -44,11 +44,7 @@ impl SetupWizard {
     }
 
     /// Run the interactive setup wizard
-    pub fn run(
-        &self,
-        storage: &Storage,
-        settings: &mut Settings,
-    ) -> EnvelopeResult<SetupResult> {
+    pub fn run(&self, storage: &Storage, settings: &mut Settings) -> EnvelopeResult<SetupResult> {
         println!();
         println!("===========================================");
         println!("  Welcome to EnvelopeCLI Setup Wizard!");
@@ -84,13 +80,19 @@ impl SetupWizard {
         println!("  Setup Summary");
         println!("===========================================");
         println!();
-        println!("Account: {} ({})", account_result.account.name, account_result.account.account_type);
+        println!(
+            "Account: {} ({})",
+            account_result.account.name, account_result.account.account_type
+        );
         println!("Starting Balance: {}", account_result.starting_balance);
-        println!("Categories: {}", match categories_result.choice {
-            CategoryChoice::UseDefaults => "Default categories",
-            CategoryChoice::Empty => "Empty (add your own)",
-            CategoryChoice::Customize => "Custom",
-        });
+        println!(
+            "Categories: {}",
+            match categories_result.choice {
+                CategoryChoice::UseDefaults => "Default categories",
+                CategoryChoice::Empty => "Empty (add your own)",
+                CategoryChoice::Customize => "Custom",
+            }
+        );
         println!("Budget Period: {:?}", period_result.period_type);
         println!();
 
@@ -126,7 +128,7 @@ impl SetupWizard {
         if !account_result.starting_balance.is_zero() {
             let txn_service = TransactionService::new(storage);
             let input = CreateTransactionInput {
-                account_id: saved_account.id.clone(),
+                account_id: saved_account.id,
                 date: chrono::Local::now().naive_local().date(),
                 amount: account_result.starting_balance,
                 payee_name: Some("Starting Balance".to_string()),
@@ -186,10 +188,14 @@ impl SetupWizard {
 /// Prompt for a string input
 fn prompt_string(prompt: &str) -> EnvelopeResult<String> {
     print!("{}", prompt);
-    io::stdout().flush().map_err(|e| EnvelopeError::Io(e.to_string()))?;
+    io::stdout()
+        .flush()
+        .map_err(|e| EnvelopeError::Io(e.to_string()))?;
 
     let mut input = String::new();
-    io::stdin().read_line(&mut input).map_err(|e| EnvelopeError::Io(e.to_string()))?;
+    io::stdin()
+        .read_line(&mut input)
+        .map_err(|e| EnvelopeError::Io(e.to_string()))?;
 
     Ok(input.trim().to_string())
 }

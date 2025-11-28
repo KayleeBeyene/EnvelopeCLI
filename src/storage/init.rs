@@ -45,23 +45,13 @@ fn create_default_categories(paths: &EnvelopePaths) -> Result<(), EnvelopeError>
                 "Phone",
                 "Insurance",
             ],
-            DefaultCategoryGroup::Needs => vec![
-                "Groceries",
-                "Transportation",
-                "Medical",
-                "Household",
-            ],
-            DefaultCategoryGroup::Wants => vec![
-                "Dining Out",
-                "Entertainment",
-                "Shopping",
-                "Subscriptions",
-            ],
-            DefaultCategoryGroup::Savings => vec![
-                "Emergency Fund",
-                "Vacation",
-                "Large Purchases",
-            ],
+            DefaultCategoryGroup::Needs => {
+                vec!["Groceries", "Transportation", "Medical", "Household"]
+            }
+            DefaultCategoryGroup::Wants => {
+                vec!["Dining Out", "Entertainment", "Shopping", "Subscriptions"]
+            }
+            DefaultCategoryGroup::Savings => vec!["Emergency Fund", "Vacation", "Large Purchases"],
         };
 
         for (j, cat_name) in default_cats.into_iter().enumerate() {

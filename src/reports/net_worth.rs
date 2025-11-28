@@ -160,17 +160,29 @@ impl NetWorthReport {
         output.push('\n');
 
         // Summary box
-        output.push_str(&format!("Total Assets:      {:>15}\n", self.summary.total_assets));
+        output.push_str(&format!(
+            "Total Assets:      {:>15}\n",
+            self.summary.total_assets
+        ));
         output.push_str(&format!(
             "Total Liabilities: {:>15}\n",
             self.summary.total_liabilities.abs()
         ));
         output.push_str(&"-".repeat(35));
         output.push('\n');
-        output.push_str(&format!("Net Worth:         {:>15}\n", self.summary.net_worth));
+        output.push_str(&format!(
+            "Net Worth:         {:>15}\n",
+            self.summary.net_worth
+        ));
         output.push('\n');
-        output.push_str(&format!("On-Budget:         {:>15}\n", self.summary.on_budget_total));
-        output.push_str(&format!("Off-Budget:        {:>15}\n", self.summary.off_budget_total));
+        output.push_str(&format!(
+            "On-Budget:         {:>15}\n",
+            self.summary.on_budget_total
+        ));
+        output.push_str(&format!(
+            "Off-Budget:        {:>15}\n",
+            self.summary.off_budget_total
+        ));
         output.push('\n');
 
         // Column headers

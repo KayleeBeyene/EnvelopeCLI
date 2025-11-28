@@ -131,9 +131,9 @@ impl<'a> PeriodService<'a> {
         ];
 
         for (name, month) in months {
-            if s.starts_with(name) {
+            if let Some(stripped) = s.strip_prefix(name) {
                 // Check if year is specified (e.g., "January 2025" or "Jan 2025")
-                let rest = s[name.len()..].trim();
+                let rest = stripped.trim();
                 let year = if rest.is_empty() {
                     // Use current year, or previous year if month is in the future
                     let today = Local::now().date_naive();
@@ -211,7 +211,11 @@ impl<'a> PeriodService<'a> {
             }
             BudgetPeriod::BiWeekly { start_date } => {
                 let end_date = *start_date + Duration::days(13);
-                format!("{} - {}", start_date.format("%b %d"), end_date.format("%b %d, %Y"))
+                format!(
+                    "{} - {}",
+                    start_date.format("%b %d"),
+                    end_date.format("%b %d, %Y")
+                )
             }
             BudgetPeriod::Custom { start, end } => {
                 format!("{} to {}", start.format("%Y-%m-%d"), end.format("%Y-%m-%d"))
@@ -267,8 +271,14 @@ mod tests {
 
         assert_eq!(service.parse("current").unwrap(), current);
         assert_eq!(service.parse("now").unwrap(), current);
-        assert_eq!(service.parse("last").unwrap(), service.previous_period(&current));
-        assert_eq!(service.parse("next").unwrap(), service.next_period(&current));
+        assert_eq!(
+            service.parse("last").unwrap(),
+            service.previous_period(&current)
+        );
+        assert_eq!(
+            service.parse("next").unwrap(),
+            service.next_period(&current)
+        );
     }
 
     #[test]

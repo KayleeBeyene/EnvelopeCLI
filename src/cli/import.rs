@@ -10,18 +10,14 @@ use crate::services::{AccountService, ImportService, ImportStatus};
 use crate::storage::Storage;
 
 /// Handle the import command
-pub fn handle_import_command(
-    storage: &Storage,
-    file: &str,
-    account: &str,
-) -> EnvelopeResult<()> {
+pub fn handle_import_command(storage: &Storage, file: &str, account: &str) -> EnvelopeResult<()> {
     let account_service = AccountService::new(storage);
     let import_service = ImportService::new(storage);
 
     // Find account
-    let target_account = account_service.find(account)?.ok_or_else(|| {
-        EnvelopeError::account_not_found(account)
-    })?;
+    let target_account = account_service
+        .find(account)?
+        .ok_or_else(|| EnvelopeError::account_not_found(account))?;
 
     let path = Path::new(file);
     if !path.exists() {
@@ -31,7 +27,8 @@ pub fn handle_import_command(
     // Try to detect mapping from CSV header
     let mut reader = csv::Reader::from_path(path)
         .map_err(|e| EnvelopeError::Import(format!("Failed to open CSV file: {}", e)))?;
-    let headers = reader.headers()
+    let headers = reader
+        .headers()
         .map_err(|e| EnvelopeError::Import(format!("Failed to read CSV headers: {}", e)))?
         .clone();
     let mapping = import_service.detect_mapping_from_headers(&headers);
@@ -48,8 +45,14 @@ pub fn handle_import_command(
     let preview = import_service.generate_preview(&parsed, target_account.id)?;
 
     // Show preview summary
-    let new_count = preview.iter().filter(|e| e.status == ImportStatus::New).count();
-    let dup_count = preview.iter().filter(|e| e.status == ImportStatus::Duplicate).count();
+    let new_count = preview
+        .iter()
+        .filter(|e| e.status == ImportStatus::New)
+        .count();
+    let dup_count = preview
+        .iter()
+        .filter(|e| e.status == ImportStatus::Duplicate)
+        .count();
     let err_count = preview
         .iter()
         .filter(|e| matches!(e.status, ImportStatus::Error(_)))

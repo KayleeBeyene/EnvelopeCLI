@@ -67,7 +67,10 @@ impl<'a> BudgetService<'a> {
             Some(category.name),
             &before,
             &allocation,
-            Some(format!("budgeted: {} -> {}", before.budgeted, allocation.budgeted)),
+            Some(format!(
+                "budgeted: {} -> {}",
+                before.budgeted, allocation.budgeted
+            )),
         )?;
 
         Ok(allocation)
@@ -109,7 +112,10 @@ impl<'a> BudgetService<'a> {
             Some(category.name),
             &before,
             &allocation,
-            Some(format!("budgeted: {} -> {} (+{})", before.budgeted, allocation.budgeted, amount)),
+            Some(format!(
+                "budgeted: {} -> {} (+{})",
+                before.budgeted, allocation.budgeted, amount
+            )),
         )?;
 
         Ok(allocation)
@@ -128,7 +134,9 @@ impl<'a> BudgetService<'a> {
         }
 
         if amount.is_negative() {
-            return Err(EnvelopeError::Budget("Amount to move must be positive".into()));
+            return Err(EnvelopeError::Budget(
+                "Amount to move must be positive".into(),
+            ));
         }
 
         // Verify both categories exist
@@ -145,7 +153,10 @@ impl<'a> BudgetService<'a> {
             .ok_or_else(|| EnvelopeError::category_not_found(to_category_id.to_string()))?;
 
         // Get current allocations
-        let mut from_alloc = self.storage.budget.get_or_default(from_category_id, period)?;
+        let mut from_alloc = self
+            .storage
+            .budget
+            .get_or_default(from_category_id, period)?;
         let mut to_alloc = self.storage.budget.get_or_default(to_category_id, period)?;
 
         let from_before = from_alloc.clone();
@@ -184,10 +195,7 @@ impl<'a> BudgetService<'a> {
             Some(from_category.name.clone()),
             &from_before,
             &from_alloc,
-            Some(format!(
-                "moved {} to '{}'",
-                amount, to_category.name
-            )),
+            Some(format!("moved {} to '{}'", amount, to_category.name)),
         )?;
 
         self.storage.log_update(
@@ -196,10 +204,7 @@ impl<'a> BudgetService<'a> {
             Some(to_category.name.clone()),
             &to_before,
             &to_alloc,
-            Some(format!(
-                "received {} from '{}'",
-                amount, from_category.name
-            )),
+            Some(format!("received {} from '{}'", amount, from_category.name)),
         )?;
 
         Ok(())
@@ -225,7 +230,10 @@ impl<'a> BudgetService<'a> {
         // Calculate activity (sum of transactions in this category for this period)
         let activity = self.calculate_category_activity(category_id, period)?;
 
-        Ok(CategoryBudgetSummary::from_allocation(&allocation, activity))
+        Ok(CategoryBudgetSummary::from_allocation(
+            &allocation,
+            activity,
+        ))
     }
 
     /// Calculate activity (spending) for a category in a period
@@ -384,7 +392,10 @@ impl<'a> BudgetService<'a> {
                 category_name,
                 &before,
                 &allocation,
-                Some(format!("carryover: {} -> {}", before.carryover, allocation.carryover)),
+                Some(format!(
+                    "carryover: {} -> {}",
+                    before.carryover, allocation.carryover
+                )),
             )?;
         }
 
@@ -395,7 +406,10 @@ impl<'a> BudgetService<'a> {
     ///
     /// This calculates and sets the carryover amount for every category
     /// based on their Available balance from the previous period.
-    pub fn apply_rollover_all(&self, period: &BudgetPeriod) -> EnvelopeResult<Vec<BudgetAllocation>> {
+    pub fn apply_rollover_all(
+        &self,
+        period: &BudgetPeriod,
+    ) -> EnvelopeResult<Vec<BudgetAllocation>> {
         let category_service = CategoryService::new(self.storage);
         let categories = category_service.list_categories()?;
 
@@ -409,7 +423,10 @@ impl<'a> BudgetService<'a> {
     }
 
     /// Get a list of overspent categories for a period
-    pub fn get_overspent_categories(&self, period: &BudgetPeriod) -> EnvelopeResult<Vec<CategoryBudgetSummary>> {
+    pub fn get_overspent_categories(
+        &self,
+        period: &BudgetPeriod,
+    ) -> EnvelopeResult<Vec<CategoryBudgetSummary>> {
         let category_service = CategoryService::new(self.storage);
         let categories = category_service.list_categories()?;
 
@@ -530,7 +547,10 @@ mod tests {
         let result =
             service.move_between_categories(cat1_id, cat2_id, &period, Money::from_cents(20000));
 
-        assert!(matches!(result, Err(EnvelopeError::InsufficientFunds { .. })));
+        assert!(matches!(
+            result,
+            Err(EnvelopeError::InsufficientFunds { .. })
+        ));
     }
 
     #[test]
@@ -551,7 +571,9 @@ mod tests {
         storage.transactions.upsert(txn).unwrap();
 
         let service = BudgetService::new(&storage);
-        let activity = service.calculate_category_activity(cat_id, &period).unwrap();
+        let activity = service
+            .calculate_category_activity(cat_id, &period)
+            .unwrap();
 
         assert_eq!(activity.cents(), -5000);
     }
@@ -562,7 +584,11 @@ mod tests {
         let (cat_id, _, period) = setup_test_data(&storage);
 
         // Create account with balance
-        let account = Account::with_starting_balance("Checking", AccountType::Checking, Money::from_cents(100000));
+        let account = Account::with_starting_balance(
+            "Checking",
+            AccountType::Checking,
+            Money::from_cents(100000),
+        );
         storage.accounts.upsert(account.clone()).unwrap();
         storage.accounts.save().unwrap();
 

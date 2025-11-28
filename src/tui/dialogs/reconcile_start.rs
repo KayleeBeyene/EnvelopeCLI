@@ -43,7 +43,11 @@ pub fn render(frame: &mut Frame, app: &App) {
 
     let block = Block::default()
         .title(" Start Reconciliation ")
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
 
@@ -53,12 +57,12 @@ pub fn render(frame: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1),  // Spacer
-            Constraint::Length(2),  // Date label + input
-            Constraint::Length(1),  // Spacer
-            Constraint::Length(2),  // Balance label + input
-            Constraint::Length(1),  // Spacer
-            Constraint::Length(2),  // Instructions
+            Constraint::Length(1), // Spacer
+            Constraint::Length(2), // Date label + input
+            Constraint::Length(1), // Spacer
+            Constraint::Length(2), // Balance label + input
+            Constraint::Length(1), // Spacer
+            Constraint::Length(2), // Instructions
         ])
         .split(inner);
 
@@ -66,7 +70,9 @@ pub fn render(frame: &mut Frame, app: &App) {
 
     // Date field
     let date_style = if state.active_field == 0 {
-        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD)
     } else {
         Style::default().fg(Color::White)
     };
@@ -85,7 +91,9 @@ pub fn render(frame: &mut Frame, app: &App) {
 
     // Balance field
     let balance_style = if state.active_field == 1 {
-        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD)
     } else {
         Style::default().fg(Color::White)
     };

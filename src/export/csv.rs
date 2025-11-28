@@ -15,16 +15,12 @@ pub fn export_transactions_csv<W: Write>(storage: &Storage, writer: &mut W) -> E
 
     // Build lookups
     let categories = category_service.list_categories()?;
-    let category_names: std::collections::HashMap<_, _> = categories
-        .iter()
-        .map(|c| (c.id, c.name.clone()))
-        .collect();
+    let category_names: std::collections::HashMap<_, _> =
+        categories.iter().map(|c| (c.id, c.name.clone())).collect();
 
     let accounts = account_service.list(true)?;
-    let account_names: std::collections::HashMap<_, _> = accounts
-        .iter()
-        .map(|a| (a.id, a.name.clone()))
-        .collect();
+    let account_names: std::collections::HashMap<_, _> =
+        accounts.iter().map(|a| (a.id, a.name.clone())).collect();
 
     // Write header
     writeln!(
@@ -87,7 +83,7 @@ pub fn export_transactions_csv<W: Write>(storage: &Storage, writer: &mut W) -> E
 
                 writeln!(
                     writer,
-                    "{}-split,{},{},{},{},{},{:.2},{},{},{}",
+                    "{}-split,{},{},{},{},{},{:.2},{},true,false",
                     txn.id,
                     txn.date,
                     escape_csv(&account_name),
@@ -95,9 +91,7 @@ pub fn export_transactions_csv<W: Write>(storage: &Storage, writer: &mut W) -> E
                     escape_csv(&split_cat_name),
                     escape_csv(&split.memo),
                     split.amount.cents() as f64 / 100.0,
-                    status,
-                    "true",
-                    "false"
+                    status
                 )
                 .map_err(|e| crate::error::EnvelopeError::Export(e.to_string()))?;
             }
@@ -120,10 +114,8 @@ pub fn export_allocations_csv<W: Write>(
     let categories = category_service.list_categories()?;
     let groups = category_service.list_groups()?;
 
-    let group_names: std::collections::HashMap<_, _> = groups
-        .iter()
-        .map(|g| (g.id, g.name.clone()))
-        .collect();
+    let group_names: std::collections::HashMap<_, _> =
+        groups.iter().map(|g| (g.id, g.name.clone())).collect();
 
     // Write header
     writeln!(
@@ -138,13 +130,15 @@ pub fn export_allocations_csv<W: Write>(
     } else {
         // Export last 12 months by default
         let current = BudgetPeriod::current_month();
-        (0..12).map(|i| {
-            let mut p = current.clone();
-            for _ in 0..i {
-                p = p.prev();
-            }
-            p
-        }).collect()
+        (0..12)
+            .map(|i| {
+                let mut p = current.clone();
+                for _ in 0..i {
+                    p = p.prev();
+                }
+                p
+            })
+            .collect()
     };
 
     for period in periods_to_export {

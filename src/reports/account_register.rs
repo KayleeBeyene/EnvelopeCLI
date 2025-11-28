@@ -86,7 +86,11 @@ impl RegisterFilter {
 
         // Payee filter
         if let Some(ref payee) = self.payee_contains {
-            if !txn.payee_name.to_lowercase().contains(&payee.to_lowercase()) {
+            if !txn
+                .payee_name
+                .to_lowercase()
+                .contains(&payee.to_lowercase())
+            {
                 return false;
             }
         }
@@ -105,10 +109,10 @@ impl RegisterFilter {
         }
 
         // Uncategorized filter
-        if self.uncategorized_only {
-            if txn.category_id.is_some() || !txn.splits.is_empty() || txn.is_transfer() {
-                return false;
-            }
+        if self.uncategorized_only
+            && (txn.category_id.is_some() || !txn.splits.is_empty() || txn.is_transfer())
+        {
+            return false;
         }
 
         true
@@ -147,16 +151,14 @@ impl AccountRegisterReport {
         let category_service = CategoryService::new(storage);
 
         // Get the account
-        let account = account_service
-            .get(account_id)?
-            .ok_or_else(|| crate::error::EnvelopeError::account_not_found(account_id.to_string()))?;
+        let account = account_service.get(account_id)?.ok_or_else(|| {
+            crate::error::EnvelopeError::account_not_found(account_id.to_string())
+        })?;
 
         // Build category lookup
         let categories = category_service.list_categories()?;
-        let category_names: std::collections::HashMap<CategoryId, String> = categories
-            .iter()
-            .map(|c| (c.id, c.name.clone()))
-            .collect();
+        let category_names: std::collections::HashMap<CategoryId, String> =
+            categories.iter().map(|c| (c.id, c.name.clone())).collect();
 
         // Get all transactions for this account
         let mut transactions = storage.transactions.get_by_account(account_id)?;
@@ -206,7 +208,10 @@ impl AccountRegisterReport {
             } else if txn.is_split() {
                 "Split".to_string()
             } else if let Some(cat_id) = txn.category_id {
-                category_names.get(&cat_id).cloned().unwrap_or_else(|| "Unknown".to_string())
+                category_names
+                    .get(&cat_id)
+                    .cloned()
+                    .unwrap_or_else(|| "Unknown".to_string())
             } else {
                 "Uncategorized".to_string()
             };
@@ -354,7 +359,12 @@ impl AccountRegisterReport {
         let cleared_count = self
             .entries
             .iter()
-            .filter(|e| matches!(e.status, TransactionStatus::Cleared | TransactionStatus::Reconciled))
+            .filter(|e| {
+                matches!(
+                    e.status,
+                    TransactionStatus::Cleared | TransactionStatus::Reconciled
+                )
+            })
             .count();
 
         let pending_count = self
@@ -452,12 +462,9 @@ mod tests {
         storage.transactions.upsert(txn2).unwrap();
 
         // Generate report
-        let report = AccountRegisterReport::generate(
-            &storage,
-            account.id,
-            RegisterFilter::default(),
-        )
-        .unwrap();
+        let report =
+            AccountRegisterReport::generate(&storage, account.id, RegisterFilter::default())
+                .unwrap();
 
         assert_eq!(report.entries.len(), 2);
         assert_eq!(report.starting_balance.cents(), 100000);
@@ -489,8 +496,7 @@ mod tests {
             ..Default::default()
         };
 
-        let report =
-            AccountRegisterReport::generate(&storage, account.id, filter).unwrap();
+        let report = AccountRegisterReport::generate(&storage, account.id, filter).unwrap();
 
         assert_eq!(report.entries.len(), 5); // Days 3, 4, 5, 6, 7
     }
@@ -510,12 +516,9 @@ mod tests {
         txn.payee_name = "Test Payee".to_string();
         storage.transactions.upsert(txn).unwrap();
 
-        let report = AccountRegisterReport::generate(
-            &storage,
-            account.id,
-            RegisterFilter::default(),
-        )
-        .unwrap();
+        let report =
+            AccountRegisterReport::generate(&storage, account.id, RegisterFilter::default())
+                .unwrap();
 
         let mut csv_output = Vec::new();
         report.export_csv(&mut csv_output).unwrap();

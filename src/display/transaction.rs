@@ -73,7 +73,10 @@ pub fn format_transaction_details(txn: &Transaction, category_name: Option<&str>
     if let Some(cat_name) = category_name {
         output.push_str(&format!("Category:    {}\n", cat_name));
     } else if txn.is_split() {
-        output.push_str(&format!("Category:    Split ({} categories)\n", txn.splits.len()));
+        output.push_str(&format!(
+            "Category:    Split ({} categories)\n",
+            txn.splits.len()
+        ));
     } else {
         output.push_str("Category:    (uncategorized)\n");
     }

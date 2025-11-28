@@ -190,30 +190,32 @@ pub fn handle_budget_command(
             if has_any_carryover {
                 println!(
                     "{:26} {:>10} {:>10} {:>10} {:>10}",
-                    "TOTALS:",
-                    total_budgeted,
-                    total_carryover,
-                    total_activity,
-                    total_available
+                    "TOTALS:", total_budgeted, total_carryover, total_activity, total_available
                 );
             } else {
                 println!(
                     "{:30} {:>10} {:>10} {:>10}",
-                    "TOTALS:",
-                    total_budgeted,
-                    total_activity,
-                    total_available
+                    "TOTALS:", total_budgeted, total_activity, total_available
                 );
             }
 
             // Show available to budget
             let available_to_budget = budget_service.get_available_to_budget(&period)?;
-            println!("\n{:30} {:>10}", "Available to Budget:", available_to_budget);
+            println!(
+                "\n{:30} {:>10}",
+                "Available to Budget:", available_to_budget
+            );
 
             if available_to_budget.is_negative() {
-                println!("\n⚠️  Warning: Overbudgeted by {}", available_to_budget.abs());
+                println!(
+                    "\n⚠️  Warning: Overbudgeted by {}",
+                    available_to_budget.abs()
+                );
             } else if available_to_budget.is_positive() {
-                println!("\n📌 Tip: You have {} ready to assign!", available_to_budget);
+                println!(
+                    "\n📌 Tip: You have {} ready to assign!",
+                    available_to_budget
+                );
             } else {
                 println!("\n✅ Budget is balanced!");
             }
@@ -283,9 +285,9 @@ pub fn handle_budget_command(
             })?;
 
             let category_service = CategoryService::new(storage);
-            let cat = category_service.find_category(&category)?.ok_or_else(|| {
-                crate::error::EnvelopeError::category_not_found(&category)
-            })?;
+            let cat = category_service
+                .find_category(&category)?
+                .ok_or_else(|| crate::error::EnvelopeError::category_not_found(&category))?;
 
             let budget_service = BudgetService::new(storage);
             let allocation = budget_service.assign_to_category(cat.id, &period, amount)?;
@@ -318,12 +320,12 @@ pub fn handle_budget_command(
             })?;
 
             let category_service = CategoryService::new(storage);
-            let from_cat = category_service.find_category(&from)?.ok_or_else(|| {
-                crate::error::EnvelopeError::category_not_found(&from)
-            })?;
-            let to_cat = category_service.find_category(&to)?.ok_or_else(|| {
-                crate::error::EnvelopeError::category_not_found(&to)
-            })?;
+            let from_cat = category_service
+                .find_category(&from)?
+                .ok_or_else(|| crate::error::EnvelopeError::category_not_found(&from))?;
+            let to_cat = category_service
+                .find_category(&to)?
+                .ok_or_else(|| crate::error::EnvelopeError::category_not_found(&to))?;
 
             let budget_service = BudgetService::new(storage);
             budget_service.move_between_categories(from_cat.id, to_cat.id, &period, amount)?;
@@ -343,7 +345,10 @@ pub fn handle_budget_command(
             let prev_period = period.prev();
             let prev_friendly = period_service.format_period_friendly(&prev_period);
 
-            println!("Applying rollover from {} to {}...", prev_friendly, friendly);
+            println!(
+                "Applying rollover from {} to {}...",
+                prev_friendly, friendly
+            );
             println!();
 
             let budget_service = BudgetService::new(storage);

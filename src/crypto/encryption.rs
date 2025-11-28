@@ -3,11 +3,11 @@
 //! Provides authenticated encryption for data at rest using AES-256-GCM.
 //! Each encryption operation generates a unique nonce for security.
 
+use aes_gcm::aead::rand_core::RngCore;
 use aes_gcm::{
     aead::{Aead, KeyInit, OsRng},
     Aes256Gcm, Nonce,
 };
-use aes_gcm::aead::rand_core::RngCore;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{EnvelopeError, EnvelopeResult};
@@ -47,17 +47,17 @@ impl EncryptedData {
     /// Decode the nonce from base64
     fn decode_nonce(&self) -> EnvelopeResult<Vec<u8>> {
         use base64::{engine::general_purpose::STANDARD, Engine};
-        STANDARD.decode(&self.nonce).map_err(|e| {
-            EnvelopeError::Encryption(format!("Invalid nonce encoding: {}", e))
-        })
+        STANDARD
+            .decode(&self.nonce)
+            .map_err(|e| EnvelopeError::Encryption(format!("Invalid nonce encoding: {}", e)))
     }
 
     /// Decode the ciphertext from base64
     fn decode_ciphertext(&self) -> EnvelopeResult<Vec<u8>> {
         use base64::{engine::general_purpose::STANDARD, Engine};
-        STANDARD.decode(&self.ciphertext).map_err(|e| {
-            EnvelopeError::Encryption(format!("Invalid ciphertext encoding: {}", e))
-        })
+        STANDARD
+            .decode(&self.ciphertext)
+            .map_err(|e| EnvelopeError::Encryption(format!("Invalid ciphertext encoding: {}", e)))
     }
 }
 
@@ -110,9 +110,9 @@ pub fn decrypt(encrypted: &EncryptedData, key: &DerivedKey) -> EnvelopeResult<Ve
     let ciphertext = encrypted.decode_ciphertext()?;
 
     // Decrypt
-    let plaintext = cipher
-        .decrypt(nonce, ciphertext.as_ref())
-        .map_err(|_| EnvelopeError::Encryption("Decryption failed: invalid key or corrupted data".to_string()))?;
+    let plaintext = cipher.decrypt(nonce, ciphertext.as_ref()).map_err(|_| {
+        EnvelopeError::Encryption("Decryption failed: invalid key or corrupted data".to_string())
+    })?;
 
     Ok(plaintext)
 }

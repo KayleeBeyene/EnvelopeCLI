@@ -25,7 +25,11 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 
     let block = Block::default()
         .title(" Command Palette ")
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
 
@@ -41,10 +45,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 
     let input_line = Line::from(vec![
         Span::styled("> ", Style::default().fg(Color::Cyan)),
-        Span::styled(
-            app.command_input.clone(),
-            Style::default().fg(Color::White),
-        ),
+        Span::styled(app.command_input.clone(), Style::default().fg(Color::White)),
         Span::styled("_", Style::default().fg(Color::Cyan)), // Cursor
     ]);
 
@@ -74,8 +75,8 @@ pub fn render(frame: &mut Frame, app: &mut App) {
         .collect();
 
     if filtered_commands.is_empty() {
-        let text = Paragraph::new("No matching commands")
-            .style(Style::default().fg(Color::DarkGray));
+        let text =
+            Paragraph::new("No matching commands").style(Style::default().fg(Color::DarkGray));
         frame.render_widget(text, results_area);
         return;
     }
@@ -90,10 +91,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
                     Style::default().fg(Color::Cyan),
                 ),
                 Span::raw(" "),
-                Span::styled(
-                    cmd.description,
-                    Style::default().fg(Color::DarkGray),
-                ),
+                Span::styled(cmd.description, Style::default().fg(Color::DarkGray)),
             ]);
             ListItem::new(line)
         })
@@ -108,7 +106,9 @@ pub fn render(frame: &mut Frame, app: &mut App) {
         .highlight_symbol("▶ ");
 
     let mut state = ListState::default();
-    let selected = app.selected_command_index.min(filtered_commands.len().saturating_sub(1));
+    let selected = app
+        .selected_command_index
+        .min(filtered_commands.len().saturating_sub(1));
     state.select(Some(selected));
 
     frame.render_stateful_widget(list, results_area, &mut state);

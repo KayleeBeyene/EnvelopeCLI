@@ -33,7 +33,9 @@ impl AccountSetupStep {
         // Get account name
         let name = prompt_string("Account name (e.g., 'Checking', 'Main Account'): ")?;
         if name.is_empty() {
-            return Err(EnvelopeError::Validation("Account name cannot be empty".into()));
+            return Err(EnvelopeError::Validation(
+                "Account name cannot be empty".into(),
+            ));
         }
 
         // Get account type
@@ -62,17 +64,18 @@ impl AccountSetupStep {
         let starting_balance = if balance_str.is_empty() {
             Money::zero()
         } else {
-            Money::parse(&balance_str).map_err(|e| {
-                EnvelopeError::Validation(format!("Invalid amount: {}", e))
-            })?
+            Money::parse(&balance_str)
+                .map_err(|e| EnvelopeError::Validation(format!("Invalid amount: {}", e)))?
         };
 
         // Create the account
         let account = Account::new(name, account_type);
 
         println!();
-        println!("Account '{}' will be created with balance {}",
-            account.name, starting_balance);
+        println!(
+            "Account '{}' will be created with balance {}",
+            account.name, starting_balance
+        );
 
         Ok(AccountSetupResult {
             account,

@@ -50,7 +50,11 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
 
     let block = Block::default()
         .title(format!(" Budget - {} ", app.current_period))
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::DarkGray));
 
@@ -61,19 +65,11 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
         ),
         Span::styled(
             format!("{}", atb),
-            Style::default()
-                .fg(atb_color)
-                .add_modifier(Modifier::BOLD),
+            Style::default().fg(atb_color).add_modifier(Modifier::BOLD),
         ),
         Span::raw("  │  "),
-        Span::styled(
-            "[/] Period  ",
-            Style::default().fg(Color::DarkGray),
-        ),
-        Span::styled(
-            "[m] Move Funds",
-            Style::default().fg(Color::DarkGray),
-        ),
+        Span::styled("[/] Period  ", Style::default().fg(Color::DarkGray)),
+        Span::styled("[m] Move Funds", Style::default().fg(Color::DarkGray)),
     ]);
 
     let paragraph = Paragraph::new(line).block(block);
@@ -84,7 +80,11 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
 /// Render category budget table
 fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
     let is_focused = app.focused_panel == FocusedPanel::Main;
-    let border_color = if is_focused { Color::Cyan } else { Color::DarkGray };
+    let border_color = if is_focused {
+        Color::Cyan
+    } else {
+        Color::DarkGray
+    };
 
     let block = Block::default()
         .borders(Borders::ALL)

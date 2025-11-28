@@ -39,12 +39,14 @@ impl PayeeRepository {
     pub fn load(&self) -> Result<(), EnvelopeError> {
         let file_data: PayeeData = read_json(&self.path)?;
 
-        let mut data = self.data.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
-        let mut by_name = self.by_name.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut data = self
+            .data
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
+        let mut by_name = self
+            .by_name
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         data.clear();
         by_name.clear();
@@ -60,9 +62,10 @@ impl PayeeRepository {
 
     /// Save payees to disk
     pub fn save(&self) -> Result<(), EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut payees: Vec<_> = data.values().cloned().collect();
         payees.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
@@ -73,18 +76,20 @@ impl PayeeRepository {
 
     /// Get a payee by ID
     pub fn get(&self, id: PayeeId) -> Result<Option<Payee>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         Ok(data.get(&id).cloned())
     }
 
     /// Get all payees
     pub fn get_all(&self) -> Result<Vec<Payee>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut payees: Vec<_> = data.values().cloned().collect();
         payees.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
@@ -93,12 +98,14 @@ impl PayeeRepository {
 
     /// Get a payee by exact name (case-insensitive)
     pub fn get_by_name(&self, name: &str) -> Result<Option<Payee>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
-        let by_name = self.by_name.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
+        let by_name = self
+            .by_name
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let normalized = Payee::normalize_name(name);
         if let Some(&id) = by_name.get(&normalized) {
@@ -110,9 +117,10 @@ impl PayeeRepository {
 
     /// Find payees matching a query (fuzzy search)
     pub fn search(&self, query: &str, limit: usize) -> Result<Vec<Payee>, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
 
         let mut scored: Vec<_> = data
             .values()
@@ -137,12 +145,14 @@ impl PayeeRepository {
 
     /// Insert or update a payee
     pub fn upsert(&self, payee: Payee) -> Result<(), EnvelopeError> {
-        let mut data = self.data.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
-        let mut by_name = self.by_name.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut data = self
+            .data
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
+        let mut by_name = self
+            .by_name
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         // Remove old name index if updating
         if let Some(old) = data.get(&payee.id) {
@@ -160,12 +170,14 @@ impl PayeeRepository {
 
     /// Delete a payee
     pub fn delete(&self, id: PayeeId) -> Result<bool, EnvelopeError> {
-        let mut data = self.data.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
-        let mut by_name = self.by_name.write().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e))
-        })?;
+        let mut data = self
+            .data
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
+        let mut by_name = self
+            .by_name
+            .write()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire write lock: {}", e)))?;
 
         if let Some(payee) = data.remove(&id) {
             let normalized = Payee::normalize_name(&payee.name);
@@ -178,9 +190,10 @@ impl PayeeRepository {
 
     /// Count payees
     pub fn count(&self) -> Result<usize, EnvelopeError> {
-        let data = self.data.read().map_err(|e| {
-            EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e))
-        })?;
+        let data = self
+            .data
+            .read()
+            .map_err(|e| EnvelopeError::Storage(format!("Failed to acquire read lock: {}", e)))?;
         Ok(data.len())
     }
 }

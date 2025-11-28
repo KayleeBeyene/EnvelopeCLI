@@ -24,11 +24,7 @@ pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
     // Get total balance if an account is selected
     let balance_info = if let Some(account_id) = app.selected_account {
         let account_service = AccountService::new(app.storage);
-        if let Ok(balance) = account_service.calculate_balance(account_id) {
-            Some(balance)
-        } else {
-            None
-        }
+        account_service.calculate_balance(account_id).ok()
     } else {
         None
     };
@@ -93,10 +89,7 @@ pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
     let padding = " ".repeat(padding_len.max(1));
 
     spans.push(Span::raw(padding));
-    spans.push(Span::styled(
-        hints,
-        Style::default().fg(Color::DarkGray),
-    ));
+    spans.push(Span::styled(hints, Style::default().fg(Color::DarkGray)));
 
     let line = Line::from(spans);
     let paragraph = Paragraph::new(line).style(Style::default().bg(Color::Black));

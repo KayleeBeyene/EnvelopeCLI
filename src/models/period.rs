@@ -65,16 +65,10 @@ impl BudgetPeriod {
     /// Get the start date of this period
     pub fn start_date(&self) -> NaiveDate {
         match self {
-            Self::Monthly { year, month } => {
-                NaiveDate::from_ymd_opt(*year, *month, 1).unwrap_or_else(|| {
-                    NaiveDate::from_ymd_opt(*year, 1, 1).unwrap()
-                })
-            }
-            Self::Weekly { year, week } => {
-                NaiveDate::from_isoywd_opt(*year, *week, Weekday::Mon).unwrap_or_else(|| {
-                    NaiveDate::from_ymd_opt(*year, 1, 1).unwrap()
-                })
-            }
+            Self::Monthly { year, month } => NaiveDate::from_ymd_opt(*year, *month, 1)
+                .unwrap_or_else(|| NaiveDate::from_ymd_opt(*year, 1, 1).unwrap()),
+            Self::Weekly { year, week } => NaiveDate::from_isoywd_opt(*year, *week, Weekday::Mon)
+                .unwrap_or_else(|| NaiveDate::from_ymd_opt(*year, 1, 1).unwrap()),
             Self::BiWeekly { start_date } => *start_date,
             Self::Custom { start, .. } => *start,
         }
@@ -91,11 +85,8 @@ impl BudgetPeriod {
                 };
                 next_month.unwrap() - Duration::days(1)
             }
-            Self::Weekly { year, week } => {
-                NaiveDate::from_isoywd_opt(*year, *week, Weekday::Sun).unwrap_or_else(|| {
-                    self.start_date() + Duration::days(6)
-                })
-            }
+            Self::Weekly { year, week } => NaiveDate::from_isoywd_opt(*year, *week, Weekday::Sun)
+                .unwrap_or_else(|| self.start_date() + Duration::days(6)),
             Self::BiWeekly { start_date } => *start_date + Duration::days(13),
             Self::Custom { end, .. } => *end,
         }
@@ -245,7 +236,7 @@ impl BudgetPeriod {
                 .parse()
                 .map_err(|_| PeriodParseError::InvalidFormat(s.to_string()))?;
 
-            if month < 1 || month > 12 {
+            if !(1..=12).contains(&month) {
                 return Err(PeriodParseError::InvalidMonth(month));
             }
 
@@ -263,10 +254,20 @@ impl fmt::Display for BudgetPeriod {
             Self::Weekly { year, week } => write!(f, "{:04}-W{:02}", year, week),
             Self::BiWeekly { start_date } => {
                 let end = *start_date + Duration::days(13);
-                write!(f, "{} - {}", start_date.format("%Y-%m-%d"), end.format("%Y-%m-%d"))
+                write!(
+                    f,
+                    "{} - {}",
+                    start_date.format("%Y-%m-%d"),
+                    end.format("%Y-%m-%d")
+                )
             }
             Self::Custom { start, end } => {
-                write!(f, "{}..{}", start.format("%Y-%m-%d"), end.format("%Y-%m-%d"))
+                write!(
+                    f,
+                    "{}..{}",
+                    start.format("%Y-%m-%d"),
+                    end.format("%Y-%m-%d")
+                )
             }
         }
     }
@@ -309,8 +310,14 @@ mod tests {
     #[test]
     fn test_monthly_period() {
         let period = BudgetPeriod::monthly(2025, 1);
-        assert_eq!(period.start_date(), NaiveDate::from_ymd_opt(2025, 1, 1).unwrap());
-        assert_eq!(period.end_date(), NaiveDate::from_ymd_opt(2025, 1, 31).unwrap());
+        assert_eq!(
+            period.start_date(),
+            NaiveDate::from_ymd_opt(2025, 1, 1).unwrap()
+        );
+        assert_eq!(
+            period.end_date(),
+            NaiveDate::from_ymd_opt(2025, 1, 31).unwrap()
+        );
     }
 
     #[test]

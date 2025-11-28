@@ -57,7 +57,8 @@ impl AdjustmentDialogState {
 
     /// Move selection down
     pub fn move_down(&mut self) {
-        if self.selecting_category && self.selected_index < self.categories.len().saturating_sub(1) {
+        if self.selecting_category && self.selected_index < self.categories.len().saturating_sub(1)
+        {
             self.selected_index += 1;
         }
     }
@@ -80,7 +81,9 @@ impl AdjustmentDialogState {
         // Clone to avoid borrow issues
         let selection: Option<(CategoryId, String)> = {
             let filtered = self.filtered_categories();
-            filtered.get(self.selected_index).map(|(id, name)| (*id, name.clone()))
+            filtered
+                .get(self.selected_index)
+                .map(|(id, name)| (*id, name.clone()))
         };
 
         if let Some((id, name)) = selection {
@@ -102,7 +105,11 @@ pub fn render(frame: &mut Frame, app: &App) {
 
     let block = Block::default()
         .title(" Create Adjustment Transaction ")
-        .title_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Yellow));
 
@@ -112,29 +119,29 @@ pub fn render(frame: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1),  // Spacer
-            Constraint::Length(2),  // Message
-            Constraint::Length(2),  // Amount
-            Constraint::Length(2),  // Category input
-            Constraint::Length(3),  // Category list (if selecting)
-            Constraint::Length(2),  // Instructions
+            Constraint::Length(1), // Spacer
+            Constraint::Length(2), // Message
+            Constraint::Length(2), // Amount
+            Constraint::Length(2), // Category input
+            Constraint::Length(3), // Category list (if selecting)
+            Constraint::Length(2), // Instructions
         ])
         .split(inner);
 
     // Message
-    let message = Paragraph::new(Line::from(vec![
-        Span::styled(
-            "Your cleared balance doesn't match the statement balance.",
-            Style::default().fg(Color::White),
-        ),
-    ]));
+    let message = Paragraph::new(Line::from(vec![Span::styled(
+        "Your cleared balance doesn't match the statement balance.",
+        Style::default().fg(Color::White),
+    )]));
     frame.render_widget(message, chunks[1]);
 
     // Amount
     let amount_style = if state.adjustment_amount.is_negative() {
         Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)
     } else {
-        Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::Green)
+            .add_modifier(Modifier::BOLD)
     };
 
     let amount_text = Paragraph::new(Line::from(vec![
@@ -145,7 +152,9 @@ pub fn render(frame: &mut Frame, app: &App) {
 
     // Category input
     let category_style = if state.selecting_category {
-        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD)
     } else {
         Style::default().fg(Color::White)
     };

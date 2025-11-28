@@ -20,7 +20,11 @@ pub fn render(frame: &mut Frame, message: &str) {
 
     let block = Block::default()
         .title(" Confirm ")
-        .title_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Yellow));
 

@@ -115,10 +115,12 @@ pub fn handle_category_command(storage: &Storage, cmd: CategoryCommands) -> Enve
         }
 
         CategoryCommands::Create { name, group, goal } => {
-            let group = service.find_group(&group)?.ok_or_else(|| EnvelopeError::NotFound {
-                entity_type: "Category Group",
-                identifier: group.clone(),
-            })?;
+            let group = service
+                .find_group(&group)?
+                .ok_or_else(|| EnvelopeError::NotFound {
+                    entity_type: "Category Group",
+                    identifier: group.clone(),
+                })?;
 
             let category = service.create_category(&name, group.id)?;
 
@@ -136,9 +138,9 @@ pub fn handle_category_command(storage: &Storage, cmd: CategoryCommands) -> Enve
         }
 
         CategoryCommands::Show { category } => {
-            let cat = service.find_category(&category)?.ok_or_else(|| {
-                EnvelopeError::category_not_found(&category)
-            })?;
+            let cat = service
+                .find_category(&category)?
+                .ok_or_else(|| EnvelopeError::category_not_found(&category))?;
 
             let group = service.get_group(cat.group_id)?;
             print!("{}", format_category_details(&cat, group.as_ref()));
@@ -150,9 +152,9 @@ pub fn handle_category_command(storage: &Storage, cmd: CategoryCommands) -> Enve
             goal,
             clear_goal,
         } => {
-            let cat = service.find_category(&category)?.ok_or_else(|| {
-                EnvelopeError::category_not_found(&category)
-            })?;
+            let cat = service
+                .find_category(&category)?
+                .ok_or_else(|| EnvelopeError::category_not_found(&category))?;
 
             if name.is_none() && goal.is_none() && !clear_goal {
                 println!("No changes specified. Use --name, --goal, or --clear-goal.");
@@ -168,28 +170,31 @@ pub fn handle_category_command(storage: &Storage, cmd: CategoryCommands) -> Enve
                 None
             };
 
-            let updated = service.update_category(cat.id, name.as_deref(), goal_cents, clear_goal)?;
+            let updated =
+                service.update_category(cat.id, name.as_deref(), goal_cents, clear_goal)?;
             println!("Updated category: {}", updated.name);
         }
 
         CategoryCommands::Move { category, to } => {
-            let cat = service.find_category(&category)?.ok_or_else(|| {
-                EnvelopeError::category_not_found(&category)
-            })?;
+            let cat = service
+                .find_category(&category)?
+                .ok_or_else(|| EnvelopeError::category_not_found(&category))?;
 
-            let target_group = service.find_group(&to)?.ok_or_else(|| EnvelopeError::NotFound {
-                entity_type: "Category Group",
-                identifier: to.clone(),
-            })?;
+            let target_group = service
+                .find_group(&to)?
+                .ok_or_else(|| EnvelopeError::NotFound {
+                    entity_type: "Category Group",
+                    identifier: to.clone(),
+                })?;
 
             let moved = service.move_category(cat.id, target_group.id)?;
             println!("Moved '{}' to group '{}'", moved.name, target_group.name);
         }
 
         CategoryCommands::Delete { category } => {
-            let cat = service.find_category(&category)?.ok_or_else(|| {
-                EnvelopeError::category_not_found(&category)
-            })?;
+            let cat = service
+                .find_category(&category)?
+                .ok_or_else(|| EnvelopeError::category_not_found(&category))?;
 
             service.delete_category(cat.id)?;
             println!("Deleted category: {}", cat.name);
@@ -207,20 +212,24 @@ pub fn handle_category_command(storage: &Storage, cmd: CategoryCommands) -> Enve
         }
 
         CategoryCommands::ShowGroup { group } => {
-            let g = service.find_group(&group)?.ok_or_else(|| EnvelopeError::NotFound {
-                entity_type: "Category Group",
-                identifier: group.clone(),
-            })?;
+            let g = service
+                .find_group(&group)?
+                .ok_or_else(|| EnvelopeError::NotFound {
+                    entity_type: "Category Group",
+                    identifier: group.clone(),
+                })?;
 
             let categories = service.list_categories_in_group(g.id)?;
             print!("{}", format_group_details(&g, &categories));
         }
 
         CategoryCommands::EditGroup { group, name } => {
-            let g = service.find_group(&group)?.ok_or_else(|| EnvelopeError::NotFound {
-                entity_type: "Category Group",
-                identifier: group.clone(),
-            })?;
+            let g = service
+                .find_group(&group)?
+                .ok_or_else(|| EnvelopeError::NotFound {
+                    entity_type: "Category Group",
+                    identifier: group.clone(),
+                })?;
 
             if name.is_none() {
                 println!("No changes specified. Use --name to change the group name.");
@@ -232,10 +241,12 @@ pub fn handle_category_command(storage: &Storage, cmd: CategoryCommands) -> Enve
         }
 
         CategoryCommands::DeleteGroup { group, force } => {
-            let g = service.find_group(&group)?.ok_or_else(|| EnvelopeError::NotFound {
-                entity_type: "Category Group",
-                identifier: group.clone(),
-            })?;
+            let g = service
+                .find_group(&group)?
+                .ok_or_else(|| EnvelopeError::NotFound {
+                    entity_type: "Category Group",
+                    identifier: group.clone(),
+                })?;
 
             service.delete_group(g.id, force)?;
             println!("Deleted category group: {}", g.name);

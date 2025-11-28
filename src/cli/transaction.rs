@@ -116,7 +116,10 @@ pub enum TransactionCommands {
 }
 
 /// Handle a transaction command
-pub fn handle_transaction_command(storage: &Storage, cmd: TransactionCommands) -> EnvelopeResult<()> {
+pub fn handle_transaction_command(
+    storage: &Storage,
+    cmd: TransactionCommands,
+) -> EnvelopeResult<()> {
     let service = TransactionService::new(storage);
     let account_service = AccountService::new(storage);
     let category_service = CategoryService::new(storage);
@@ -134,9 +137,9 @@ pub fn handle_transaction_command(storage: &Storage, cmd: TransactionCommands) -
             auto_categorize,
         } => {
             // Find account
-            let account = account_service.find(&account)?.ok_or_else(|| {
-                EnvelopeError::account_not_found(&account)
-            })?;
+            let account = account_service
+                .find(&account)?
+                .ok_or_else(|| EnvelopeError::account_not_found(&account))?;
 
             // Parse amount
             let amount = Money::parse(&amount).map_err(|e| {
@@ -160,9 +163,9 @@ pub fn handle_transaction_command(storage: &Storage, cmd: TransactionCommands) -
 
             // Find category
             let mut category_id = if let Some(cat_name) = &category {
-                let cat = category_service.find_category(cat_name)?.ok_or_else(|| {
-                    EnvelopeError::category_not_found(cat_name)
-                })?;
+                let cat = category_service
+                    .find_category(cat_name)?
+                    .ok_or_else(|| EnvelopeError::category_not_found(cat_name))?;
                 Some(cat.id)
             } else {
                 None
@@ -226,17 +229,17 @@ pub fn handle_transaction_command(storage: &Storage, cmd: TransactionCommands) -
 
             // Apply account filter
             if let Some(acc_name) = &account {
-                let acc = account_service.find(acc_name)?.ok_or_else(|| {
-                    EnvelopeError::account_not_found(acc_name)
-                })?;
+                let acc = account_service
+                    .find(acc_name)?
+                    .ok_or_else(|| EnvelopeError::account_not_found(acc_name))?;
                 filter = filter.account(acc.id);
             }
 
             // Apply category filter
             if let Some(cat_name) = &category {
-                let cat = category_service.find_category(cat_name)?.ok_or_else(|| {
-                    EnvelopeError::category_not_found(cat_name)
-                })?;
+                let cat = category_service
+                    .find_category(cat_name)?
+                    .ok_or_else(|| EnvelopeError::category_not_found(cat_name))?;
                 filter = filter.category(cat.id);
             }
 
@@ -281,7 +284,10 @@ pub fn handle_transaction_command(storage: &Storage, cmd: TransactionCommands) -
 
             if let Some(acc_name) = &account {
                 if let Some(acc) = account_service.find(acc_name)? {
-                    print!("{}", format_transaction_list_by_account(&transactions, &acc.name));
+                    print!(
+                        "{}",
+                        format_transaction_list_by_account(&transactions, &acc.name)
+                    );
                 } else {
                     print!("{}", format_transaction_register(&transactions));
                 }
@@ -293,9 +299,9 @@ pub fn handle_transaction_command(storage: &Storage, cmd: TransactionCommands) -
         }
 
         TransactionCommands::Show { id } => {
-            let txn = service.find(&id)?.ok_or_else(|| {
-                EnvelopeError::transaction_not_found(&id)
-            })?;
+            let txn = service
+                .find(&id)?
+                .ok_or_else(|| EnvelopeError::transaction_not_found(&id))?;
 
             let category_name = if let Some(cat_id) = txn.category_id {
                 category_service.get_category(cat_id)?.map(|c| c.name)
@@ -322,15 +328,16 @@ pub fn handle_transaction_command(storage: &Storage, cmd: TransactionCommands) -
             date,
             memo,
         } => {
-            let txn = service.find(&id)?.ok_or_else(|| {
-                EnvelopeError::transaction_not_found(&id)
-            })?;
+            let txn = service
+                .find(&id)?
+                .ok_or_else(|| EnvelopeError::transaction_not_found(&id))?;
 
             // Parse new values if provided
             let new_amount = if let Some(amt_str) = amount {
-                Some(Money::parse(&amt_str).map_err(|e| {
-                    EnvelopeError::Validation(format!("Invalid amount: {}", e))
-                })?)
+                Some(
+                    Money::parse(&amt_str)
+                        .map_err(|e| EnvelopeError::Validation(format!("Invalid amount: {}", e)))?,
+                )
             } else {
                 None
             };
@@ -353,23 +360,17 @@ pub fn handle_transaction_command(storage: &Storage, cmd: TransactionCommands) -
                     // Clear category
                     Some(None)
                 } else {
-                    let cat = category_service.find_category(&cat_name)?.ok_or_else(|| {
-                        EnvelopeError::category_not_found(&cat_name)
-                    })?;
+                    let cat = category_service
+                        .find_category(&cat_name)?
+                        .ok_or_else(|| EnvelopeError::category_not_found(&cat_name))?;
                     Some(Some(cat.id))
                 }
             } else {
                 None
             };
 
-            let updated = service.update(
-                txn.id,
-                new_date,
-                new_amount,
-                payee,
-                new_category_id,
-                memo,
-            )?;
+            let updated =
+                service.update(txn.id, new_date, new_amount, payee, new_category_id, memo)?;
 
             println!("Updated transaction: {}", updated.id);
             println!("  Date:   {}", updated.date);
@@ -380,9 +381,9 @@ pub fn handle_transaction_command(storage: &Storage, cmd: TransactionCommands) -
         }
 
         TransactionCommands::Delete { id, force } => {
-            let txn = service.find(&id)?.ok_or_else(|| {
-                EnvelopeError::transaction_not_found(&id)
-            })?;
+            let txn = service
+                .find(&id)?
+                .ok_or_else(|| EnvelopeError::transaction_not_found(&id))?;
 
             if !force {
                 println!("About to delete transaction:");
@@ -395,31 +396,40 @@ pub fn handle_transaction_command(storage: &Storage, cmd: TransactionCommands) -
             }
 
             let deleted = service.delete(txn.id)?;
-            println!("Deleted transaction: {} ({} {})", deleted.id, deleted.date, deleted.payee_name);
+            println!(
+                "Deleted transaction: {} ({} {})",
+                deleted.id, deleted.date, deleted.payee_name
+            );
         }
 
         TransactionCommands::Clear { id } => {
-            let txn = service.find(&id)?.ok_or_else(|| {
-                EnvelopeError::transaction_not_found(&id)
-            })?;
+            let txn = service
+                .find(&id)?
+                .ok_or_else(|| EnvelopeError::transaction_not_found(&id))?;
 
             let cleared = service.clear(txn.id)?;
-            println!("Cleared transaction: {} ({})", cleared.id, cleared.payee_name);
+            println!(
+                "Cleared transaction: {} ({})",
+                cleared.id, cleared.payee_name
+            );
         }
 
         TransactionCommands::Unclear { id } => {
-            let txn = service.find(&id)?.ok_or_else(|| {
-                EnvelopeError::transaction_not_found(&id)
-            })?;
+            let txn = service
+                .find(&id)?
+                .ok_or_else(|| EnvelopeError::transaction_not_found(&id))?;
 
             let uncleared = service.unclear(txn.id)?;
-            println!("Uncleared transaction: {} ({})", uncleared.id, uncleared.payee_name);
+            println!(
+                "Uncleared transaction: {} ({})",
+                uncleared.id, uncleared.payee_name
+            );
         }
 
         TransactionCommands::Unlock { id } => {
-            let txn = service.find(&id)?.ok_or_else(|| {
-                EnvelopeError::transaction_not_found(&id)
-            })?;
+            let txn = service
+                .find(&id)?
+                .ok_or_else(|| EnvelopeError::transaction_not_found(&id))?;
 
             let unlocked = service.unlock(txn.id)?;
             println!(

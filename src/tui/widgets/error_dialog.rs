@@ -60,21 +60,33 @@ impl ErrorInfo {
             EnvelopeError::Validation(msg) => (
                 "Validation Error".to_string(),
                 msg.clone(),
-                vec![
-                    "Review the input values and try again".to_string(),
-                ],
+                vec!["Review the input values and try again".to_string()],
                 None,
             ),
-            EnvelopeError::NotFound { entity_type, identifier } => (
+            EnvelopeError::NotFound {
+                entity_type,
+                identifier,
+            } => (
                 format!("{} Not Found", entity_type),
-                format!("Could not find {} with identifier '{}'", entity_type.to_lowercase(), identifier),
+                format!(
+                    "Could not find {} with identifier '{}'",
+                    entity_type.to_lowercase(),
+                    identifier
+                ),
                 vec![
                     format!("Check that the {} exists", entity_type.to_lowercase()),
-                    format!("Use 'envelope {} list' to see available {}s", entity_type.to_lowercase(), entity_type.to_lowercase()),
+                    format!(
+                        "Use 'envelope {} list' to see available {}s",
+                        entity_type.to_lowercase(),
+                        entity_type.to_lowercase()
+                    ),
                 ],
                 None,
             ),
-            EnvelopeError::Duplicate { entity_type, identifier } => (
+            EnvelopeError::Duplicate {
+                entity_type,
+                identifier,
+            } => (
                 format!("Duplicate {}", entity_type),
                 format!("{} '{}' already exists", entity_type, identifier),
                 vec![
@@ -138,7 +150,11 @@ impl ErrorInfo {
                 ],
                 None,
             ),
-            EnvelopeError::InsufficientFunds { category, needed, available } => (
+            EnvelopeError::InsufficientFunds {
+                category,
+                needed,
+                available,
+            } => (
                 "Insufficient Funds".to_string(),
                 format!(
                     "Category '{}' has insufficient funds: need ${:.2}, have ${:.2}",
@@ -252,12 +268,12 @@ impl<'a> Widget for ErrorDialog<'a> {
 
         // Render suggestions
         if !self.error.suggestions.is_empty() {
-            let mut lines: Vec<Line> = vec![
-                Line::from(Span::styled(
-                    "Suggestions:",
-                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
-                )),
-            ];
+            let mut lines: Vec<Line> = vec![Line::from(Span::styled(
+                "Suggestions:",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ))];
 
             for suggestion in &self.error.suggestions {
                 lines.push(Line::from(vec![
@@ -282,8 +298,8 @@ impl<'a> Widget for ErrorDialog<'a> {
 
 /// Calculate the area for an error dialog (centered in parent)
 pub fn error_dialog_area(parent: Rect) -> Rect {
-    let width = (parent.width * 70 / 100).min(80).max(40);
-    let height = (parent.height * 50 / 100).min(20).max(10);
+    let width = (parent.width * 70 / 100).clamp(40, 80);
+    let height = (parent.height * 50 / 100).clamp(10, 20);
 
     let x = parent.x + (parent.width - width) / 2;
     let y = parent.y + (parent.height - height) / 2;
@@ -318,8 +334,8 @@ mod tests {
 
     #[test]
     fn test_simple_error_info() {
-        let info = ErrorInfo::simple("Test Error", "Something went wrong")
-            .with_suggestion("Try again");
+        let info =
+            ErrorInfo::simple("Test Error", "Something went wrong").with_suggestion("Try again");
 
         assert_eq!(info.title, "Test Error");
         assert_eq!(info.details, "Something went wrong");

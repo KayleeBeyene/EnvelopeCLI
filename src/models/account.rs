@@ -10,10 +10,11 @@ use super::ids::AccountId;
 use super::money::Money;
 
 /// Type of financial account
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountType {
     /// Checking account
+    #[default]
     Checking,
     /// Savings account
     Savings,
@@ -48,12 +49,6 @@ impl AccountType {
             "other" => Some(Self::Other),
             _ => None,
         }
-    }
-}
-
-impl Default for AccountType {
-    fn default() -> Self {
-        Self::Checking
     }
 }
 
@@ -253,10 +248,7 @@ mod tests {
         assert!(account.validate().is_ok());
 
         account.name = String::new();
-        assert_eq!(
-            account.validate(),
-            Err(AccountValidationError::EmptyName)
-        );
+        assert_eq!(account.validate(), Err(AccountValidationError::EmptyName));
 
         account.name = "a".repeat(101);
         assert!(matches!(

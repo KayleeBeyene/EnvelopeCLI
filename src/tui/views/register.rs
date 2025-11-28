@@ -41,7 +41,11 @@ fn render_header(frame: &mut Frame, app: &mut App, area: Rect) {
     let title = format!(" {} - Transactions ", account_name);
     let block = Block::default()
         .title(title)
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::DarkGray));
 
@@ -61,7 +65,11 @@ fn render_header(frame: &mut Frame, app: &mut App, area: Rect) {
 /// Render transaction table
 fn render_transaction_table(frame: &mut Frame, app: &mut App, area: Rect) {
     let is_focused = app.focused_panel == FocusedPanel::Main;
-    let border_color = if is_focused { Color::Cyan } else { Color::DarkGray };
+    let border_color = if is_focused {
+        Color::Cyan
+    } else {
+        Color::DarkGray
+    };
 
     let block = Block::default()
         .borders(Borders::ALL)
@@ -112,7 +120,11 @@ fn render_transaction_table(frame: &mut Frame, app: &mut App, area: Rect) {
     .height(1);
 
     // Get categories for lookup
-    let categories = app.storage.categories.get_all_categories().unwrap_or_default();
+    let categories = app
+        .storage
+        .categories
+        .get_all_categories()
+        .unwrap_or_default();
 
     // Data rows
     let rows: Vec<Row> = transactions
@@ -133,7 +145,11 @@ fn render_transaction_table(frame: &mut Frame, app: &mut App, area: Rect) {
             // Multi-select indicator
             let is_selected = app.selected_transactions.contains(&txn.id);
             let select_indicator = if app.multi_select_mode {
-                if is_selected { "■ " } else { "□ " }
+                if is_selected {
+                    "■ "
+                } else {
+                    "□ "
+                }
             } else {
                 ""
             };

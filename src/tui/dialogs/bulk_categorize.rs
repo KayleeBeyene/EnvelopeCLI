@@ -95,8 +95,16 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     let count = app.selected_transactions.len();
 
     let block = Block::default()
-        .title(format!(" Categorize {} Transaction{} ", count, if count == 1 { "" } else { "s" }))
-        .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+        .title(format!(
+            " Categorize {} Transaction{} ",
+            count,
+            if count == 1 { "" } else { "s" }
+        ))
+        .title_style(
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan));
 
@@ -114,13 +122,13 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1),  // Search label
-            Constraint::Length(1),  // Search input
-            Constraint::Length(1),  // Spacer
-            Constraint::Min(6),     // Category list
-            Constraint::Length(1),  // Spacer
-            Constraint::Length(1),  // Error/success
-            Constraint::Length(1),  // Hints
+            Constraint::Length(1), // Search label
+            Constraint::Length(1), // Search input
+            Constraint::Length(1), // Spacer
+            Constraint::Min(6),    // Category list
+            Constraint::Length(1), // Spacer
+            Constraint::Length(1), // Error/success
+            Constraint::Length(1), // Hints
         ])
         .split(inner);
 
@@ -201,7 +209,10 @@ fn render_search_field(
     let cursor_pos = cursor.min(search.len());
     let (before, after) = search.split_at(cursor_pos);
 
-    spans.push(Span::styled(before.to_string(), Style::default().fg(Color::White)));
+    spans.push(Span::styled(
+        before.to_string(),
+        Style::default().fg(Color::White),
+    ));
 
     let cursor_char = after.chars().next().unwrap_or(' ');
     spans.push(Span::styled(
@@ -210,7 +221,10 @@ fn render_search_field(
     ));
 
     if after.len() > 1 {
-        spans.push(Span::styled(after[1..].to_string(), Style::default().fg(Color::White)));
+        spans.push(Span::styled(
+            after[1..].to_string(),
+            Style::default().fg(Color::White),
+        ));
     }
 
     if search.is_empty() {
@@ -232,8 +246,8 @@ fn render_category_list(
     area: Rect,
 ) {
     if categories.is_empty() {
-        let text = Paragraph::new("No matching categories")
-            .style(Style::default().fg(Color::DarkGray));
+        let text =
+            Paragraph::new("No matching categories").style(Style::default().fg(Color::DarkGray));
         frame.render_widget(text, area);
         return;
     }
@@ -288,7 +302,10 @@ pub fn handle_key(app: &mut App, key: crossterm::event::KeyEvent) -> bool {
         KeyCode::Enter => {
             // Apply the selected category
             if cat_count > 0 {
-                let idx = app.bulk_categorize_state.category_list_index.min(cat_count.saturating_sub(1));
+                let idx = app
+                    .bulk_categorize_state
+                    .category_list_index
+                    .min(cat_count.saturating_sub(1));
                 if let Some(cat) = filtered.get(idx) {
                     execute_bulk_categorize(app, cat.id);
                 }
@@ -340,7 +357,8 @@ fn execute_bulk_categorize(app: &mut App, category_id: CategoryId) {
     let transaction_ids = app.selected_transactions.clone();
 
     if transaction_ids.is_empty() {
-        app.bulk_categorize_state.set_error("No transactions selected");
+        app.bulk_categorize_state
+            .set_error("No transactions selected");
         return;
     }
 
@@ -373,7 +391,8 @@ fn execute_bulk_categorize(app: &mut App, category_id: CategoryId) {
 
     // Save all changes
     if let Err(e) = app.storage.transactions.save() {
-        app.bulk_categorize_state.set_error(format!("Failed to save: {}", e));
+        app.bulk_categorize_state
+            .set_error(format!("Failed to save: {}", e));
         return;
     }
 

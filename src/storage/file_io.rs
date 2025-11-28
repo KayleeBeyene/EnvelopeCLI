@@ -22,14 +22,12 @@ where
         return Ok(T::default());
     }
 
-    let file = File::open(path).map_err(|e| {
-        EnvelopeError::Storage(format!("Failed to open {}: {}", path.display(), e))
-    })?;
+    let file = File::open(path)
+        .map_err(|e| EnvelopeError::Storage(format!("Failed to open {}: {}", path.display(), e)))?;
 
     let reader = BufReader::new(file);
-    serde_json::from_reader(reader).map_err(|e| {
-        EnvelopeError::Storage(format!("Failed to parse {}: {}", path.display(), e))
-    })
+    serde_json::from_reader(reader)
+        .map_err(|e| EnvelopeError::Storage(format!("Failed to parse {}: {}", path.display(), e)))
 }
 
 /// Read JSON from a file, returning an error if file doesn't exist
@@ -47,14 +45,12 @@ where
         )));
     }
 
-    let file = File::open(path).map_err(|e| {
-        EnvelopeError::Storage(format!("Failed to open {}: {}", path.display(), e))
-    })?;
+    let file = File::open(path)
+        .map_err(|e| EnvelopeError::Storage(format!("Failed to open {}: {}", path.display(), e)))?;
 
     let reader = BufReader::new(file);
-    serde_json::from_reader(reader).map_err(|e| {
-        EnvelopeError::Storage(format!("Failed to parse {}: {}", path.display(), e))
-    })
+    serde_json::from_reader(reader)
+        .map_err(|e| EnvelopeError::Storage(format!("Failed to parse {}: {}", path.display(), e)))
 }
 
 /// Write JSON to a file atomically (write to temp, then rename)
@@ -83,23 +79,22 @@ where
     let temp_path = path.with_extension("json.tmp");
 
     // Write to temp file
-    let file = File::create(&temp_path).map_err(|e| {
-        EnvelopeError::Storage(format!("Failed to create temp file: {}", e))
-    })?;
+    let file = File::create(&temp_path)
+        .map_err(|e| EnvelopeError::Storage(format!("Failed to create temp file: {}", e)))?;
 
     let mut writer = BufWriter::new(file);
-    serde_json::to_writer_pretty(&mut writer, data).map_err(|e| {
-        EnvelopeError::Storage(format!("Failed to serialize data: {}", e))
-    })?;
+    serde_json::to_writer_pretty(&mut writer, data)
+        .map_err(|e| EnvelopeError::Storage(format!("Failed to serialize data: {}", e)))?;
 
-    writer.flush().map_err(|e| {
-        EnvelopeError::Storage(format!("Failed to flush data: {}", e))
-    })?;
+    writer
+        .flush()
+        .map_err(|e| EnvelopeError::Storage(format!("Failed to flush data: {}", e)))?;
 
     // Sync to disk before rename
-    writer.get_ref().sync_all().map_err(|e| {
-        EnvelopeError::Storage(format!("Failed to sync data: {}", e))
-    })?;
+    writer
+        .get_ref()
+        .sync_all()
+        .map_err(|e| EnvelopeError::Storage(format!("Failed to sync data: {}", e)))?;
 
     // Atomic rename
     fs::rename(&temp_path, path).map_err(|e| {
