@@ -19,7 +19,7 @@
 //! # Example
 //!
 //! ```rust,ignore
-//! use envelope::config::{paths::EnvelopePaths, settings::Settings};
+//! use envelope_cli::config::{paths::EnvelopePaths, settings::Settings};
 //!
 //! let paths = EnvelopePaths::new()?;
 //! let settings = Settings::load_or_create(&paths)?;

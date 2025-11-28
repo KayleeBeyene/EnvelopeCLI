@@ -1,14 +1,14 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use envelope::cli::{
+use envelope_cli::cli::{
     handle_account_command, handle_backup_command, handle_budget_command, handle_category_command,
     handle_encrypt_command, handle_export_command, handle_import_command, handle_payee_command,
     handle_reconcile_command, handle_report_command, handle_target_command,
     handle_transaction_command, handle_transfer_command,
 };
-use envelope::config::{paths::EnvelopePaths, settings::Settings};
-use envelope::storage::Storage;
+use envelope_cli::config::{paths::EnvelopePaths, settings::Settings};
+use envelope_cli::storage::Storage;
 
 #[derive(Parser)]
 #[command(
@@ -33,47 +33,47 @@ enum Commands {
 
     /// Account management commands
     #[command(subcommand)]
-    Account(envelope::cli::AccountCommands),
+    Account(envelope_cli::cli::AccountCommands),
 
     /// Category management commands
     #[command(subcommand)]
-    Category(envelope::cli::CategoryCommands),
+    Category(envelope_cli::cli::CategoryCommands),
 
     /// Budget management commands
     #[command(subcommand)]
-    Budget(envelope::cli::BudgetCommands),
+    Budget(envelope_cli::cli::BudgetCommands),
 
     /// Budget target management commands
     #[command(subcommand)]
-    Target(envelope::cli::TargetCommands),
+    Target(envelope_cli::cli::TargetCommands),
 
     /// Backup management commands
     #[command(subcommand)]
-    Backup(envelope::cli::BackupCommands),
+    Backup(envelope_cli::cli::BackupCommands),
 
     /// Transaction management commands
     #[command(subcommand, alias = "txn")]
-    Transaction(envelope::cli::TransactionCommands),
+    Transaction(envelope_cli::cli::TransactionCommands),
 
     /// Payee management commands
     #[command(subcommand)]
-    Payee(envelope::cli::PayeeCommands),
+    Payee(envelope_cli::cli::PayeeCommands),
 
     /// Reconciliation commands
     #[command(subcommand)]
-    Reconcile(envelope::cli::ReconcileCommands),
+    Reconcile(envelope_cli::cli::ReconcileCommands),
 
     /// Generate reports
     #[command(subcommand)]
-    Report(envelope::cli::ReportCommands),
+    Report(envelope_cli::cli::ReportCommands),
 
     /// Export data
     #[command(subcommand)]
-    Export(envelope::cli::ExportCommands),
+    Export(envelope_cli::cli::ExportCommands),
 
     /// Encryption management commands
     #[command(subcommand)]
-    Encrypt(envelope::cli::EncryptCommands),
+    Encrypt(envelope_cli::cli::EncryptCommands),
 
     /// Transfer between accounts
     Transfer {
@@ -121,7 +121,7 @@ fn main() -> Result<()> {
     match cli.command {
         Some(Commands::Tui) => {
             // Launch the TUI
-            envelope::tui::run_tui(&storage, &settings, &paths)?;
+            envelope_cli::tui::run_tui(&storage, &settings, &paths)?;
         }
         Some(Commands::Account(cmd)) => {
             handle_account_command(&storage, cmd)?;
@@ -173,7 +173,7 @@ fn main() -> Result<()> {
                 "Initializing EnvelopeCLI at: {}",
                 paths.data_dir().display()
             );
-            envelope::storage::init::initialize_storage(&paths)?;
+            envelope_cli::storage::init::initialize_storage(&paths)?;
             settings.save(&paths)?;
             println!("Initialization complete!");
             println!();
