@@ -147,7 +147,12 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
                             } else {
                                 0.0
                             };
-                            format!("{} by {} ({:.0}%)", t.amount, target_date.format("%b %Y"), progress_pct)
+                            format!(
+                                "{} by {} ({:.0}%)",
+                                t.amount,
+                                target_date.format("%b %Y"),
+                                progress_pct
+                            )
                         }
                         _ => format!("{} {}", t.amount, t.cadence),
                     }
@@ -201,7 +206,7 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
 
     // Column widths
     let widths = [
-        ratatui::layout::Constraint::Min(20),    // Category name (with target indicator)
+        ratatui::layout::Constraint::Min(20), // Category name (with target indicator)
         ratatui::layout::Constraint::Length(14), // Budgeted
         ratatui::layout::Constraint::Length(14), // Activity
         ratatui::layout::Constraint::Length(14), // Available

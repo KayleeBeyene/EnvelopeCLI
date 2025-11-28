@@ -76,9 +76,8 @@ pub fn handle_target_command(
                 .find_category(&category)?
                 .ok_or_else(|| EnvelopeError::category_not_found(&category))?;
 
-            let amount = Money::parse(&amount).map_err(|e| {
-                EnvelopeError::Validation(format!("Invalid amount: {}", e))
-            })?;
+            let amount = Money::parse(&amount)
+                .map_err(|e| EnvelopeError::Validation(format!("Invalid amount: {}", e)))?;
 
             let cadence = parse_cadence(&cadence, days, date.as_deref())?;
 
@@ -112,10 +111,7 @@ pub fn handle_target_command(
             } else {
                 println!("Budget Targets:");
                 println!("{}", "-".repeat(60));
-                println!(
-                    "{:25} {:>12} {:>15}",
-                    "Category", "Amount", "Cadence"
-                );
+                println!("{:25} {:>12} {:>15}", "Category", "Amount", "Cadence");
                 println!("{}", "-".repeat(60));
 
                 let current_period = period_service.current_period();
@@ -196,7 +192,10 @@ pub fn handle_target_command(
                 None => {
                     println!("No target set for '{}'.", cat.name);
                     println!();
-                    println!("Use 'envelope target set {} <amount>' to create one.", cat.name);
+                    println!(
+                        "Use 'envelope target set {} <amount>' to create one.",
+                        cat.name
+                    );
                 }
             }
         }
@@ -291,7 +290,8 @@ fn parse_cadence(
         "by-date" | "bydate" | "by_date" => {
             let date_str = date.ok_or_else(|| {
                 EnvelopeError::Validation(
-                    "By-date cadence requires --date parameter (e.g., --date 2025-12-25)".to_string(),
+                    "By-date cadence requires --date parameter (e.g., --date 2025-12-25)"
+                        .to_string(),
                 )
             })?;
             let target_date = NaiveDate::parse_from_str(date_str, "%Y-%m-%d").map_err(|e| {

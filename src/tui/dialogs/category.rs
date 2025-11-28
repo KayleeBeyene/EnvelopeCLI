@@ -143,7 +143,9 @@ impl CategoryFormState {
 
     /// Get selected group ID
     pub fn selected_group_id(&self) -> Option<CategoryGroupId> {
-        self.groups.get(self.selected_group_index).map(|(id, _)| *id)
+        self.groups
+            .get(self.selected_group_index)
+            .map(|(id, _)| *id)
     }
 
     /// Get selected group name
@@ -383,7 +385,9 @@ pub fn handle_key(app: &mut App, key: crossterm::event::KeyEvent) -> bool {
             return true;
         }
 
-        KeyCode::BackTab | KeyCode::Up if app.category_form.focused_field == CategoryField::Group => {
+        KeyCode::BackTab | KeyCode::Up
+            if app.category_form.focused_field == CategoryField::Group =>
+        {
             app.category_form.prev_field();
             return true;
         }

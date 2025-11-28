@@ -126,9 +126,7 @@ fn execute_import(
     account_id: AccountId,
 ) -> EnvelopeResult<()> {
     let result = import_service.import_from_preview(
-        preview,
-        account_id,
-        None,  // No default category
+        preview, account_id, None,  // No default category
         false, // Don't mark as cleared
     )?;
 

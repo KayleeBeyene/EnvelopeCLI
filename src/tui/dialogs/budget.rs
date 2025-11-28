@@ -287,7 +287,8 @@ impl BudgetDialogState {
         match self.target_field {
             TargetField::Amount => {
                 if c.is_ascii_digit() || c == '.' {
-                    self.target_amount_input.insert(self.target_amount_cursor, c);
+                    self.target_amount_input
+                        .insert(self.target_amount_cursor, c);
                     self.target_amount_cursor += 1;
                     self.error_message = None;
                 }
@@ -618,18 +619,17 @@ fn render_period_tab(frame: &mut Frame, area: Rect, app: &App) {
     row += 1;
 
     // Amount input with cursor
-    let input_line = render_input_with_cursor(
-        "$",
-        &state.period_amount_input,
-        state.period_cursor,
-        true,
-    );
+    let input_line =
+        render_input_with_cursor("$", &state.period_amount_input, state.period_cursor, true);
     frame.render_widget(Paragraph::new(input_line), chunks[row]);
     row += 1;
 
     // Error message
     if let Some(ref error) = state.error_message {
-        let error_line = Line::from(Span::styled(error.as_str(), Style::default().fg(Color::Red)));
+        let error_line = Line::from(Span::styled(
+            error.as_str(),
+            Style::default().fg(Color::Red),
+        ));
         frame.render_widget(Paragraph::new(error_line), chunks[row]);
     }
     row += 1;
@@ -734,7 +734,10 @@ fn render_target_tab(frame: &mut Frame, area: Rect, app: &App) {
 
     // Error message
     if let Some(ref error) = state.error_message {
-        let error_line = Line::from(Span::styled(error.as_str(), Style::default().fg(Color::Red)));
+        let error_line = Line::from(Span::styled(
+            error.as_str(),
+            Style::default().fg(Color::Red),
+        ));
         frame.render_widget(Paragraph::new(error_line), chunks[row]);
     }
     row += 1;
@@ -753,7 +756,12 @@ fn render_target_tab(frame: &mut Frame, area: Rect, app: &App) {
     frame.render_widget(Paragraph::new(instructions), chunks[row]);
 }
 
-fn render_input_with_cursor(prefix: &str, value: &str, cursor: usize, _focused: bool) -> Line<'static> {
+fn render_input_with_cursor(
+    prefix: &str,
+    value: &str,
+    cursor: usize,
+    _focused: bool,
+) -> Line<'static> {
     let mut spans = vec![];
 
     if !prefix.is_empty() {
@@ -965,16 +973,12 @@ fn handle_target_key(app: &mut App, key: crossterm::event::KeyEvent) -> bool {
             true
         }
 
-        KeyCode::Char('j')
-            if app.budget_dialog_state.target_field == TargetField::Cadence =>
-        {
+        KeyCode::Char('j') if app.budget_dialog_state.target_field == TargetField::Cadence => {
             app.budget_dialog_state.next_cadence();
             true
         }
 
-        KeyCode::Char('k')
-            if app.budget_dialog_state.target_field == TargetField::Cadence =>
-        {
+        KeyCode::Char('k') if app.budget_dialog_state.target_field == TargetField::Cadence => {
             app.budget_dialog_state.prev_cadence();
             true
         }

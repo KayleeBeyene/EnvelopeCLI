@@ -677,9 +677,7 @@ fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
         CommandAction::DeleteCategory => {
             // Delete selected category with confirmation
             if let Some(category_id) = app.selected_category {
-                if let Ok(Some(category)) =
-                    app.storage.categories.get_category(category_id)
-                {
+                if let Ok(Some(category)) = app.storage.categories.get_category(category_id) {
                     app.open_dialog(ActiveDialog::Confirm(format!(
                         "Delete category '{}'?",
                         category.name
