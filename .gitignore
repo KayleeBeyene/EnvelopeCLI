@@ -1,7 +1,7 @@
 # Rust build artifacts
 /target/
 **/*.rs.bk
-Cargo.lock
+# Note: Cargo.lock is committed for binary crates per Rust guidelines
 
 # IDE
 .idea/
