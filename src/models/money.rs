@@ -20,7 +20,7 @@ impl Money {
     ///
     /// # Examples
     /// ```
-    /// use envelope::models::Money;
+    /// use envelope_cli::models::Money;
     /// let amount = Money::from_cents(1050); // $10.50
     /// ```
     pub const fn from_cents(cents: i64) -> Self {
@@ -31,7 +31,7 @@ impl Money {
     ///
     /// # Examples
     /// ```
-    /// use envelope::models::Money;
+    /// use envelope_cli::models::Money;
     /// let amount = Money::from_dollars_cents(10, 50); // $10.50
     /// ```
     pub const fn from_dollars_cents(dollars: i64, cents: i64) -> Self {
