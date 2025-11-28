@@ -25,7 +25,8 @@ pub enum TransactionField {
     Date,
     Payee,
     Category,
-    Amount,
+    Outflow,
+    Inflow,
     Memo,
 }
 
@@ -35,8 +36,9 @@ impl TransactionField {
         match self {
             Self::Date => Self::Payee,
             Self::Payee => Self::Category,
-            Self::Category => Self::Amount,
-            Self::Amount => Self::Memo,
+            Self::Category => Self::Outflow,
+            Self::Outflow => Self::Inflow,
+            Self::Inflow => Self::Memo,
             Self::Memo => Self::Date,
         }
     }
@@ -47,8 +49,9 @@ impl TransactionField {
             Self::Date => Self::Memo,
             Self::Payee => Self::Date,
             Self::Category => Self::Payee,
-            Self::Amount => Self::Category,
-            Self::Memo => Self::Amount,
+            Self::Outflow => Self::Category,
+            Self::Inflow => Self::Outflow,
+            Self::Memo => Self::Inflow,
         }
     }
 }
@@ -77,8 +80,11 @@ pub struct TransactionFormState {
     /// Show category dropdown
     pub show_category_dropdown: bool,
 
-    /// Amount input
-    pub amount_input: TextInput,
+    /// Outflow input (money going out - expenses)
+    pub outflow_input: TextInput,
+
+    /// Inflow input (money coming in - income)
+    pub inflow_input: TextInput,
 
     /// Memo input
     pub memo_input: TextInput,
@@ -115,9 +121,12 @@ impl TransactionFormState {
             selected_category: None,
             category_list_index: 0,
             show_category_dropdown: false,
-            amount_input: TextInput::new()
-                .label("Amount")
-                .placeholder("0.00 (negative for expense)"),
+            outflow_input: TextInput::new()
+                .label("Outflow")
+                .placeholder("(expense)"),
+            inflow_input: TextInput::new()
+                .label("Inflow")
+                .placeholder("(income)"),
             memo_input: TextInput::new().label("Memo").placeholder("Optional note"),
             is_edit: false,
             error_message: None,
@@ -132,9 +141,27 @@ impl TransactionFormState {
             .label("Date")
             .content(txn.date.format("%Y-%m-%d").to_string());
         state.payee_input = TextInput::new().label("Payee").content(&txn.payee_name);
-        state.amount_input = TextInput::new()
-            .label("Amount")
-            .content(format!("{:.2}", txn.amount.cents() as f64 / 100.0));
+
+        // Populate outflow/inflow based on amount sign
+        let cents = txn.amount.cents();
+        if cents < 0 {
+            // Negative = outflow (expense)
+            state.outflow_input = TextInput::new()
+                .label("Outflow")
+                .content(format!("{:.2}", (-cents) as f64 / 100.0));
+            state.inflow_input = TextInput::new()
+                .label("Inflow")
+                .placeholder("0.00");
+        } else if cents > 0 {
+            // Positive = inflow (income)
+            state.outflow_input = TextInput::new()
+                .label("Outflow")
+                .placeholder("0.00");
+            state.inflow_input = TextInput::new()
+                .label("Inflow")
+                .content(format!("{:.2}", cents as f64 / 100.0));
+        }
+
         state.memo_input = TextInput::new().label("Memo").content(&txn.memo);
 
         // Set category
@@ -167,7 +194,8 @@ impl TransactionFormState {
         self.date_input.focused = self.focused_field == TransactionField::Date;
         self.payee_input.focused = self.focused_field == TransactionField::Payee;
         self.category_input.focused = self.focused_field == TransactionField::Category;
-        self.amount_input.focused = self.focused_field == TransactionField::Amount;
+        self.outflow_input.focused = self.focused_field == TransactionField::Outflow;
+        self.inflow_input.focused = self.focused_field == TransactionField::Inflow;
         self.memo_input.focused = self.focused_field == TransactionField::Memo;
 
         // Show dropdown when category is focused
@@ -188,7 +216,8 @@ impl TransactionFormState {
             TransactionField::Date => &mut self.date_input,
             TransactionField::Payee => &mut self.payee_input,
             TransactionField::Category => &mut self.category_input,
-            TransactionField::Amount => &mut self.amount_input,
+            TransactionField::Outflow => &mut self.outflow_input,
+            TransactionField::Inflow => &mut self.inflow_input,
             TransactionField::Memo => &mut self.memo_input,
         }
     }
@@ -200,13 +229,27 @@ impl TransactionFormState {
             return Err("Invalid date format. Use YYYY-MM-DD".to_string());
         }
 
-        // Validate amount
-        let amount_str = self.amount_input.value().trim();
-        if amount_str.is_empty() {
-            return Err("Amount is required".to_string());
+        // Validate outflow/inflow - at least one must have a value
+        let outflow_str = self.outflow_input.value().trim();
+        let inflow_str = self.inflow_input.value().trim();
+
+        let has_outflow = !outflow_str.is_empty();
+        let has_inflow = !inflow_str.is_empty();
+
+        if !has_outflow && !has_inflow {
+            return Err("Enter an outflow or inflow amount".to_string());
         }
-        if Money::parse(amount_str).is_err() {
-            return Err("Invalid amount format".to_string());
+
+        if has_outflow && has_inflow {
+            return Err("Enter either outflow OR inflow, not both".to_string());
+        }
+
+        if has_outflow && Money::parse(outflow_str).is_err() {
+            return Err("Invalid outflow format".to_string());
+        }
+
+        if has_inflow && Money::parse(inflow_str).is_err() {
+            return Err("Invalid inflow format".to_string());
         }
 
         Ok(())
@@ -222,7 +265,18 @@ impl TransactionFormState {
         let date = NaiveDate::parse_from_str(self.date_input.value(), "%Y-%m-%d")
             .map_err(|_| "Invalid date")?;
 
-        let amount = Money::parse(self.amount_input.value()).map_err(|_| "Invalid amount")?;
+        // Calculate amount from outflow/inflow
+        let outflow_str = self.outflow_input.value().trim();
+        let inflow_str = self.inflow_input.value().trim();
+
+        let amount = if !outflow_str.is_empty() {
+            // Outflow = negative amount (expense)
+            let parsed = Money::parse(outflow_str).map_err(|_| "Invalid outflow")?;
+            -parsed
+        } else {
+            // Inflow = positive amount (income)
+            Money::parse(inflow_str).map_err(|_| "Invalid inflow")?
+        };
 
         let mut txn = Transaction::with_details(
             account_id,
@@ -290,7 +344,8 @@ pub fn render(frame: &mut Frame, app: &mut App) {
             Constraint::Length(1), // Payee
             Constraint::Length(1), // Category input
             Constraint::Length(6), // Category dropdown
-            Constraint::Length(1), // Amount
+            Constraint::Length(1), // Outflow
+            Constraint::Length(1), // Inflow
             Constraint::Length(1), // Memo
             Constraint::Length(1), // Spacer
             Constraint::Length(1), // Error
@@ -310,10 +365,15 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     let payee_cursor = app.transaction_form.payee_input.cursor;
     let payee_placeholder = app.transaction_form.payee_input.placeholder.clone();
 
-    let amount_value = app.transaction_form.amount_input.value().to_string();
-    let amount_focused = app.transaction_form.focused_field == TransactionField::Amount;
-    let amount_cursor = app.transaction_form.amount_input.cursor;
-    let amount_placeholder = app.transaction_form.amount_input.placeholder.clone();
+    let outflow_value = app.transaction_form.outflow_input.value().to_string();
+    let outflow_focused = app.transaction_form.focused_field == TransactionField::Outflow;
+    let outflow_cursor = app.transaction_form.outflow_input.cursor;
+    let outflow_placeholder = app.transaction_form.outflow_input.placeholder.clone();
+
+    let inflow_value = app.transaction_form.inflow_input.value().to_string();
+    let inflow_focused = app.transaction_form.focused_field == TransactionField::Inflow;
+    let inflow_cursor = app.transaction_form.inflow_input.cursor;
+    let inflow_placeholder = app.transaction_form.inflow_input.placeholder.clone();
 
     let memo_value = app.transaction_form.memo_input.value().to_string();
     let memo_focused = app.transaction_form.focused_field == TransactionField::Memo;
@@ -347,21 +407,32 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     // Render category field (needs app for category lookup)
     render_category_field(frame, app, chunks[2], chunks[3]);
 
-    // Render amount field
+    // Render outflow field
     render_field_simple(
         frame,
         chunks[4],
-        "Amount",
-        &amount_value,
-        amount_focused,
-        amount_cursor,
-        &amount_placeholder,
+        "Outflow",
+        &outflow_value,
+        outflow_focused,
+        outflow_cursor,
+        &outflow_placeholder,
+    );
+
+    // Render inflow field
+    render_field_simple(
+        frame,
+        chunks[5],
+        "Inflow",
+        &inflow_value,
+        inflow_focused,
+        inflow_cursor,
+        &inflow_placeholder,
     );
 
     // Render memo field
     render_field_simple(
         frame,
-        chunks[5],
+        chunks[6],
         "Memo",
         &memo_value,
         memo_focused,
@@ -375,7 +446,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
             error.as_str(),
             Style::default().fg(Color::Red),
         ));
-        frame.render_widget(Paragraph::new(error_line), chunks[7]);
+        frame.render_widget(Paragraph::new(error_line), chunks[8]);
     }
 
     // Render buttons/hints
@@ -389,7 +460,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
         Span::styled("[Esc]", Style::default().fg(Color::Red)),
         Span::raw(" Cancel"),
     ]);
-    frame.render_widget(Paragraph::new(hints), chunks[8]);
+    frame.render_widget(Paragraph::new(hints), chunks[9]);
 }
 
 /// Render a single form field with extracted values

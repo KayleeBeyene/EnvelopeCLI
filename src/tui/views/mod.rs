@@ -82,6 +82,9 @@ fn render_dialog(frame: &mut Frame, app: &mut App) {
         ActiveDialog::Adjustment => {
             dialogs::adjustment::render(frame, app);
         }
+        ActiveDialog::EditBudget => {
+            dialogs::edit_budget::render(frame, app);
+        }
         ActiveDialog::None => {}
     }
 }

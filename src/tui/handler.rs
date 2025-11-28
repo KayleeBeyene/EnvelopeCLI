@@ -408,9 +408,19 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             app.open_dialog(ActiveDialog::MoveFunds);
         }
 
-        // Quick budget (edit inline) - would need editing mode
+        // Edit budget for selected category
         KeyCode::Enter => {
-            // Could implement inline editing here
+            // Initialize and open the edit budget dialog
+            if let Some(cat) = categories.get(app.selected_category_index) {
+                let budget_service = crate::services::BudgetService::new(app.storage);
+                let summary = budget_service
+                    .get_category_summary(cat.id, &app.current_period)
+                    .unwrap_or_else(|_| crate::models::CategoryBudgetSummary::empty(cat.id));
+
+                app.edit_budget_state
+                    .init(cat.id, cat.name.clone(), summary.budgeted);
+                app.open_dialog(ActiveDialog::EditBudget);
+            }
         }
 
         _ => {}
@@ -552,6 +562,9 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
                     super::dialogs::adjustment::handle_key(app, key.code);
                 }
             }
+        }
+        ActiveDialog::EditBudget => {
+            super::dialogs::edit_budget::handle_key(app, key);
         }
         ActiveDialog::None => {}
     }

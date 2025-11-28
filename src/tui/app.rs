@@ -9,6 +9,7 @@ use crate::storage::Storage;
 
 use super::dialogs::adjustment::AdjustmentDialogState;
 use super::dialogs::bulk_categorize::BulkCategorizeState;
+use super::dialogs::edit_budget::EditBudgetState;
 use super::dialogs::move_funds::MoveFundsState;
 use super::dialogs::reconcile_start::ReconcileStartState;
 use super::dialogs::transaction::TransactionFormState;
@@ -58,6 +59,7 @@ pub enum ActiveDialog {
     ReconcileStart,
     UnlockConfirm(UnlockConfirmState),
     Adjustment,
+    EditBudget,
 }
 
 /// Main application state
@@ -148,6 +150,9 @@ pub struct App<'a> {
 
     /// Adjustment dialog state
     pub adjustment_dialog_state: AdjustmentDialogState,
+
+    /// Edit budget dialog state
+    pub edit_budget_state: EditBudgetState,
 }
 
 impl<'a> App<'a> {
@@ -190,6 +195,7 @@ impl<'a> App<'a> {
             reconciliation_state: ReconciliationState::new(),
             reconcile_start_state: ReconcileStartState::new(),
             adjustment_dialog_state: AdjustmentDialogState::default(),
+            edit_budget_state: EditBudgetState::new(),
         }
     }
 
