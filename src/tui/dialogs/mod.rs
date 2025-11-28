@@ -13,5 +13,6 @@ pub mod group;
 pub mod help;
 pub mod move_funds;
 pub mod reconcile_start;
+pub mod target;
 pub mod transaction;
 pub mod unlock_confirm;

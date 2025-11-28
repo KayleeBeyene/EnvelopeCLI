@@ -10,6 +10,7 @@ pub mod ids;
 pub mod money;
 pub mod payee;
 pub mod period;
+pub mod target;
 pub mod transaction;
 
 pub use account::{Account, AccountType};
@@ -19,4 +20,5 @@ pub use ids::{AccountId, CategoryGroupId, CategoryId, PayeeId, TransactionId};
 pub use money::Money;
 pub use payee::Payee;
 pub use period::BudgetPeriod;
+pub use target::{BudgetTarget, BudgetTargetId, TargetCadence};
 pub use transaction::{Split, Transaction, TransactionStatus};

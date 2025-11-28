@@ -456,10 +456,22 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
                 let summary = budget_service
                     .get_category_summary(cat.id, &app.current_period)
                     .unwrap_or_else(|_| crate::models::CategoryBudgetSummary::empty(cat.id));
+                let suggested = budget_service
+                    .get_suggested_budget(cat.id, &app.current_period)
+                    .ok()
+                    .flatten();
 
                 app.edit_budget_state
-                    .init(cat.id, cat.name.clone(), summary.budgeted);
+                    .init(cat.id, cat.name.clone(), summary.budgeted, suggested);
                 app.open_dialog(ActiveDialog::EditBudget);
+            }
+        }
+
+        // Set budget target for selected category
+        KeyCode::Char('t') => {
+            if let Some(cat) = categories.get(app.selected_category_index) {
+                app.selected_category = Some(cat.id);
+                app.open_dialog(ActiveDialog::SetTarget);
             }
         }
 
@@ -669,8 +681,12 @@ fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
                         .unwrap_or_else(|_| {
                             crate::models::CategoryBudgetSummary::empty(category_id)
                         });
+                    let suggested = budget_service
+                        .get_suggested_budget(category_id, &app.current_period)
+                        .ok()
+                        .flatten();
                     app.edit_budget_state
-                        .init(category_id, category.name.clone(), summary.budgeted);
+                        .init(category_id, category.name.clone(), summary.budgeted, suggested);
                     app.open_dialog(ActiveDialog::EditBudget);
                 }
             } else {
@@ -847,6 +863,9 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
         }
         ActiveDialog::AddGroup => {
             super::dialogs::group::handle_key(app, key);
+        }
+        ActiveDialog::SetTarget => {
+            super::dialogs::target::handle_key(app, key);
         }
         ActiveDialog::None => {}
     }

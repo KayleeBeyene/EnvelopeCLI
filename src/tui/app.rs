@@ -15,6 +15,7 @@ use super::dialogs::edit_budget::EditBudgetState;
 use super::dialogs::group::GroupFormState;
 use super::dialogs::move_funds::MoveFundsState;
 use super::dialogs::reconcile_start::ReconcileStartState;
+use super::dialogs::target::TargetFormState;
 use super::dialogs::transaction::TransactionFormState;
 use super::dialogs::unlock_confirm::UnlockConfirmState;
 use super::views::reconcile::ReconciliationState;
@@ -68,6 +69,7 @@ pub enum ActiveDialog {
     UnlockConfirm(UnlockConfirmState),
     Adjustment,
     EditBudget,
+    SetTarget,
 }
 
 /// Main application state
@@ -170,6 +172,9 @@ pub struct App<'a> {
 
     /// Group form dialog state
     pub group_form: GroupFormState,
+
+    /// Target form dialog state
+    pub target_form: TargetFormState,
 }
 
 impl<'a> App<'a> {
@@ -216,6 +221,7 @@ impl<'a> App<'a> {
             account_form: AccountFormState::new(),
             category_form: CategoryFormState::new(),
             group_form: GroupFormState::new(),
+            target_form: TargetFormState::new(),
         }
     }
 
@@ -425,6 +431,23 @@ impl<'a> App<'a> {
                 // Reset form for new group
                 self.group_form = GroupFormState::new();
                 self.input_mode = InputMode::Editing;
+            }
+            ActiveDialog::SetTarget => {
+                // Initialize target form for selected category
+                if let Some(category_id) = self.selected_category {
+                    if let Ok(Some(category)) = self.storage.categories.get_category(category_id) {
+                        // Check for existing target
+                        let existing_target = self
+                            .storage
+                            .targets
+                            .get_for_category(category_id)
+                            .ok()
+                            .flatten();
+                        self.target_form
+                            .init_for_category(category_id, category.name, existing_target.as_ref());
+                        self.input_mode = InputMode::Editing;
+                    }
+                }
             }
             _ => {}
         }

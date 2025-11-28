@@ -10,6 +10,7 @@ pub mod categories;
 pub mod file_io;
 pub mod init;
 pub mod payees;
+pub mod targets;
 pub mod transactions;
 
 pub use accounts::AccountRepository;
@@ -18,6 +19,7 @@ pub use categories::CategoryRepository;
 pub use file_io::{read_json, write_json_atomic};
 pub use init::initialize_storage;
 pub use payees::PayeeRepository;
+pub use targets::TargetRepository;
 pub use transactions::TransactionRepository;
 
 use std::path::{Path, PathBuf};
@@ -37,6 +39,7 @@ pub struct Storage {
     pub categories: CategoryRepository,
     pub budget: BudgetRepository,
     pub payees: PayeeRepository,
+    pub targets: TargetRepository,
     audit: AuditLogger,
 }
 
@@ -54,6 +57,7 @@ impl Storage {
             categories: CategoryRepository::new(paths.budget_file()),
             budget: BudgetRepository::new(paths.allocations_file()),
             payees: PayeeRepository::new(paths.payees_file()),
+            targets: TargetRepository::new(paths.targets_file()),
             audit,
             paths,
         })
@@ -131,6 +135,7 @@ impl Storage {
         self.categories.load()?;
         self.budget.load()?;
         self.payees.load()?;
+        self.targets.load()?;
         Ok(())
     }
 
@@ -141,6 +146,7 @@ impl Storage {
         self.categories.save()?;
         self.budget.save()?;
         self.payees.save()?;
+        self.targets.save()?;
         Ok(())
     }
 

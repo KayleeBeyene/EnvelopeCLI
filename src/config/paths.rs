@@ -93,6 +93,11 @@ impl EnvelopePaths {
         self.data_dir().join("payees.json")
     }
 
+    /// Get the path to targets.json (budget targets)
+    pub fn targets_file(&self) -> PathBuf {
+        self.data_dir().join("targets.json")
+    }
+
     /// Ensure all required directories exist
     ///
     /// Creates:

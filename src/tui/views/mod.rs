@@ -94,6 +94,9 @@ fn render_dialog(frame: &mut Frame, app: &mut App) {
         ActiveDialog::AddGroup => {
             dialogs::group::render(frame, app);
         }
+        ActiveDialog::SetTarget => {
+            dialogs::target::render(frame, app);
+        }
         ActiveDialog::None => {}
     }
 }

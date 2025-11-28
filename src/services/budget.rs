@@ -5,7 +5,10 @@
 
 use crate::audit::EntityType;
 use crate::error::{EnvelopeError, EnvelopeResult};
-use crate::models::{BudgetAllocation, BudgetPeriod, CategoryBudgetSummary, CategoryId, Money};
+use crate::models::{
+    BudgetAllocation, BudgetPeriod, BudgetTarget, BudgetTargetId, CategoryBudgetSummary,
+    CategoryId, Money, TargetCadence,
+};
 use crate::services::CategoryService;
 use crate::storage::Storage;
 
@@ -439,6 +442,174 @@ impl<'a> BudgetService<'a> {
         }
 
         Ok(overspent)
+    }
+
+    // ==================== Budget Target Methods ====================
+
+    /// Create or update a budget target for a category
+    pub fn set_target(
+        &self,
+        category_id: CategoryId,
+        amount: Money,
+        cadence: TargetCadence,
+    ) -> EnvelopeResult<BudgetTarget> {
+        let category = self
+            .storage
+            .categories
+            .get_category(category_id)?
+            .ok_or_else(|| EnvelopeError::category_not_found(category_id.to_string()))?;
+
+        // Deactivate any existing active target for this category
+        if let Some(mut existing) = self.storage.targets.get_for_category(category_id)? {
+            existing.deactivate();
+            self.storage.targets.upsert(existing)?;
+        }
+
+        let target = BudgetTarget::new(category_id, amount, cadence);
+        target
+            .validate()
+            .map_err(|e| EnvelopeError::Budget(e.to_string()))?;
+
+        self.storage.targets.upsert(target.clone())?;
+        self.storage.targets.save()?;
+
+        self.storage.log_create(
+            EntityType::BudgetTarget,
+            target.id.to_string(),
+            Some(category.name),
+            &target,
+        )?;
+
+        Ok(target)
+    }
+
+    /// Update an existing budget target
+    pub fn update_target(
+        &self,
+        target_id: BudgetTargetId,
+        amount: Option<Money>,
+        cadence: Option<TargetCadence>,
+    ) -> EnvelopeResult<BudgetTarget> {
+        let mut target = self
+            .storage
+            .targets
+            .get(target_id)?
+            .ok_or_else(|| EnvelopeError::Budget(format!("Target {} not found", target_id)))?;
+
+        let before = target.clone();
+
+        if let Some(amt) = amount {
+            target.set_amount(amt);
+        }
+        if let Some(cad) = cadence {
+            target.set_cadence(cad);
+        }
+
+        target
+            .validate()
+            .map_err(|e| EnvelopeError::Budget(e.to_string()))?;
+
+        self.storage.targets.upsert(target.clone())?;
+        self.storage.targets.save()?;
+
+        let category = self.storage.categories.get_category(target.category_id)?;
+        let category_name = category.map(|c| c.name);
+
+        self.storage.log_update(
+            EntityType::BudgetTarget,
+            target.id.to_string(),
+            category_name,
+            &before,
+            &target,
+            Some(format!("{} -> {}", before, target)),
+        )?;
+
+        Ok(target)
+    }
+
+    /// Get the active target for a category
+    pub fn get_target(&self, category_id: CategoryId) -> EnvelopeResult<Option<BudgetTarget>> {
+        self.storage.targets.get_for_category(category_id)
+    }
+
+    /// Get the suggested budget amount for a category based on its target
+    pub fn get_suggested_budget(
+        &self,
+        category_id: CategoryId,
+        period: &BudgetPeriod,
+    ) -> EnvelopeResult<Option<Money>> {
+        if let Some(target) = self.storage.targets.get_for_category(category_id)? {
+            Ok(Some(target.calculate_for_period(period)))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Delete a target
+    pub fn delete_target(&self, target_id: BudgetTargetId) -> EnvelopeResult<bool> {
+        if let Some(target) = self.storage.targets.get(target_id)? {
+            let category = self.storage.categories.get_category(target.category_id)?;
+            let category_name = category.map(|c| c.name);
+
+            self.storage.targets.delete(target_id)?;
+            self.storage.targets.save()?;
+
+            self.storage.log_delete(
+                EntityType::BudgetTarget,
+                target.id.to_string(),
+                category_name,
+                &target,
+            )?;
+
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
+    /// Remove target for a category
+    pub fn remove_target(&self, category_id: CategoryId) -> EnvelopeResult<bool> {
+        if let Some(target) = self.storage.targets.get_for_category(category_id)? {
+            self.delete_target(target.id)
+        } else {
+            Ok(false)
+        }
+    }
+
+    /// Get all active targets
+    pub fn get_all_targets(&self) -> EnvelopeResult<Vec<BudgetTarget>> {
+        self.storage.targets.get_all_active()
+    }
+
+    /// Auto-fill budget for a category based on its target
+    pub fn auto_fill_from_target(
+        &self,
+        category_id: CategoryId,
+        period: &BudgetPeriod,
+    ) -> EnvelopeResult<Option<BudgetAllocation>> {
+        if let Some(suggested) = self.get_suggested_budget(category_id, period)? {
+            let allocation = self.assign_to_category(category_id, period, suggested)?;
+            Ok(Some(allocation))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Auto-fill budgets for all categories with targets
+    pub fn auto_fill_all_targets(
+        &self,
+        period: &BudgetPeriod,
+    ) -> EnvelopeResult<Vec<BudgetAllocation>> {
+        let targets = self.storage.targets.get_all_active()?;
+        let mut allocations = Vec::with_capacity(targets.len());
+
+        for target in &targets {
+            let suggested = target.calculate_for_period(period);
+            let allocation = self.assign_to_category(target.category_id, period, suggested)?;
+            allocations.push(allocation);
+        }
+
+        Ok(allocations)
     }
 }
 

@@ -24,6 +24,8 @@ pub struct EditBudgetState {
     pub category_name: String,
     /// Current budgeted amount
     pub current_amount: Money,
+    /// Suggested amount from budget target (if any)
+    pub suggested_amount: Option<Money>,
     /// Input value (as string for editing)
     pub amount_input: String,
     /// Cursor position in the input
@@ -38,10 +40,17 @@ impl EditBudgetState {
     }
 
     /// Initialize the dialog for a category
-    pub fn init(&mut self, category_id: CategoryId, category_name: String, current_amount: Money) {
+    pub fn init(
+        &mut self,
+        category_id: CategoryId,
+        category_name: String,
+        current_amount: Money,
+        suggested_amount: Option<Money>,
+    ) {
         self.category_id = Some(category_id);
         self.category_name = category_name;
         self.current_amount = current_amount;
+        self.suggested_amount = suggested_amount;
         // Pre-fill with current amount (without $ sign, formatted as decimal)
         let cents = current_amount.cents();
         if cents == 0 {
@@ -51,6 +60,20 @@ impl EditBudgetState {
         }
         self.cursor_pos = self.amount_input.len();
         self.error_message = None;
+    }
+
+    /// Fill in the suggested amount from budget target
+    pub fn use_suggested(&mut self) {
+        if let Some(suggested) = self.suggested_amount {
+            let cents = suggested.cents();
+            if cents == 0 {
+                self.amount_input = String::new();
+            } else {
+                self.amount_input = format!("{:.2}", cents as f64 / 100.0);
+            }
+            self.cursor_pos = self.amount_input.len();
+            self.error_message = None;
+        }
     }
 
     /// Reset the state
@@ -113,7 +136,9 @@ impl EditBudgetState {
 
 /// Render the edit budget dialog
 pub fn render(frame: &mut Frame, app: &App) {
-    let area = centered_rect_fixed(50, 12, frame.area());
+    let has_suggested = app.edit_budget_state.suggested_amount.is_some();
+    let height = if has_suggested { 14 } else { 12 };
+    let area = centered_rect_fixed(55, height, frame.area());
 
     // Clear the background
     frame.render_widget(Clear, area);
@@ -133,9 +158,22 @@ pub fn render(frame: &mut Frame, app: &App) {
     let inner = block.inner(area);
     frame.render_widget(block, area);
 
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
+    let constraints = if has_suggested {
+        vec![
+            Constraint::Length(1), // Spacer
+            Constraint::Length(1), // Category name
+            Constraint::Length(1), // Period
+            Constraint::Length(1), // Spacer
+            Constraint::Length(1), // Current amount
+            Constraint::Length(1), // Suggested amount
+            Constraint::Length(1), // New amount label
+            Constraint::Length(1), // Amount input
+            Constraint::Length(1), // Error
+            Constraint::Length(1), // Instructions
+            Constraint::Min(0),    // Remaining
+        ]
+    } else {
+        vec![
             Constraint::Length(1), // Spacer
             Constraint::Length(1), // Category name
             Constraint::Length(1), // Period
@@ -146,19 +184,24 @@ pub fn render(frame: &mut Frame, app: &App) {
             Constraint::Length(1), // Error
             Constraint::Length(1), // Instructions
             Constraint::Min(0),    // Remaining
-        ])
+        ]
+    };
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(constraints)
         .split(inner);
 
     // Category name
     let category_line = Line::from(vec![
-        Span::styled("Category: ", Style::default().fg(Color::Yellow)),
+        Span::styled("Category:  ", Style::default().fg(Color::Yellow)),
         Span::styled(&state.category_name, Style::default().fg(Color::White)),
     ]);
     frame.render_widget(Paragraph::new(category_line), chunks[1]);
 
     // Period
     let period_line = Line::from(vec![
-        Span::styled("Period:   ", Style::default().fg(Color::Yellow)),
+        Span::styled("Period:    ", Style::default().fg(Color::Yellow)),
         Span::styled(
             format!("{}", app.current_period),
             Style::default().fg(Color::White),
@@ -168,7 +211,7 @@ pub fn render(frame: &mut Frame, app: &App) {
 
     // Current amount
     let current_line = Line::from(vec![
-        Span::styled("Current:  ", Style::default().fg(Color::Yellow)),
+        Span::styled("Current:   ", Style::default().fg(Color::Yellow)),
         Span::styled(
             format!("{}", state.current_amount),
             Style::default().fg(Color::White),
@@ -176,12 +219,33 @@ pub fn render(frame: &mut Frame, app: &App) {
     ]);
     frame.render_widget(Paragraph::new(current_line), chunks[4]);
 
+    // Suggested amount (if there's a target)
+    let (new_label_idx, input_idx, error_idx, instructions_idx) = if has_suggested {
+        // Show suggested amount
+        if let Some(suggested) = state.suggested_amount {
+            let suggested_line = Line::from(vec![
+                Span::styled("Suggested: ", Style::default().fg(Color::Green)),
+                Span::styled(
+                    format!("{}", suggested),
+                    Style::default()
+                        .fg(Color::Green)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(" (from target)", Style::default().fg(Color::DarkGray)),
+            ]);
+            frame.render_widget(Paragraph::new(suggested_line), chunks[5]);
+        }
+        (6, 7, 8, 9)
+    } else {
+        (5, 6, 7, 8)
+    };
+
     // New amount input
     let new_amount_label = Line::from(Span::styled(
         "New amount:",
         Style::default().fg(Color::Cyan),
     ));
-    frame.render_widget(Paragraph::new(new_amount_label), chunks[5]);
+    frame.render_widget(Paragraph::new(new_amount_label), chunks[new_label_idx]);
 
     // Input with cursor
     let mut input_spans = vec![Span::raw("$")];
@@ -207,7 +271,7 @@ pub fn render(frame: &mut Frame, app: &App) {
         ));
     }
 
-    frame.render_widget(Paragraph::new(Line::from(input_spans)), chunks[6]);
+    frame.render_widget(Paragraph::new(Line::from(input_spans)), chunks[input_idx]);
 
     // Error message
     if let Some(ref error) = state.error_message {
@@ -215,19 +279,28 @@ pub fn render(frame: &mut Frame, app: &App) {
             error.as_str(),
             Style::default().fg(Color::Red),
         ));
-        frame.render_widget(Paragraph::new(error_line), chunks[7]);
+        frame.render_widget(Paragraph::new(error_line), chunks[error_idx]);
     }
 
     // Instructions
-    let instructions = Line::from(vec![
+    let mut instructions = vec![
         Span::styled("[Enter]", Style::default().fg(Color::Green)),
         Span::raw(" Save  "),
         Span::styled("[Esc]", Style::default().fg(Color::Yellow)),
-        Span::raw(" Cancel  "),
-        Span::styled("[Ctrl+U]", Style::default().fg(Color::Cyan)),
-        Span::raw(" Clear"),
-    ]);
-    frame.render_widget(Paragraph::new(instructions), chunks[8]);
+        Span::raw(" Cancel"),
+    ];
+
+    if has_suggested {
+        instructions.push(Span::raw("  "));
+        instructions.push(Span::styled("[Tab]", Style::default().fg(Color::Green)));
+        instructions.push(Span::raw(" Use Suggested"));
+    } else {
+        instructions.push(Span::raw("  "));
+        instructions.push(Span::styled("[Ctrl+U]", Style::default().fg(Color::Cyan)));
+        instructions.push(Span::raw(" Clear"));
+    }
+
+    frame.render_widget(Paragraph::new(Line::from(instructions)), chunks[instructions_idx]);
 }
 
 /// Handle key events for the edit budget dialog
@@ -238,6 +311,12 @@ pub fn handle_key(app: &mut App, key: crossterm::event::KeyEvent) -> bool {
         KeyCode::Esc => {
             app.edit_budget_state.reset();
             app.close_dialog();
+            true
+        }
+
+        KeyCode::Tab => {
+            // Fill in the suggested amount from budget target
+            app.edit_budget_state.use_suggested();
             true
         }
 
