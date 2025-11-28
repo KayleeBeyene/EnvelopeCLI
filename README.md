@@ -43,6 +43,31 @@ A terminal-based zero-based budgeting application inspired by YNAB. Every dollar
 
 ## Installation
 
+### Via Cargo (Recommended)
+
+```bash
+cargo install envelope-cli
+```
+
+### Via Homebrew (macOS/Linux)
+
+```bash
+brew tap KayleeBeyene/tap
+brew install envelope
+```
+
+### Via Shell Script (macOS/Linux)
+
+```bash
+curl -fsSL https://github.com/KayleeBeyene/EnvelopeCLI/releases/latest/download/envelope-installer.sh | sh
+```
+
+### Via PowerShell (Windows)
+
+```powershell
+irm https://github.com/KayleeBeyene/EnvelopeCLI/releases/latest/download/envelope-installer.ps1 | iex
+```
+
 ### From Source
 
 ```bash
@@ -51,9 +76,7 @@ cd EnvelopeCLI
 cargo install --path .
 ```
 
-### Requirements
-
-- Rust 1.70+
+Requires Rust 1.70+
 
 ## Quick Start
 
