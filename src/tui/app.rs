@@ -153,6 +153,13 @@ pub struct App<'a> {
 impl<'a> App<'a> {
     /// Create a new App instance
     pub fn new(storage: &'a Storage, settings: &'a Settings, paths: &'a EnvelopePaths) -> Self {
+        // Initialize selected_account to first account (default view is Accounts)
+        let selected_account = storage
+            .accounts
+            .get_active()
+            .ok()
+            .and_then(|accounts| accounts.first().map(|a| a.id));
+
         Self {
             storage,
             settings,
@@ -162,7 +169,7 @@ impl<'a> App<'a> {
             focused_panel: FocusedPanel::default(),
             input_mode: InputMode::default(),
             active_dialog: ActiveDialog::default(),
-            selected_account: None,
+            selected_account,
             selected_account_index: 0,
             selected_transaction: None,
             selected_transaction_index: 0,
@@ -210,12 +217,44 @@ impl<'a> App<'a> {
         match view {
             ActiveView::Accounts => {
                 self.selected_account_index = 0;
+                // Initialize selected_account to first account
+                if let Ok(accounts) = self.storage.accounts.get_active() {
+                    self.selected_account = accounts.first().map(|a| a.id);
+                }
             }
             ActiveView::Register => {
                 self.selected_transaction_index = 0;
+                // Initialize selected_transaction to first transaction (sorted by date desc)
+                if let Some(account_id) = self.selected_account {
+                    let mut txns = self
+                        .storage
+                        .transactions
+                        .get_by_account(account_id)
+                        .unwrap_or_default();
+                    txns.sort_by(|a, b| b.date.cmp(&a.date));
+                    self.selected_transaction = txns.first().map(|t| t.id);
+                }
             }
             ActiveView::Budget => {
                 self.selected_category_index = 0;
+                // Initialize selected_category to first category (in visual order)
+                let groups = self
+                    .storage
+                    .categories
+                    .get_all_groups()
+                    .unwrap_or_default();
+                let all_categories = self
+                    .storage
+                    .categories
+                    .get_all_categories()
+                    .unwrap_or_default();
+                // Find first category in visual order (first category in first group)
+                for group in &groups {
+                    if let Some(cat) = all_categories.iter().find(|c| c.group_id == group.id) {
+                        self.selected_category = Some(cat.id);
+                        break;
+                    }
+                }
             }
             ActiveView::Reports => {}
             ActiveView::Reconcile => {
@@ -233,6 +272,57 @@ impl<'a> App<'a> {
             FocusedPanel::Sidebar => FocusedPanel::Main,
             FocusedPanel::Main => FocusedPanel::Sidebar,
         };
+        // Initialize selection when switching to main panel
+        if self.focused_panel == FocusedPanel::Main {
+            self.ensure_selection_initialized();
+        }
+    }
+
+    /// Ensure selection is initialized for the current view
+    pub fn ensure_selection_initialized(&mut self) {
+        match self.active_view {
+            ActiveView::Accounts => {
+                if self.selected_account.is_none() {
+                    if let Ok(accounts) = self.storage.accounts.get_active() {
+                        self.selected_account = accounts.first().map(|a| a.id);
+                    }
+                }
+            }
+            ActiveView::Register => {
+                if self.selected_transaction.is_none() {
+                    if let Some(account_id) = self.selected_account {
+                        let mut txns = self
+                            .storage
+                            .transactions
+                            .get_by_account(account_id)
+                            .unwrap_or_default();
+                        txns.sort_by(|a, b| b.date.cmp(&a.date));
+                        self.selected_transaction = txns.first().map(|t| t.id);
+                    }
+                }
+            }
+            ActiveView::Budget => {
+                if self.selected_category.is_none() {
+                    let groups = self
+                        .storage
+                        .categories
+                        .get_all_groups()
+                        .unwrap_or_default();
+                    let all_categories = self
+                        .storage
+                        .categories
+                        .get_all_categories()
+                        .unwrap_or_default();
+                    for group in &groups {
+                        if let Some(cat) = all_categories.iter().find(|c| c.group_id == group.id) {
+                            self.selected_category = Some(cat.id);
+                            break;
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
     }
 
     /// Open a dialog

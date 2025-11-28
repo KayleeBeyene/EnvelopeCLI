@@ -94,11 +94,11 @@ fn render_placeholder(frame: &mut Frame, area: ratatui::layout::Rect, name: &str
     let block = Block::default()
         .title(name)
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
+        .border_style(Style::default().fg(Color::White));
 
     let text = Paragraph::new(format!("{} view - Coming soon!", name))
         .block(block)
-        .style(Style::default().fg(Color::DarkGray));
+        .style(Style::default().fg(Color::White));
 
     frame.render_widget(text, area);
 }

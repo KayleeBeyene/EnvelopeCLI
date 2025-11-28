@@ -155,7 +155,7 @@ fn render_header(frame: &mut Frame, app: &App, area: Rect) {
                 .add_modifier(Modifier::BOLD),
         )
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
+        .border_style(Style::default().fg(Color::White));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -177,7 +177,7 @@ fn render_header(frame: &mut Frame, app: &App, area: Rect) {
     let date_text = Paragraph::new(vec![
         Line::from(Span::styled(
             "Statement Date:",
-            Style::default().fg(Color::DarkGray),
+            Style::default().fg(Color::Yellow),
         )),
         Line::from(Span::styled(&state.statement_date, date_style)),
     ]);
@@ -201,7 +201,7 @@ fn render_header(frame: &mut Frame, app: &App, area: Rect) {
     let balance_text = Paragraph::new(vec![
         Line::from(Span::styled(
             "Statement Balance:",
-            Style::default().fg(Color::DarkGray),
+            Style::default().fg(Color::Yellow),
         )),
         Line::from(Span::styled(balance_display, balance_style)),
     ]);
@@ -219,19 +219,19 @@ fn render_transactions(frame: &mut Frame, app: &App, area: Rect) {
         .border_style(if state.in_transaction_phase {
             Style::default().fg(Color::Cyan)
         } else {
-            Style::default().fg(Color::DarkGray)
+            Style::default().fg(Color::White)
         });
 
     if state.transactions.is_empty() {
         let empty_msg = Paragraph::new("No transactions to reconcile")
             .block(block)
-            .style(Style::default().fg(Color::DarkGray));
+            .style(Style::default().fg(Color::Yellow));
         frame.render_widget(empty_msg, area);
         return;
     }
 
     let header = Row::new(vec!["", "Date", "Payee", "Amount", "Status"])
-        .style(Style::default().fg(Color::DarkGray))
+        .style(Style::default().fg(Color::Yellow))
         .bottom_margin(1);
 
     let rows: Vec<Row> = state
@@ -248,7 +248,7 @@ fn render_transactions(frame: &mut Frame, app: &App, area: Rect) {
             };
 
             let _status_color = match txn.status {
-                TransactionStatus::Pending => Color::DarkGray,
+                TransactionStatus::Pending => Color::Yellow,
                 TransactionStatus::Cleared => Color::Green,
                 TransactionStatus::Reconciled => Color::Blue,
             };
@@ -292,7 +292,7 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
 
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
+        .border_style(Style::default().fg(Color::White));
 
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -330,7 +330,7 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
 
     // Cleared balance
     let cleared_text = Paragraph::new(vec![Line::from(vec![
-        Span::styled("Cleared: ", Style::default().fg(Color::DarkGray)),
+        Span::styled("Cleared: ", Style::default().fg(Color::Yellow)),
         Span::styled(
             format!("{}", cleared_balance),
             Style::default().fg(Color::White),
@@ -340,7 +340,7 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
 
     // Difference
     let diff_text = Paragraph::new(vec![Line::from(vec![
-        Span::styled("Difference: ", Style::default().fg(Color::DarkGray)),
+        Span::styled("Difference: ", Style::default().fg(Color::Yellow)),
         Span::styled(format!("{}", state.difference), difference_style),
     ])]);
     frame.render_widget(diff_text, summary_chunks[1]);
@@ -353,7 +353,7 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
         ),
         Span::styled(
             format!("{} pending", pending_count),
-            Style::default().fg(Color::DarkGray),
+            Style::default().fg(Color::Yellow),
         ),
     ])]);
     frame.render_widget(count_text, summary_chunks[2]);

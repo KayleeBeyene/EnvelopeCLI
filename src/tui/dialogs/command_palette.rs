@@ -76,7 +76,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 
     if filtered_commands.is_empty() {
         let text =
-            Paragraph::new("No matching commands").style(Style::default().fg(Color::DarkGray));
+            Paragraph::new("No matching commands").style(Style::default().fg(Color::Yellow));
         frame.render_widget(text, results_area);
         return;
     }
@@ -91,7 +91,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
                     Style::default().fg(Color::Cyan),
                 ),
                 Span::raw(" "),
-                Span::styled(cmd.description, Style::default().fg(Color::DarkGray)),
+                Span::styled(cmd.description, Style::default().fg(Color::Yellow)),
             ]);
             ListItem::new(line)
         })

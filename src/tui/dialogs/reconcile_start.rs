@@ -80,7 +80,7 @@ pub fn render(frame: &mut Frame, app: &App) {
     let date_label = if state.active_field == 0 {
         Span::styled("Statement Date: ", Style::default().fg(Color::Yellow))
     } else {
-        Span::styled("Statement Date: ", Style::default().fg(Color::DarkGray))
+        Span::styled("Statement Date: ", Style::default().fg(Color::White))
     };
 
     let date_text = Paragraph::new(vec![
@@ -101,7 +101,7 @@ pub fn render(frame: &mut Frame, app: &App) {
     let balance_label = if state.active_field == 1 {
         Span::styled("Statement Balance: ", Style::default().fg(Color::Yellow))
     } else {
-        Span::styled("Statement Balance: ", Style::default().fg(Color::DarkGray))
+        Span::styled("Statement Balance: ", Style::default().fg(Color::White))
     };
 
     let balance_display = if state.balance_input.is_empty() {
@@ -122,7 +122,7 @@ pub fn render(frame: &mut Frame, app: &App) {
         Span::raw(" Switch field  "),
         Span::styled("[Enter]", Style::default().fg(Color::Green)),
         Span::raw(" Start  "),
-        Span::styled("[Esc]", Style::default().fg(Color::DarkGray)),
+        Span::styled("[Esc]", Style::default().fg(Color::White)),
         Span::raw(" Cancel"),
     ]));
     frame.render_widget(instructions, chunks[5]);

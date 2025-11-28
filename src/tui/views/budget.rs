@@ -56,7 +56,7 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
                 .add_modifier(Modifier::BOLD),
         )
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
+        .border_style(Style::default().fg(Color::White));
 
     let line = Line::from(vec![
         Span::styled(
@@ -68,8 +68,8 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
             Style::default().fg(atb_color).add_modifier(Modifier::BOLD),
         ),
         Span::raw("  │  "),
-        Span::styled("[/] Period  ", Style::default().fg(Color::DarkGray)),
-        Span::styled("[m] Move Funds", Style::default().fg(Color::DarkGray)),
+        Span::styled("[/] Period  ", Style::default().fg(Color::Yellow)),
+        Span::styled("[m] Move Funds", Style::default().fg(Color::Yellow)),
     ]);
 
     let paragraph = Paragraph::new(line).block(block);
@@ -83,7 +83,7 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
     let border_color = if is_focused {
         Color::Cyan
     } else {
-        Color::DarkGray
+        Color::Gray
     };
 
     let block = Block::default()
@@ -101,6 +101,9 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
     let mut rows: Vec<Row> = Vec::new();
     let mut row_to_category_index: Vec<Option<usize>> = Vec::new();
 
+    // Track visual index (categories in display order)
+    let mut visual_index = 0usize;
+
     for group in &groups {
         // Group header row
         rows.push(
@@ -117,11 +120,12 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
         // Categories in this group
         let group_categories: Vec<_> = categories
             .iter()
-            .enumerate()
-            .filter(|(_, c)| c.group_id == group.id)
+            .filter(|c| c.group_id == group.id)
             .collect();
 
-        for (cat_index, category) in group_categories {
+        for category in group_categories {
+            let cat_index = visual_index;
+            visual_index += 1;
             let summary = budget_service
                 .get_category_summary(category.id, &app.current_period)
                 .unwrap_or_else(|_| crate::models::CategoryBudgetSummary::empty(category.id));
@@ -130,7 +134,7 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
             let available_style = if summary.is_overspent() {
                 Style::default().fg(Color::Red)
             } else if summary.available.is_zero() {
-                Style::default().fg(Color::DarkGray)
+                Style::default().fg(Color::Yellow)
             } else {
                 Style::default().fg(Color::Green)
             };
@@ -141,7 +145,7 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
             } else if summary.activity.is_positive() {
                 Style::default().fg(Color::Green)
             } else {
-                Style::default().fg(Color::DarkGray)
+                Style::default().fg(Color::Yellow)
             };
 
             rows.push(Row::new(vec![
@@ -157,7 +161,7 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
     if rows.is_empty() {
         let text = Paragraph::new("No categories. Run 'envelope category create' to add some.")
             .block(block)
-            .style(Style::default().fg(Color::DarkGray));
+            .style(Style::default().fg(Color::Yellow));
         frame.render_widget(text, area);
         return;
     }

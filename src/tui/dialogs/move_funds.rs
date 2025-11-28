@@ -272,7 +272,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 
     // Hints
     let hints = Line::from(vec![
-        Span::styled("[Tab]", Style::default().fg(Color::DarkGray)),
+        Span::styled("[Tab]", Style::default().fg(Color::White)),
         Span::raw(" Next  "),
         Span::styled("[Enter]", Style::default().fg(Color::Green)),
         Span::raw(" Move  "),
@@ -320,7 +320,7 @@ fn render_category_field(
             if selected.is_some() {
                 Style::default().fg(Color::White)
             } else {
-                Style::default().fg(Color::DarkGray)
+                Style::default().fg(Color::White)
             },
         ),
     ]);
@@ -355,7 +355,7 @@ fn render_category_field(
     } else {
         // Show hint when not focused
         let hint = Paragraph::new("  (Tab to this field to select)")
-            .style(Style::default().fg(Color::DarkGray));
+            .style(Style::default().fg(Color::White));
         frame.render_widget(hint, list_area);
     }
 }
@@ -412,7 +412,7 @@ fn render_amount_field(
             ));
         }
     } else {
-        spans.push(Span::styled(display, Style::default().fg(Color::Gray)));
+        spans.push(Span::styled(display, Style::default().fg(Color::Yellow)));
     }
 
     frame.render_widget(Paragraph::new(Line::from(spans)), input_area);

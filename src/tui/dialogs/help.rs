@@ -142,7 +142,7 @@ fn get_help_lines(app: &App) -> Vec<Line<'static>> {
     lines.push(Line::from(""));
     lines.push(Line::from(vec![Span::styled(
         "Press any key to close",
-        Style::default().fg(Color::DarkGray),
+        Style::default().fg(Color::White),
     )]));
 
     lines

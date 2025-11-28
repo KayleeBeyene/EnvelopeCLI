@@ -283,14 +283,14 @@ impl<'a> Widget for ErrorDialog<'a> {
             }
 
             let suggestions = Paragraph::new(lines)
-                .style(Style::default().fg(Color::Gray))
+                .style(Style::default().fg(Color::Yellow))
                 .wrap(Wrap { trim: true });
             suggestions.render(chunks[1], buf);
         }
 
         // Render close hint
         let close_hint = Paragraph::new("Press Esc or Enter to close")
-            .style(Style::default().fg(Color::DarkGray))
+            .style(Style::default().fg(Color::Yellow))
             .alignment(Alignment::Center);
         close_hint.render(chunks[2], buf);
     }

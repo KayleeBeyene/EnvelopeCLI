@@ -3,7 +3,7 @@
 //! This module handles terminal events (key presses, mouse events, resize)
 //! using crossterm's event system.
 
-use crossterm::event::{self, Event as CrosstermEvent, KeyEvent, MouseEvent};
+use crossterm::event::{self, Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -50,7 +50,7 @@ impl EventHandler {
                     // Poll for events
                     if event::poll(timeout).expect("Failed to poll events") {
                         match event::read().expect("Failed to read event") {
-                            CrosstermEvent::Key(key) => {
+                            CrosstermEvent::Key(key) if key.kind == KeyEventKind::Press => {
                                 if sender.send(Event::Key(key)).is_err() {
                                     return;
                                 }

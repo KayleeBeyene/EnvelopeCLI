@@ -24,6 +24,12 @@ pub fn handle_event(app: &mut App, event: Event) -> Result<()> {
 
 /// Handle a key event
 fn handle_key_event(app: &mut App, key: KeyEvent) -> Result<()> {
+    // DEBUG: Log every key at the top level
+    app.set_status(format!(
+        "KEY: {:?} | mode={:?} | panel={:?} | view={:?} | dialog={:?}",
+        key.code, app.input_mode, app.focused_panel, app.active_view, app.has_dialog()
+    ));
+
     // Check if we're in a dialog first
     if app.has_dialog() {
         return handle_dialog_key(app, key);
@@ -73,6 +79,7 @@ fn handle_normal_key(app: &mut App, key: KeyEvent) -> Result<()> {
         KeyCode::Char('l') | KeyCode::Right if key.modifiers.is_empty() => {
             if app.focused_panel == FocusedPanel::Sidebar {
                 app.focused_panel = FocusedPanel::Main;
+                app.ensure_selection_initialized();
                 return Ok(());
             }
         }
@@ -89,6 +96,9 @@ fn handle_normal_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
 /// Handle keys when sidebar is focused
 fn handle_sidebar_key(app: &mut App, key: KeyEvent) -> Result<()> {
+    // DEBUG: Show we're in sidebar
+    app.set_status(format!("DEBUG: sidebar key={:?}", key.code));
+
     // Get account count for bounds checking
     let account_count = app
         .storage
@@ -147,6 +157,9 @@ fn handle_sidebar_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
 /// Handle keys when main panel is focused
 fn handle_main_panel_key(app: &mut App, key: KeyEvent) -> Result<()> {
+    // DEBUG: Show which view we're in
+    app.set_status(format!("DEBUG: main_panel key={:?}, view={:?}", key.code, app.active_view));
+
     match app.active_view {
         ActiveView::Accounts => handle_accounts_view_key(app, key),
         ActiveView::Register => handle_register_view_key(app, key),
@@ -192,40 +205,42 @@ fn handle_accounts_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
     Ok(())
 }
 
-/// Handle keys in the register view
-fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
-    // Get transaction count for the selected account
-    let txn_count = if let Some(account_id) = app.selected_account {
-        app.storage
+/// Get sorted transactions for an account (matches display order)
+fn get_sorted_transactions(app: &App) -> Vec<crate::models::Transaction> {
+    if let Some(account_id) = app.selected_account {
+        let mut txns = app
+            .storage
             .transactions
             .get_by_account(account_id)
-            .map(|t| t.len())
-            .unwrap_or(0)
+            .unwrap_or_default();
+        // Sort by date descending (matches render order)
+        txns.sort_by(|a, b| b.date.cmp(&a.date));
+        txns
     } else {
-        0
-    };
+        Vec::new()
+    }
+}
+
+/// Handle keys in the register view
+fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
+    // Get sorted transactions (matches display order)
+    let txns = get_sorted_transactions(app);
+    let txn_count = txns.len();
 
     match key.code {
         // Navigation
         KeyCode::Char('j') | KeyCode::Down => {
             app.move_down(txn_count);
-            // Update selected transaction
-            if let Some(account_id) = app.selected_account {
-                if let Ok(txns) = app.storage.transactions.get_by_account(account_id) {
-                    if let Some(txn) = txns.get(app.selected_transaction_index) {
-                        app.selected_transaction = Some(txn.id);
-                    }
-                }
+            // Update selected transaction from sorted list
+            if let Some(txn) = txns.get(app.selected_transaction_index) {
+                app.selected_transaction = Some(txn.id);
             }
         }
         KeyCode::Char('k') | KeyCode::Up => {
             app.move_up();
-            if let Some(account_id) = app.selected_account {
-                if let Ok(txns) = app.storage.transactions.get_by_account(account_id) {
-                    if let Some(txn) = txns.get(app.selected_transaction_index) {
-                        app.selected_transaction = Some(txn.id);
-                    }
-                }
+            // Update selected transaction from sorted list
+            if let Some(txn) = txns.get(app.selected_transaction_index) {
+                app.selected_transaction = Some(txn.id);
             }
         }
 
@@ -234,11 +249,17 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             // Go to bottom
             if txn_count > 0 {
                 app.selected_transaction_index = txn_count - 1;
+                if let Some(txn) = txns.get(app.selected_transaction_index) {
+                    app.selected_transaction = Some(txn.id);
+                }
             }
         }
         KeyCode::Char('g') => {
             // Go to top (gg in vim, but we'll use single g)
             app.selected_transaction_index = 0;
+            if let Some(txn) = txns.first() {
+                app.selected_transaction = Some(txn.id);
+            }
         }
 
         // Add transaction
@@ -247,7 +268,25 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
         }
 
         // Edit transaction
-        KeyCode::Char('e') | KeyCode::Enter => {
+        KeyCode::Char('e') => {
+            // DEBUG: Force initialize selection and try edit
+            if app.selected_transaction.is_none() {
+                let txns = get_sorted_transactions(app);
+                if let Some(txn) = txns.get(app.selected_transaction_index) {
+                    app.selected_transaction = Some(txn.id);
+                }
+            }
+            if let Some(txn_id) = app.selected_transaction {
+                app.open_dialog(ActiveDialog::EditTransaction(txn_id));
+            }
+        }
+        KeyCode::Enter => {
+            if app.selected_transaction.is_none() {
+                let txns = get_sorted_transactions(app);
+                if let Some(txn) = txns.get(app.selected_transaction_index) {
+                    app.selected_transaction = Some(txn.id);
+                }
+            }
             if let Some(txn_id) = app.selected_transaction {
                 app.open_dialog(ActiveDialog::EditTransaction(txn_id));
             }
@@ -310,32 +349,49 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
     Ok(())
 }
 
-/// Handle keys in the budget view
-fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
-    // Get category count
-    let category_count = app
+/// Get categories in visual order (grouped by group, same as render)
+fn get_categories_in_visual_order(app: &App) -> Vec<crate::models::Category> {
+    let groups = app
+        .storage
+        .categories
+        .get_all_groups()
+        .unwrap_or_default();
+    let all_categories = app
         .storage
         .categories
         .get_all_categories()
-        .map(|c| c.len())
-        .unwrap_or(0);
+        .unwrap_or_default();
+
+    let mut result = Vec::new();
+    for group in &groups {
+        let group_cats: Vec<_> = all_categories
+            .iter()
+            .filter(|c| c.group_id == group.id)
+            .cloned()
+            .collect();
+        result.extend(group_cats);
+    }
+    result
+}
+
+/// Handle keys in the budget view
+fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
+    // Get categories in visual order (matches display)
+    let categories = get_categories_in_visual_order(app);
+    let category_count = categories.len();
 
     match key.code {
         // Navigation
         KeyCode::Char('j') | KeyCode::Down => {
             app.move_down(category_count);
-            if let Ok(categories) = app.storage.categories.get_all_categories() {
-                if let Some(cat) = categories.get(app.selected_category_index) {
-                    app.selected_category = Some(cat.id);
-                }
+            if let Some(cat) = categories.get(app.selected_category_index) {
+                app.selected_category = Some(cat.id);
             }
         }
         KeyCode::Char('k') | KeyCode::Up => {
             app.move_up();
-            if let Ok(categories) = app.storage.categories.get_all_categories() {
-                if let Some(cat) = categories.get(app.selected_category_index) {
-                    app.selected_category = Some(cat.id);
-                }
+            if let Some(cat) = categories.get(app.selected_category_index) {
+                app.selected_category = Some(cat.id);
             }
         }
 

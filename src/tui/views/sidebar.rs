@@ -38,11 +38,11 @@ fn render_header(frame: &mut Frame, area: Rect) {
                 .add_modifier(Modifier::BOLD),
         )
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
+        .border_style(Style::default().fg(Color::White));
 
     let version = Paragraph::new("v0.1.0")
         .block(block)
-        .style(Style::default().fg(Color::DarkGray));
+        .style(Style::default().fg(Color::Yellow));
 
     frame.render_widget(version, area);
 }
@@ -54,7 +54,7 @@ fn render_accounts(frame: &mut Frame, app: &mut App, area: Rect) {
     let border_color = if is_focused {
         Color::Cyan
     } else {
-        Color::DarkGray
+        Color::White
     };
 
     let block = Block::default()
@@ -71,7 +71,7 @@ fn render_accounts(frame: &mut Frame, app: &mut App, area: Rect) {
     if accounts.is_empty() {
         let text = Paragraph::new("No accounts")
             .block(block)
-            .style(Style::default().fg(Color::DarkGray));
+            .style(Style::default().fg(Color::Yellow));
         frame.render_widget(text, area);
         return;
     }
@@ -122,7 +122,7 @@ fn render_view_switcher(frame: &mut Frame, app: &mut App, area: Rect) {
     let block = Block::default()
         .title(" Views ")
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
+        .border_style(Style::default().fg(Color::White));
 
     let views = [
         ("1", "Accounts", ActiveView::Accounts),

@@ -145,7 +145,7 @@ pub fn render(frame: &mut Frame, app: &App) {
     };
 
     let amount_text = Paragraph::new(Line::from(vec![
-        Span::styled("Adjustment needed: ", Style::default().fg(Color::DarkGray)),
+        Span::styled("Adjustment needed: ", Style::default().fg(Color::Yellow)),
         Span::styled(format!("{}", state.adjustment_amount), amount_style),
     ]));
     frame.render_widget(amount_text, chunks[2]);
@@ -166,7 +166,7 @@ pub fn render(frame: &mut Frame, app: &App) {
     };
 
     let category_text = Paragraph::new(Line::from(vec![
-        Span::styled("Category: ", Style::default().fg(Color::DarkGray)),
+        Span::styled("Category: ", Style::default().fg(Color::Yellow)),
         Span::styled(category_display, category_style),
     ]));
     frame.render_widget(category_text, chunks[3]);
@@ -182,7 +182,7 @@ pub fn render(frame: &mut Frame, app: &App) {
                 let style = if i == state.selected_index {
                     Style::default().bg(Color::DarkGray).fg(Color::White)
                 } else {
-                    Style::default().fg(Color::DarkGray)
+                    Style::default().fg(Color::Yellow)
                 };
                 Line::from(Span::styled(format!("  {}", name), style))
             })
@@ -198,7 +198,7 @@ pub fn render(frame: &mut Frame, app: &App) {
         Span::raw(" Create  "),
         Span::styled("[Tab]", Style::default().fg(Color::Cyan)),
         Span::raw(" Select category  "),
-        Span::styled("[Esc]", Style::default().fg(Color::DarkGray)),
+        Span::styled("[Esc]", Style::default().fg(Color::Yellow)),
         Span::raw(" Cancel"),
     ]));
     frame.render_widget(instructions, chunks[5]);

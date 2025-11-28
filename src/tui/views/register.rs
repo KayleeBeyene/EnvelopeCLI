@@ -47,7 +47,7 @@ fn render_header(frame: &mut Frame, app: &mut App, area: Rect) {
                 .add_modifier(Modifier::BOLD),
         )
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
+        .border_style(Style::default().fg(Color::White));
 
     let hints = if app.multi_select_mode {
         "Multi-select: SPACE to select, C to categorize, v to exit"
@@ -57,7 +57,7 @@ fn render_header(frame: &mut Frame, app: &mut App, area: Rect) {
 
     let paragraph = Paragraph::new(hints)
         .block(block)
-        .style(Style::default().fg(Color::DarkGray));
+        .style(Style::default().fg(Color::Yellow));
 
     frame.render_widget(paragraph, area);
 }
@@ -68,7 +68,7 @@ fn render_transaction_table(frame: &mut Frame, app: &mut App, area: Rect) {
     let border_color = if is_focused {
         Color::Cyan
     } else {
-        Color::DarkGray
+        Color::Gray
     };
 
     let block = Block::default()
@@ -92,7 +92,7 @@ fn render_transaction_table(frame: &mut Frame, app: &mut App, area: Rect) {
     if transactions.is_empty() {
         let text = Paragraph::new("No transactions. Press 'a' to add one.")
             .block(block)
-            .style(Style::default().fg(Color::DarkGray));
+            .style(Style::default().fg(Color::Yellow));
         frame.render_widget(text, area);
         return;
     }

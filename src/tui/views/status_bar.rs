@@ -89,10 +89,10 @@ pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
     let padding = " ".repeat(padding_len.max(1));
 
     spans.push(Span::raw(padding));
-    spans.push(Span::styled(hints, Style::default().fg(Color::DarkGray)));
+    spans.push(Span::styled(hints, Style::default().fg(Color::White)));
 
     let line = Line::from(spans);
-    let paragraph = Paragraph::new(line).style(Style::default().bg(Color::Black));
+    let paragraph = Paragraph::new(line);
 
     frame.render_widget(paragraph, area);
 }

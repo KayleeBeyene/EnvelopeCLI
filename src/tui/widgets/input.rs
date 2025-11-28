@@ -154,11 +154,11 @@ impl Widget for TextInput {
         };
 
         let text_style = if self.content.is_empty() && !self.focused {
-            Style::default().fg(Color::DarkGray)
+            Style::default().fg(Color::Yellow)
         } else if self.focused {
             Style::default().fg(Color::White)
         } else {
-            Style::default().fg(Color::Gray)
+            Style::default().fg(Color::Yellow)
         };
 
         // Render text

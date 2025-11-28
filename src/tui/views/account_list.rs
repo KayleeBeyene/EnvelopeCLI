@@ -34,7 +34,7 @@ fn render_header(frame: &mut Frame, area: Rect) {
                 .add_modifier(Modifier::BOLD),
         )
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
+        .border_style(Style::default().fg(Color::White));
 
     frame.render_widget(block, area);
 }
@@ -45,7 +45,7 @@ fn render_account_table(frame: &mut Frame, app: &mut App, area: Rect) {
     let border_color = if is_focused {
         Color::Cyan
     } else {
-        Color::DarkGray
+        Color::White
     };
 
     let block = Block::default()

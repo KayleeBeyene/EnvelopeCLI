@@ -178,7 +178,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 
     // Hints
     let hints = Line::from(vec![
-        Span::styled("[↑↓]", Style::default().fg(Color::DarkGray)),
+        Span::styled("[↑↓]", Style::default().fg(Color::Yellow)),
         Span::raw(" Select  "),
         Span::styled("[Enter]", Style::default().fg(Color::Green)),
         Span::raw(" Apply  "),
@@ -230,7 +230,7 @@ fn render_search_field(
     if search.is_empty() {
         spans.push(Span::styled(
             " (type to filter)",
-            Style::default().fg(Color::DarkGray),
+            Style::default().fg(Color::Yellow),
         ));
     }
 
@@ -247,7 +247,7 @@ fn render_category_list(
 ) {
     if categories.is_empty() {
         let text =
-            Paragraph::new("No matching categories").style(Style::default().fg(Color::DarkGray));
+            Paragraph::new("No matching categories").style(Style::default().fg(Color::Yellow));
         frame.render_widget(text, area);
         return;
     }

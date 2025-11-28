@@ -37,7 +37,7 @@ pub fn render(frame: &mut Frame, message: &str) {
             Span::raw(" Yes  "),
             Span::styled("[N]", Style::default().fg(Color::Red)),
             Span::raw(" No  "),
-            Span::styled("[Esc]", Style::default().fg(Color::DarkGray)),
+            Span::styled("[Esc]", Style::default().fg(Color::Yellow)),
             Span::raw(" Cancel"),
         ]),
     ];

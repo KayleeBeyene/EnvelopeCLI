@@ -380,9 +380,9 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 
     // Render buttons/hints
     let hints = Line::from(vec![
-        Span::styled("[Tab]", Style::default().fg(Color::DarkGray)),
+        Span::styled("[Tab]", Style::default().fg(Color::Yellow)),
         Span::raw(" Next  "),
-        Span::styled("[Shift+Tab]", Style::default().fg(Color::DarkGray)),
+        Span::styled("[Shift+Tab]", Style::default().fg(Color::Yellow)),
         Span::raw(" Prev  "),
         Span::styled("[Enter]", Style::default().fg(Color::Green)),
         Span::raw(" Save  "),
@@ -417,9 +417,9 @@ fn render_field_simple(
     let value_style = if focused {
         Style::default().fg(Color::White)
     } else if value.is_empty() {
-        Style::default().fg(Color::DarkGray)
+        Style::default().fg(Color::Yellow)
     } else {
-        Style::default().fg(Color::Gray)
+        Style::default().fg(Color::Yellow)
     };
 
     let display_value = if value.is_empty() && !focused {
@@ -490,9 +490,9 @@ fn render_category_field(frame: &mut Frame, app: &mut App, input_area: Rect, dro
     let value_style = if focused {
         Style::default().fg(Color::White)
     } else if display_value.is_empty() || display_value == form.category_input.placeholder {
-        Style::default().fg(Color::DarkGray)
+        Style::default().fg(Color::Yellow)
     } else {
-        Style::default().fg(Color::Gray)
+        Style::default().fg(Color::Yellow)
     };
 
     let mut spans = vec![Span::styled(format!("{:>10}: ", "Category"), label_style)];
@@ -518,7 +518,7 @@ fn render_category_field(frame: &mut Frame, app: &mut App, input_area: Rect, dro
         if focused && form.selected_category.is_some() {
             spans.push(Span::styled(
                 " (Backspace to clear)",
-                Style::default().fg(Color::DarkGray),
+                Style::default().fg(Color::Yellow),
             ));
         }
     }
@@ -550,7 +550,7 @@ fn render_category_dropdown(frame: &mut Frame, app: &mut App, area: Rect) {
         } else {
             "No matching categories"
         };
-        let text = Paragraph::new(hint).style(Style::default().fg(Color::DarkGray));
+        let text = Paragraph::new(hint).style(Style::default().fg(Color::Yellow));
         frame.render_widget(text, area);
         return;
     }

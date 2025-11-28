@@ -66,7 +66,7 @@ pub fn render(frame: &mut Frame, state: &UnlockConfirmState) {
             Span::raw(" Unlock  "),
             Span::styled("[N]", Style::default().fg(Color::Green)),
             Span::raw(" Cancel  "),
-            Span::styled("[Esc]", Style::default().fg(Color::DarkGray)),
+            Span::styled("[Esc]", Style::default().fg(Color::Yellow)),
             Span::raw(" Cancel"),
         ]),
     ];
