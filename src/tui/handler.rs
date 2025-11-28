@@ -25,16 +25,6 @@ pub fn handle_event(app: &mut App, event: Event) -> Result<()> {
 
 /// Handle a key event
 fn handle_key_event(app: &mut App, key: KeyEvent) -> Result<()> {
-    // DEBUG: Log every key at the top level
-    app.set_status(format!(
-        "KEY: {:?} | mode={:?} | panel={:?} | view={:?} | dialog={:?}",
-        key.code,
-        app.input_mode,
-        app.focused_panel,
-        app.active_view,
-        app.has_dialog()
-    ));
-
     // Check if we're in a dialog first
     if app.has_dialog() {
         return handle_dialog_key(app, key);
@@ -101,9 +91,6 @@ fn handle_normal_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
 /// Handle keys when sidebar is focused
 fn handle_sidebar_key(app: &mut App, key: KeyEvent) -> Result<()> {
-    // DEBUG: Show we're in sidebar
-    app.set_status(format!("DEBUG: sidebar key={:?}", key.code));
-
     // Get account count for bounds checking
     let account_count = app
         .storage
@@ -176,12 +163,6 @@ fn handle_sidebar_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
 /// Handle keys when main panel is focused
 fn handle_main_panel_key(app: &mut App, key: KeyEvent) -> Result<()> {
-    // DEBUG: Show which view we're in
-    app.set_status(format!(
-        "DEBUG: main_panel key={:?}, view={:?}",
-        key.code, app.active_view
-    ));
-
     match app.active_view {
         ActiveView::Accounts => handle_accounts_view_key(app, key),
         ActiveView::Register => handle_register_view_key(app, key),
@@ -448,30 +429,11 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             app.open_dialog(ActiveDialog::AddGroup);
         }
 
-        // Edit budget for selected category
-        KeyCode::Enter => {
-            // Initialize and open the edit budget dialog
-            if let Some(cat) = categories.get(app.selected_category_index) {
-                let budget_service = crate::services::BudgetService::new(app.storage);
-                let summary = budget_service
-                    .get_category_summary(cat.id, &app.current_period)
-                    .unwrap_or_else(|_| crate::models::CategoryBudgetSummary::empty(cat.id));
-                let suggested = budget_service
-                    .get_suggested_budget(cat.id, &app.current_period)
-                    .ok()
-                    .flatten();
-
-                app.edit_budget_state
-                    .init(cat.id, cat.name.clone(), summary.budgeted, suggested);
-                app.open_dialog(ActiveDialog::EditBudget);
-            }
-        }
-
-        // Set budget target for selected category
-        KeyCode::Char('t') => {
+        // Open unified budget dialog (period budget + target)
+        KeyCode::Enter | KeyCode::Char('b') | KeyCode::Char('t') => {
             if let Some(cat) = categories.get(app.selected_category_index) {
                 app.selected_category = Some(cat.id);
-                app.open_dialog(ActiveDialog::SetTarget);
+                app.open_dialog(ActiveDialog::Budget);
             }
         }
 
@@ -671,24 +633,9 @@ fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
             app.open_dialog(ActiveDialog::MoveFunds);
         }
         CommandAction::AssignBudget => {
-            // Open EditBudget dialog for the selected category
-            if let Some(category_id) = app.selected_category {
-                if let Ok(Some(category)) = app.storage.categories.get_category(category_id) {
-                    use crate::services::BudgetService;
-                    let budget_service = BudgetService::new(app.storage);
-                    let summary = budget_service
-                        .get_category_summary(category_id, &app.current_period)
-                        .unwrap_or_else(|_| {
-                            crate::models::CategoryBudgetSummary::empty(category_id)
-                        });
-                    let suggested = budget_service
-                        .get_suggested_budget(category_id, &app.current_period)
-                        .ok()
-                        .flatten();
-                    app.edit_budget_state
-                        .init(category_id, category.name.clone(), summary.budgeted, suggested);
-                    app.open_dialog(ActiveDialog::EditBudget);
-                }
+            // Open unified budget dialog for the selected category
+            if app.selected_category.is_some() {
+                app.open_dialog(ActiveDialog::Budget);
             } else {
                 app.set_status("No category selected. Switch to Budget view first.".to_string());
             }
@@ -852,8 +799,8 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
                 }
             }
         }
-        ActiveDialog::EditBudget => {
-            super::dialogs::edit_budget::handle_key(app, key);
+        ActiveDialog::Budget => {
+            super::dialogs::budget::handle_key(app, key);
         }
         ActiveDialog::AddAccount | ActiveDialog::EditAccount(_) => {
             super::dialogs::account::handle_key(app, key);
@@ -863,9 +810,6 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
         }
         ActiveDialog::AddGroup => {
             super::dialogs::group::handle_key(app, key);
-        }
-        ActiveDialog::SetTarget => {
-            super::dialogs::target::handle_key(app, key);
         }
         ActiveDialog::None => {}
     }

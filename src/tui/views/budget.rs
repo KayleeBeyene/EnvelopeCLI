@@ -1,6 +1,6 @@
 //! Budget view
 //!
-//! Shows budget categories with budgeted, activity, and available amounts
+//! Shows budget categories with budgeted, activity, available, and target amounts
 
 use ratatui::{
     layout::Rect,
@@ -128,6 +128,13 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
                 .get_category_summary(category.id, &app.current_period)
                 .unwrap_or_else(|_| crate::models::CategoryBudgetSummary::empty(category.id));
 
+            // Get target for this category
+            let target = budget_service.get_target(category.id).ok().flatten();
+            let target_display = match &target {
+                Some(t) => format!("{} {}", t.amount, t.cadence),
+                None => "—".to_string(),
+            };
+
             // Available column styling
             let available_style = if summary.is_overspent() {
                 Style::default().fg(Color::Red)
@@ -146,11 +153,19 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
                 Style::default().fg(Color::Yellow)
             };
 
+            // Target styling
+            let target_style = if target.is_some() {
+                Style::default().fg(Color::Magenta)
+            } else {
+                Style::default().fg(Color::White)
+            };
+
             rows.push(Row::new(vec![
                 Cell::from(format!("  {}", category.name)),
                 Cell::from(format!("{}", summary.budgeted)),
                 Cell::from(format!("{}", summary.activity)).style(activity_style),
                 Cell::from(format!("{}", summary.available)).style(available_style),
+                Cell::from(target_display).style(target_style),
             ]));
             row_to_category_index.push(Some(cat_index));
         }
@@ -170,6 +185,7 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
         ratatui::layout::Constraint::Length(14), // Budgeted
         ratatui::layout::Constraint::Length(14), // Activity
         ratatui::layout::Constraint::Length(14), // Available
+        ratatui::layout::Constraint::Length(26), // Target
     ];
 
     // Header row
@@ -178,6 +194,7 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
         Cell::from("Budgeted").style(Style::default().add_modifier(Modifier::BOLD)),
         Cell::from("Activity").style(Style::default().add_modifier(Modifier::BOLD)),
         Cell::from("Available").style(Style::default().add_modifier(Modifier::BOLD)),
+        Cell::from("Target").style(Style::default().add_modifier(Modifier::BOLD)),
     ])
     .style(Style::default().fg(Color::Yellow))
     .height(1);

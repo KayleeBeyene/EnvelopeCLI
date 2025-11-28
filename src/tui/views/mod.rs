@@ -82,8 +82,8 @@ fn render_dialog(frame: &mut Frame, app: &mut App) {
         ActiveDialog::Adjustment => {
             dialogs::adjustment::render(frame, app);
         }
-        ActiveDialog::EditBudget => {
-            dialogs::edit_budget::render(frame, app);
+        ActiveDialog::Budget => {
+            dialogs::budget::render(frame, app);
         }
         ActiveDialog::AddAccount | ActiveDialog::EditAccount(_) => {
             dialogs::account::render(frame, app);
@@ -93,9 +93,6 @@ fn render_dialog(frame: &mut Frame, app: &mut App) {
         }
         ActiveDialog::AddGroup => {
             dialogs::group::render(frame, app);
-        }
-        ActiveDialog::SetTarget => {
-            dialogs::target::render(frame, app);
         }
         ActiveDialog::None => {}
     }

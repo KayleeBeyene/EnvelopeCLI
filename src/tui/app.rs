@@ -9,13 +9,12 @@ use crate::storage::Storage;
 
 use super::dialogs::account::AccountFormState;
 use super::dialogs::adjustment::AdjustmentDialogState;
+use super::dialogs::budget::BudgetDialogState;
 use super::dialogs::bulk_categorize::BulkCategorizeState;
 use super::dialogs::category::CategoryFormState;
-use super::dialogs::edit_budget::EditBudgetState;
 use super::dialogs::group::GroupFormState;
 use super::dialogs::move_funds::MoveFundsState;
 use super::dialogs::reconcile_start::ReconcileStartState;
-use super::dialogs::target::TargetFormState;
 use super::dialogs::transaction::TransactionFormState;
 use super::dialogs::unlock_confirm::UnlockConfirmState;
 use super::views::reconcile::ReconciliationState;
@@ -68,8 +67,7 @@ pub enum ActiveDialog {
     ReconcileStart,
     UnlockConfirm(UnlockConfirmState),
     Adjustment,
-    EditBudget,
-    SetTarget,
+    Budget,
 }
 
 /// Main application state
@@ -161,9 +159,6 @@ pub struct App<'a> {
     /// Adjustment dialog state
     pub adjustment_dialog_state: AdjustmentDialogState,
 
-    /// Edit budget dialog state
-    pub edit_budget_state: EditBudgetState,
-
     /// Account form dialog state
     pub account_form: AccountFormState,
 
@@ -173,8 +168,8 @@ pub struct App<'a> {
     /// Group form dialog state
     pub group_form: GroupFormState,
 
-    /// Target form dialog state
-    pub target_form: TargetFormState,
+    /// Unified budget dialog state (period budget + target)
+    pub budget_dialog_state: BudgetDialogState,
 }
 
 impl<'a> App<'a> {
@@ -217,11 +212,10 @@ impl<'a> App<'a> {
             reconciliation_state: ReconciliationState::new(),
             reconcile_start_state: ReconcileStartState::new(),
             adjustment_dialog_state: AdjustmentDialogState::default(),
-            edit_budget_state: EditBudgetState::new(),
             account_form: AccountFormState::new(),
             category_form: CategoryFormState::new(),
             group_form: GroupFormState::new(),
-            target_form: TargetFormState::new(),
+            budget_dialog_state: BudgetDialogState::new(),
         }
     }
 
@@ -432,19 +426,33 @@ impl<'a> App<'a> {
                 self.group_form = GroupFormState::new();
                 self.input_mode = InputMode::Editing;
             }
-            ActiveDialog::SetTarget => {
-                // Initialize target form for selected category
+            ActiveDialog::Budget => {
+                // Initialize unified budget dialog for selected category
                 if let Some(category_id) = self.selected_category {
                     if let Ok(Some(category)) = self.storage.categories.get_category(category_id) {
-                        // Check for existing target
+                        let budget_service = crate::services::BudgetService::new(self.storage);
+                        let summary = budget_service
+                            .get_category_summary(category_id, &self.current_period)
+                            .unwrap_or_else(|_| {
+                                crate::models::CategoryBudgetSummary::empty(category_id)
+                            });
+                        let suggested = budget_service
+                            .get_suggested_budget(category_id, &self.current_period)
+                            .ok()
+                            .flatten();
                         let existing_target = self
                             .storage
                             .targets
                             .get_for_category(category_id)
                             .ok()
                             .flatten();
-                        self.target_form
-                            .init_for_category(category_id, category.name, existing_target.as_ref());
+                        self.budget_dialog_state.init_for_category(
+                            category_id,
+                            category.name,
+                            summary.budgeted,
+                            suggested,
+                            existing_target.as_ref(),
+                        );
                         self.input_mode = InputMode::Editing;
                     }
                 }
