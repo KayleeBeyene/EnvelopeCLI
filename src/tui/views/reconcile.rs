@@ -7,7 +7,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Row, Table},
+    widgets::{Block, Borders, Paragraph, Row, Table},
     Frame,
 };
 
@@ -114,7 +114,7 @@ impl ReconciliationState {
 
 /// Render the reconciliation view
 pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
-    let state = &app.reconciliation_state;
+    let _state = &app.reconciliation_state;
 
     // Create layout
     let chunks = Layout::default()
@@ -236,7 +236,7 @@ fn render_transactions(frame: &mut Frame, app: &App, area: Rect) {
                 TransactionStatus::Reconciled => "[R]",
             };
 
-            let status_color = match txn.status {
+            let _status_color = match txn.status {
                 TransactionStatus::Pending => Color::DarkGray,
                 TransactionStatus::Cleared => Color::Green,
                 TransactionStatus::Reconciled => Color::Blue,

@@ -4,11 +4,10 @@
 //! including column mapping, date parsing, duplicate detection, and batch import.
 
 use std::collections::HashMap;
-use std::path::Path;
 
 use chrono::NaiveDate;
 
-use crate::error::{EnvelopeError, EnvelopeResult};
+use crate::error::EnvelopeResult;
 use crate::models::{AccountId, CategoryId, Money, TransactionStatus};
 use crate::services::TransactionService;
 use crate::storage::Storage;

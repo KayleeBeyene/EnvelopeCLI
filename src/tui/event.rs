@@ -24,6 +24,7 @@ pub enum Event {
 /// Event handler for terminal events
 pub struct EventHandler {
     /// Event sender
+    #[allow(dead_code)]
     sender: mpsc::Sender<Event>,
     /// Event receiver
     receiver: mpsc::Receiver<Event>,

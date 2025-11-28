@@ -135,7 +135,7 @@ impl Widget for TextInput {
         };
 
         let input_start = area.x + label_width as u16;
-        let input_width = area.width.saturating_sub(label_width as u16);
+        let _input_width = area.width.saturating_sub(label_width as u16);
 
         // Render label if present
         if !self.label.is_empty() {

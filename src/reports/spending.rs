@@ -82,12 +82,12 @@ impl SpendingReport {
         let transactions = storage.transactions.get_by_date_range(start_date, end_date)?;
 
         // Build category lookup
-        let category_map: HashMap<CategoryId, _> = categories
+        let _category_map: HashMap<CategoryId, _> = categories
             .iter()
             .map(|c| (c.id, c.clone()))
             .collect();
 
-        let group_map: HashMap<CategoryGroupId, _> = groups
+        let _group_map: HashMap<CategoryGroupId, _> = groups
             .iter()
             .map(|g| (g.id, g.clone()))
             .collect();
