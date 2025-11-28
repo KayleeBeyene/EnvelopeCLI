@@ -5,6 +5,7 @@
 pub mod account;
 pub mod adjustment;
 pub mod bulk_categorize;
+pub mod category;
 pub mod command_palette;
 pub mod confirm;
 pub mod edit_budget;

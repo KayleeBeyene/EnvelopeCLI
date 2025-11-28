@@ -438,6 +438,11 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             app.open_dialog(ActiveDialog::MoveFunds);
         }
 
+        // Add new category
+        KeyCode::Char('a') => {
+            app.open_dialog(ActiveDialog::AddCategory);
+        }
+
         // Add new category group
         KeyCode::Char('A') => {
             app.open_dialog(ActiveDialog::AddGroup);
@@ -595,8 +600,17 @@ fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
             }
         }
         CommandAction::ArchiveAccount => {
-            // TODO: Implement archive confirmation dialog
-            app.set_status("Archive account not yet implemented".to_string());
+            // Archive selected account with confirmation
+            if let Ok(accounts) = app.storage.accounts.get_active() {
+                if let Some(account) = accounts.get(app.selected_account_index) {
+                    app.open_dialog(ActiveDialog::Confirm(format!(
+                        "Archive account '{}'?",
+                        account.name
+                    )));
+                } else {
+                    app.set_status("No account selected".to_string());
+                }
+            }
         }
 
         // Transaction operations
@@ -618,8 +632,26 @@ fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
             }
         }
         CommandAction::ClearTransaction => {
-            // TODO: Implement toggle cleared via existing key handler logic
-            app.set_status("Use 'c' key to toggle cleared status".to_string());
+            // Toggle cleared status for selected transaction
+            if let Some(txn_id) = app.selected_transaction {
+                if let Ok(Some(txn)) = app.storage.transactions.get(txn_id) {
+                    use crate::models::TransactionStatus;
+                    let new_status = match txn.status {
+                        TransactionStatus::Pending => TransactionStatus::Cleared,
+                        TransactionStatus::Cleared => TransactionStatus::Pending,
+                        TransactionStatus::Reconciled => TransactionStatus::Reconciled,
+                    };
+                    if new_status != txn.status {
+                        let mut txn = txn.clone();
+                        txn.set_status(new_status);
+                        let _ = app.storage.transactions.upsert(txn);
+                        let _ = app.storage.transactions.save();
+                        app.set_status(format!("Transaction marked as {}", new_status));
+                    }
+                }
+            } else {
+                app.set_status("No transaction selected".to_string());
+            }
         }
 
         // Budget operations
@@ -627,8 +659,23 @@ fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
             app.open_dialog(ActiveDialog::MoveFunds);
         }
         CommandAction::AssignBudget => {
-            // TODO: Implement assign budget dialog
-            app.set_status("Assign budget not yet implemented".to_string());
+            // Open EditBudget dialog for the selected category
+            if let Some(category_id) = app.selected_category {
+                if let Ok(Some(category)) = app.storage.categories.get_category(category_id) {
+                    use crate::services::BudgetService;
+                    let budget_service = BudgetService::new(app.storage);
+                    let summary = budget_service
+                        .get_category_summary(category_id, &app.current_period)
+                        .unwrap_or_else(|_| {
+                            crate::models::CategoryBudgetSummary::empty(category_id)
+                        });
+                    app.edit_budget_state
+                        .init(category_id, category.name.clone(), summary.budgeted);
+                    app.open_dialog(ActiveDialog::EditBudget);
+                }
+            } else {
+                app.set_status("No category selected. Switch to Budget view first.".to_string());
+            }
         }
         CommandAction::NextPeriod => {
             app.next_period();
@@ -639,16 +686,45 @@ fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
 
         // Category operations
         CommandAction::AddCategory => {
-            // TODO: Implement add category dialog
-            app.set_status("Add category not yet implemented".to_string());
+            // Initialize category form with available groups
+            let groups: Vec<_> = app
+                .storage
+                .categories
+                .get_all_groups()
+                .unwrap_or_default()
+                .into_iter()
+                .map(|g| (g.id, g.name.clone()))
+                .collect();
+            app.category_form.init_with_groups(groups);
+            app.open_dialog(ActiveDialog::AddCategory);
+        }
+        CommandAction::AddGroup => {
+            // Reset group form
+            app.group_form = super::dialogs::group::GroupFormState::new();
+            app.open_dialog(ActiveDialog::AddGroup);
         }
         CommandAction::EditCategory => {
-            // TODO: Implement edit category dialog
-            app.set_status("Edit category not yet implemented".to_string());
+            // Open EditCategory dialog for the selected category
+            if let Some(category_id) = app.selected_category {
+                app.open_dialog(ActiveDialog::EditCategory(category_id));
+            } else {
+                app.set_status("No category selected. Switch to Budget view first.".to_string());
+            }
         }
         CommandAction::DeleteCategory => {
-            // TODO: Implement delete category confirmation
-            app.set_status("Delete category not yet implemented".to_string());
+            // Delete selected category with confirmation
+            if let Some(category_id) = app.selected_category {
+                if let Ok(Some(category)) =
+                    app.storage.categories.get_category(category_id)
+                {
+                    app.open_dialog(ActiveDialog::Confirm(format!(
+                        "Delete category '{}'?",
+                        category.name
+                    )));
+                }
+            } else {
+                app.set_status("No category selected".to_string());
+            }
         }
 
         // General
@@ -659,8 +735,24 @@ fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
             app.quit();
         }
         CommandAction::Refresh => {
-            // TODO: Implement data refresh
-            app.set_status("Data refreshed".to_string());
+            // Reload all data from disk
+            if let Err(e) = app.storage.accounts.load() {
+                app.set_status(format!("Failed to refresh accounts: {}", e));
+                return Ok(());
+            }
+            if let Err(e) = app.storage.transactions.load() {
+                app.set_status(format!("Failed to refresh transactions: {}", e));
+                return Ok(());
+            }
+            if let Err(e) = app.storage.categories.load() {
+                app.set_status(format!("Failed to refresh categories: {}", e));
+                return Ok(());
+            }
+            if let Err(e) = app.storage.budget.load() {
+                app.set_status(format!("Failed to refresh budget: {}", e));
+                return Ok(());
+            }
+            app.set_status("Data refreshed from disk".to_string());
         }
         CommandAction::ToggleArchived => {
             app.show_archived = !app.show_archived;
@@ -674,21 +766,18 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
     match &app.active_dialog {
         ActiveDialog::Help => {
             // Close help on any key
-            match key.code {
-                KeyCode::Esc | KeyCode::Char('?') | KeyCode::Char('q') | KeyCode::Enter => {
-                    app.close_dialog();
-                }
-                _ => {}
-            }
+            app.close_dialog();
         }
         ActiveDialog::CommandPalette => {
             handle_command_key(app, key)?;
         }
-        ActiveDialog::Confirm(_) => {
+        ActiveDialog::Confirm(msg) => {
+            let msg = msg.clone();
             match key.code {
                 KeyCode::Char('y') | KeyCode::Char('Y') | KeyCode::Enter => {
-                    // Execute confirmed action
+                    // Execute confirmed action based on the message
                     app.close_dialog();
+                    execute_confirmed_action(app, &msg)?;
                 }
                 KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
                     app.close_dialog();
@@ -753,10 +842,68 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
         ActiveDialog::AddAccount | ActiveDialog::EditAccount(_) => {
             super::dialogs::account::handle_key(app, key);
         }
+        ActiveDialog::AddCategory | ActiveDialog::EditCategory(_) => {
+            super::dialogs::category::handle_key(app, key);
+        }
         ActiveDialog::AddGroup => {
             super::dialogs::group::handle_key(app, key);
         }
         ActiveDialog::None => {}
     }
+    Ok(())
+}
+
+/// Execute an action after user confirmation
+fn execute_confirmed_action(app: &mut App, message: &str) -> Result<()> {
+    // Delete transaction
+    if message.contains("Delete") && message.contains("transaction") {
+        if let Some(txn_id) = app.selected_transaction {
+            if let Err(e) = app.storage.transactions.delete(txn_id) {
+                app.set_status(format!("Failed to delete: {}", e));
+            } else {
+                let _ = app.storage.transactions.save();
+                app.selected_transaction = None;
+                app.set_status("Transaction deleted".to_string());
+            }
+        }
+    }
+    // Archive account
+    else if message.contains("Archive account") {
+        if let Ok(accounts) = app.storage.accounts.get_active() {
+            if let Some(account) = accounts.get(app.selected_account_index) {
+                let mut account = account.clone();
+                account.archive();
+                if let Err(e) = app.storage.accounts.upsert(account.clone()) {
+                    app.set_status(format!("Failed to archive: {}", e));
+                } else {
+                    let _ = app.storage.accounts.save();
+                    app.set_status(format!("Account '{}' archived", account.name));
+                    // Reset selection
+                    app.selected_account_index = 0;
+                    if let Ok(active) = app.storage.accounts.get_active() {
+                        app.selected_account = active.first().map(|a| a.id);
+                    }
+                }
+            }
+        }
+    }
+    // Delete category
+    else if message.contains("Delete category") {
+        if let Some(category_id) = app.selected_category {
+            use crate::services::CategoryService;
+            let category_service = CategoryService::new(app.storage);
+            match category_service.delete_category(category_id) {
+                Ok(()) => {
+                    app.set_status("Category deleted".to_string());
+                    app.selected_category = None;
+                    app.selected_category_index = 0;
+                }
+                Err(e) => {
+                    app.set_status(format!("Failed to delete: {}", e));
+                }
+            }
+        }
+    }
+
     Ok(())
 }

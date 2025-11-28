@@ -70,6 +70,7 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
         Span::raw("  │  "),
         Span::styled("[[ / ]] Period  ", Style::default().fg(Color::Yellow)),
         Span::styled("[m] Move  ", Style::default().fg(Color::Yellow)),
+        Span::styled("[a] Add Category  ", Style::default().fg(Color::Yellow)),
         Span::styled("[A] Add Group", Style::default().fg(Color::Yellow)),
     ]);
 

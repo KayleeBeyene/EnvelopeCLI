@@ -10,6 +10,7 @@ use crate::storage::Storage;
 use super::dialogs::account::AccountFormState;
 use super::dialogs::adjustment::AdjustmentDialogState;
 use super::dialogs::bulk_categorize::BulkCategorizeState;
+use super::dialogs::category::CategoryFormState;
 use super::dialogs::edit_budget::EditBudgetState;
 use super::dialogs::group::GroupFormState;
 use super::dialogs::move_funds::MoveFundsState;
@@ -55,6 +56,8 @@ pub enum ActiveDialog {
     EditTransaction(TransactionId),
     AddAccount,
     EditAccount(AccountId),
+    AddCategory,
+    EditCategory(CategoryId),
     AddGroup,
     MoveFunds,
     CommandPalette,
@@ -162,6 +165,9 @@ pub struct App<'a> {
     /// Account form dialog state
     pub account_form: AccountFormState,
 
+    /// Category form dialog state
+    pub category_form: CategoryFormState,
+
     /// Group form dialog state
     pub group_form: GroupFormState,
 }
@@ -208,6 +214,7 @@ impl<'a> App<'a> {
             adjustment_dialog_state: AdjustmentDialogState::default(),
             edit_budget_state: EditBudgetState::new(),
             account_form: AccountFormState::new(),
+            category_form: CategoryFormState::new(),
             group_form: GroupFormState::new(),
         }
     }
@@ -382,6 +389,35 @@ impl<'a> App<'a> {
                     self.account_form = AccountFormState::from_account(&account);
                     self.account_form
                         .set_focus(super::dialogs::account::AccountField::Name);
+                }
+                self.input_mode = InputMode::Editing;
+            }
+            ActiveDialog::AddCategory => {
+                // Reset form for new category and load available groups
+                self.category_form = CategoryFormState::new();
+                let groups: Vec<_> = self
+                    .storage
+                    .categories
+                    .get_all_groups()
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|g| (g.id, g.name))
+                    .collect();
+                self.category_form.init_with_groups(groups);
+                self.input_mode = InputMode::Editing;
+            }
+            ActiveDialog::EditCategory(category_id) => {
+                // Load category data into form
+                if let Ok(Some(category)) = self.storage.categories.get_category(*category_id) {
+                    let groups: Vec<_> = self
+                        .storage
+                        .categories
+                        .get_all_groups()
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(|g| (g.id, g.name.clone()))
+                        .collect();
+                    self.category_form.init_for_edit(&category, groups);
                 }
                 self.input_mode = InputMode::Editing;
             }

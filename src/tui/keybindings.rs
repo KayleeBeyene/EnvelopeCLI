@@ -190,6 +190,18 @@ pub static KEYBINDINGS: &[Keybinding] = &[
         description: "Move funds",
         context: KeyContext::Budget,
     },
+    Keybinding {
+        key: KeyCode::Char('a'),
+        modifiers: KeyModifiers::NONE,
+        description: "Add category",
+        context: KeyContext::Budget,
+    },
+    Keybinding {
+        key: KeyCode::Char('A'),
+        modifiers: KeyModifiers::SHIFT,
+        description: "Add category group",
+        context: KeyContext::Budget,
+    },
     // Dialog
     Keybinding {
         key: KeyCode::Esc,

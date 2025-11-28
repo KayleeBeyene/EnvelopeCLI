@@ -43,6 +43,7 @@ pub enum CommandAction {
 
     // Category operations
     AddCategory,
+    AddGroup,
     EditCategory,
     DeleteCategory,
 
@@ -159,8 +160,14 @@ pub static COMMANDS: &[Command] = &[
     Command {
         name: "add-category",
         description: "Create a new category",
-        shortcut: None,
+        shortcut: Some("a"),
         action: CommandAction::AddCategory,
+    },
+    Command {
+        name: "add-group",
+        description: "Create a new category group",
+        shortcut: Some("A"),
+        action: CommandAction::AddGroup,
     },
     Command {
         name: "edit-category",

@@ -88,6 +88,9 @@ fn render_dialog(frame: &mut Frame, app: &mut App) {
         ActiveDialog::AddAccount | ActiveDialog::EditAccount(_) => {
             dialogs::account::render(frame, app);
         }
+        ActiveDialog::AddCategory | ActiveDialog::EditCategory(_) => {
+            dialogs::category::render(frame, app);
+        }
         ActiveDialog::AddGroup => {
             dialogs::group::render(frame, app);
         }
