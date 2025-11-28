@@ -13,6 +13,7 @@ pub mod import;
 pub mod payee;
 pub mod reconcile;
 pub mod report;
+pub mod target;
 pub mod transaction;
 pub mod transfer;
 
@@ -26,5 +27,6 @@ pub use import::handle_import_command;
 pub use payee::{handle_payee_command, PayeeCommands};
 pub use reconcile::{handle_reconcile_command, ReconcileCommands};
 pub use report::{handle_report_command, ReportCommands};
+pub use target::{handle_target_command, TargetCommands};
 pub use transaction::{handle_transaction_command, TransactionCommands};
 pub use transfer::handle_transfer_command;
