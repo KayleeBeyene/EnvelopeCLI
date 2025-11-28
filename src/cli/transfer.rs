@@ -32,6 +32,13 @@ pub fn handle_transfer_command(
         .find(to)?
         .ok_or_else(|| EnvelopeError::account_not_found(to))?;
 
+    // Validate source and destination are different accounts
+    if from_account.id == to_account.id {
+        return Err(EnvelopeError::Validation(
+            "Source and destination accounts cannot be the same.".to_string(),
+        ));
+    }
+
     // Parse amount
     let amount = Money::parse(amount).map_err(|e| {
         EnvelopeError::Validation(format!(
