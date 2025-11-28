@@ -11,6 +11,7 @@ use super::dialogs::account::AccountFormState;
 use super::dialogs::adjustment::AdjustmentDialogState;
 use super::dialogs::bulk_categorize::BulkCategorizeState;
 use super::dialogs::edit_budget::EditBudgetState;
+use super::dialogs::group::GroupFormState;
 use super::dialogs::move_funds::MoveFundsState;
 use super::dialogs::reconcile_start::ReconcileStartState;
 use super::dialogs::transaction::TransactionFormState;
@@ -54,6 +55,7 @@ pub enum ActiveDialog {
     EditTransaction(TransactionId),
     AddAccount,
     EditAccount(AccountId),
+    AddGroup,
     MoveFunds,
     CommandPalette,
     Help,
@@ -159,6 +161,9 @@ pub struct App<'a> {
 
     /// Account form dialog state
     pub account_form: AccountFormState,
+
+    /// Group form dialog state
+    pub group_form: GroupFormState,
 }
 
 impl<'a> App<'a> {
@@ -203,6 +208,7 @@ impl<'a> App<'a> {
             adjustment_dialog_state: AdjustmentDialogState::default(),
             edit_budget_state: EditBudgetState::new(),
             account_form: AccountFormState::new(),
+            group_form: GroupFormState::new(),
         }
     }
 
@@ -377,6 +383,11 @@ impl<'a> App<'a> {
                     self.account_form
                         .set_focus(super::dialogs::account::AccountField::Name);
                 }
+                self.input_mode = InputMode::Editing;
+            }
+            ActiveDialog::AddGroup => {
+                // Reset form for new group
+                self.group_form = GroupFormState::new();
                 self.input_mode = InputMode::Editing;
             }
             _ => {}

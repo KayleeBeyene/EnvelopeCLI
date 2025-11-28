@@ -81,7 +81,7 @@ pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
     }
 
     // Key hints (right-aligned)
-    let hints = " q:Quit  ?:Help  ::Command ";
+    let hints = " q:Quit  ?:Help  / or ::Command ";
 
     // Calculate padding
     let left_len: usize = spans.iter().map(|s| s.content.len()).sum();

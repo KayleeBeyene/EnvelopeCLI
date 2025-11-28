@@ -7,6 +7,7 @@ use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use super::app::{ActiveDialog, ActiveView, App, FocusedPanel, InputMode};
+use super::commands::{CommandAction, COMMANDS};
 use super::event::Event;
 
 /// Handle an incoming event
@@ -437,6 +438,11 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             app.open_dialog(ActiveDialog::MoveFunds);
         }
 
+        // Add new category group
+        KeyCode::Char('A') => {
+            app.open_dialog(ActiveDialog::AddGroup);
+        }
+
         // Edit budget for selected category
         KeyCode::Enter => {
             // Initialize and open the edit budget dialog
@@ -491,15 +497,46 @@ fn handle_command_key(app: &mut App, key: KeyEvent) -> Result<()> {
             app.close_dialog();
         }
         KeyCode::Enter => {
-            // Execute selected command
-            app.close_dialog();
+            // Get filtered commands (same logic as render)
+            let filtered_commands: Vec<&crate::tui::commands::Command> = COMMANDS
+                .iter()
+                .filter(|cmd| {
+                    if app.command_input.is_empty() {
+                        true
+                    } else {
+                        let query = app.command_input.to_lowercase();
+                        cmd.name.to_lowercase().contains(&query)
+                            || cmd.description.to_lowercase().contains(&query)
+                    }
+                })
+                .collect();
+
+            // Get the selected command
+            if !filtered_commands.is_empty() {
+                let selected_idx = app
+                    .selected_command_index
+                    .min(filtered_commands.len().saturating_sub(1));
+                let command = filtered_commands[selected_idx];
+                let action = command.action;
+
+                // Close dialog first
+                app.close_dialog();
+
+                // Execute the command action
+                execute_command_action(app, action)?;
+            } else {
+                app.close_dialog();
+            }
         }
         KeyCode::Char(c) => {
             app.command_input.push(c);
-            // Filter commands based on input
+            // Reset selection when input changes
+            app.selected_command_index = 0;
         }
         KeyCode::Backspace => {
             app.command_input.pop();
+            // Reset selection when input changes
+            app.selected_command_index = 0;
         }
         KeyCode::Up => {
             if app.selected_command_index > 0 {
@@ -507,9 +544,127 @@ fn handle_command_key(app: &mut App, key: KeyEvent) -> Result<()> {
             }
         }
         KeyCode::Down => {
-            app.selected_command_index += 1;
+            // Get filtered count to bound selection
+            let filtered_count = COMMANDS
+                .iter()
+                .filter(|cmd| {
+                    if app.command_input.is_empty() {
+                        true
+                    } else {
+                        let query = app.command_input.to_lowercase();
+                        cmd.name.to_lowercase().contains(&query)
+                            || cmd.description.to_lowercase().contains(&query)
+                    }
+                })
+                .count();
+            if app.selected_command_index + 1 < filtered_count {
+                app.selected_command_index += 1;
+            }
         }
         _ => {}
+    }
+    Ok(())
+}
+
+/// Execute a command action from the command palette
+fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
+    match action {
+        // Navigation
+        CommandAction::ViewAccounts => {
+            app.switch_view(ActiveView::Accounts);
+        }
+        CommandAction::ViewBudget => {
+            app.switch_view(ActiveView::Budget);
+        }
+        CommandAction::ViewReports => {
+            app.switch_view(ActiveView::Reports);
+        }
+        CommandAction::ViewRegister => {
+            app.switch_view(ActiveView::Register);
+        }
+
+        // Account operations
+        CommandAction::AddAccount => {
+            app.open_dialog(ActiveDialog::AddAccount);
+        }
+        CommandAction::EditAccount => {
+            if let Ok(accounts) = app.storage.accounts.get_active() {
+                if let Some(account) = accounts.get(app.selected_account_index) {
+                    app.open_dialog(ActiveDialog::EditAccount(account.id));
+                }
+            }
+        }
+        CommandAction::ArchiveAccount => {
+            // TODO: Implement archive confirmation dialog
+            app.set_status("Archive account not yet implemented".to_string());
+        }
+
+        // Transaction operations
+        CommandAction::AddTransaction => {
+            app.open_dialog(ActiveDialog::AddTransaction);
+        }
+        CommandAction::EditTransaction => {
+            if let Some(tx_id) = app.selected_transaction {
+                app.open_dialog(ActiveDialog::EditTransaction(tx_id));
+            } else {
+                app.set_status("No transaction selected".to_string());
+            }
+        }
+        CommandAction::DeleteTransaction => {
+            if app.selected_transaction.is_some() {
+                app.open_dialog(ActiveDialog::Confirm("Delete transaction?".to_string()));
+            } else {
+                app.set_status("No transaction selected".to_string());
+            }
+        }
+        CommandAction::ClearTransaction => {
+            // TODO: Implement toggle cleared via existing key handler logic
+            app.set_status("Use 'c' key to toggle cleared status".to_string());
+        }
+
+        // Budget operations
+        CommandAction::MoveFunds => {
+            app.open_dialog(ActiveDialog::MoveFunds);
+        }
+        CommandAction::AssignBudget => {
+            // TODO: Implement assign budget dialog
+            app.set_status("Assign budget not yet implemented".to_string());
+        }
+        CommandAction::NextPeriod => {
+            app.next_period();
+        }
+        CommandAction::PrevPeriod => {
+            app.prev_period();
+        }
+
+        // Category operations
+        CommandAction::AddCategory => {
+            // TODO: Implement add category dialog
+            app.set_status("Add category not yet implemented".to_string());
+        }
+        CommandAction::EditCategory => {
+            // TODO: Implement edit category dialog
+            app.set_status("Edit category not yet implemented".to_string());
+        }
+        CommandAction::DeleteCategory => {
+            // TODO: Implement delete category confirmation
+            app.set_status("Delete category not yet implemented".to_string());
+        }
+
+        // General
+        CommandAction::Help => {
+            app.open_dialog(ActiveDialog::Help);
+        }
+        CommandAction::Quit => {
+            app.quit();
+        }
+        CommandAction::Refresh => {
+            // TODO: Implement data refresh
+            app.set_status("Data refreshed".to_string());
+        }
+        CommandAction::ToggleArchived => {
+            app.show_archived = !app.show_archived;
+        }
     }
     Ok(())
 }
@@ -597,6 +752,9 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
         }
         ActiveDialog::AddAccount | ActiveDialog::EditAccount(_) => {
             super::dialogs::account::handle_key(app, key);
+        }
+        ActiveDialog::AddGroup => {
+            super::dialogs::group::handle_key(app, key);
         }
         ActiveDialog::None => {}
     }

@@ -68,8 +68,9 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
             Style::default().fg(atb_color).add_modifier(Modifier::BOLD),
         ),
         Span::raw("  │  "),
-        Span::styled("[/] Period  ", Style::default().fg(Color::Yellow)),
-        Span::styled("[m] Move Funds", Style::default().fg(Color::Yellow)),
+        Span::styled("[[ / ]] Period  ", Style::default().fg(Color::Yellow)),
+        Span::styled("[m] Move  ", Style::default().fg(Color::Yellow)),
+        Span::styled("[A] Add Group", Style::default().fg(Color::Yellow)),
     ]);
 
     let paragraph = Paragraph::new(line).block(block);
