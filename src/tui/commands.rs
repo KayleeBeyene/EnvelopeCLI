@@ -52,6 +52,9 @@ pub enum CommandAction {
     Quit,
     Refresh,
     ToggleArchived,
+
+    // Target operations
+    AutoFillTargets,
 }
 
 /// All available commands
@@ -199,6 +202,13 @@ pub static COMMANDS: &[Command] = &[
         description: "Refresh data from disk",
         shortcut: None,
         action: CommandAction::Refresh,
+    },
+    // Target commands
+    Command {
+        name: "auto-fill-targets",
+        description: "Fill budgets from targets",
+        shortcut: None,
+        action: CommandAction::AutoFillTargets,
     },
 ];
 

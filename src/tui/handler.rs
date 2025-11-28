@@ -720,6 +720,26 @@ fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
         CommandAction::ToggleArchived => {
             app.show_archived = !app.show_archived;
         }
+
+        // Target operations
+        CommandAction::AutoFillTargets => {
+            use crate::services::BudgetService;
+            let budget_service = BudgetService::new(app.storage);
+            match budget_service.auto_fill_all_targets(&app.current_period) {
+                Ok(allocations) => {
+                    if allocations.is_empty() {
+                        app.set_status("No targets to auto-fill".to_string());
+                    } else {
+                        let count = allocations.len();
+                        let plural = if count == 1 { "category" } else { "categories" };
+                        app.set_status(format!("{} {} updated from targets", count, plural));
+                    }
+                }
+                Err(e) => {
+                    app.set_status(format!("Auto-fill failed: {}", e));
+                }
+            }
+        }
     }
     Ok(())
 }
