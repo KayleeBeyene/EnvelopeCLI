@@ -12,6 +12,7 @@ use crate::error::{EnvelopeError, EnvelopeResult};
 use crate::models::{AccountId, CategoryId, Money, TransactionStatus};
 use crate::services::TransactionService;
 use crate::storage::Storage;
+use csv::{Reader, StringRecord};
 
 /// Column mapping configuration for CSV import
 #[derive(Debug, Clone)]
@@ -210,69 +211,57 @@ impl<'a> ImportService<'a> {
         Self { storage }
     }
 
-    /// Parse a CSV file into transactions
-    pub fn parse_csv(
+
+    /// Parse a CSV from a reader into transactions
+    pub fn parse_csv_from_reader<R: std::io::Read>(
         &self,
-        content: &str,
+        reader: &mut Reader<R>,
         mapping: &ColumnMapping,
     ) -> EnvelopeResult<Vec<Result<ParsedTransaction, String>>> {
         let mut results = Vec::new();
-        let lines: Vec<&str> = content.lines().collect();
-
-        let start_row = if mapping.has_header { 1 } else { 0 };
-
-        for (idx, line) in lines.iter().enumerate().skip(start_row) {
-            let row_num = idx - start_row;
-            let result = self.parse_row(line, row_num, mapping);
+        for (idx, result) in reader.records().enumerate() {
+            let record = match result {
+                Ok(record) => record,
+                Err(e) => {
+                    results.push(Err(format!("Error reading CSV record: {}", e)));
+                    continue;
+                }
+            };
+            let result = self.parse_record(&record, idx, mapping);
             results.push(result);
         }
-
         Ok(results)
     }
 
-    /// Parse a CSV file from a path
-    pub fn parse_csv_file(
+    /// Parse a single CSV record
+    fn parse_record(
         &self,
-        path: &Path,
-        mapping: &ColumnMapping,
-    ) -> EnvelopeResult<Vec<Result<ParsedTransaction, String>>> {
-        let content = std::fs::read_to_string(path).map_err(|e| {
-            EnvelopeError::Import(format!("Failed to read CSV file: {}", e))
-        })?;
-        self.parse_csv(&content, mapping)
-    }
-
-    /// Parse a single CSV row
-    fn parse_row(
-        &self,
-        line: &str,
+        record: &StringRecord,
         row_number: usize,
         mapping: &ColumnMapping,
     ) -> Result<ParsedTransaction, String> {
-        let fields: Vec<&str> = self.split_csv_line(line, mapping.delimiter);
-
         // Parse date
-        let date_str = fields
+        let date_str = record
             .get(mapping.date_column)
-            .ok_or_else(|| format!("Missing date column"))?
+            .ok_or_else(|| "Missing date column".to_string())?
             .trim();
 
         let date = self.parse_date(date_str, &mapping.date_format)?;
 
         // Parse amount
-        let amount = self.parse_amount(&fields, mapping)?;
+        let amount = self.parse_amount_from_record(record, mapping)?;
 
         // Parse payee
         let payee = mapping
             .payee_column
-            .and_then(|col| fields.get(col))
+            .and_then(|col| record.get(col))
             .map(|s| s.trim().to_string())
             .unwrap_or_default();
 
         // Parse memo
         let memo = mapping
             .memo_column
-            .and_then(|col| fields.get(col))
+            .and_then(|col| record.get(col))
             .map(|s| s.trim().to_string())
             .unwrap_or_default();
 
@@ -289,23 +278,52 @@ impl<'a> ImportService<'a> {
         })
     }
 
-    /// Split a CSV line, handling quoted fields
-    fn split_csv_line<'b>(&self, line: &'b str, delimiter: char) -> Vec<&'b str> {
-        let mut fields = Vec::new();
-        let mut in_quotes = false;
-        let mut start = 0;
+    /// Parse amount from a record
+    fn parse_amount_from_record(
+        &self,
+        record: &StringRecord,
+        mapping: &ColumnMapping,
+    ) -> Result<Money, String> {
+        let amount = if let Some(amount_col) = mapping.amount_column {
+            // Single amount column
+            let amount_str = record
+                .get(amount_col)
+                .ok_or_else(|| "Missing amount column".to_string())?
+                .trim();
 
-        for (i, c) in line.char_indices() {
-            if c == '"' {
-                in_quotes = !in_quotes;
-            } else if c == delimiter && !in_quotes {
-                fields.push(&line[start..i]);
-                start = i + 1;
-            }
+            self.parse_amount_string(amount_str)?
+        } else {
+            // Separate inflow/outflow columns
+            let outflow_col = mapping
+                .outflow_column
+                .ok_or_else(|| "Missing outflow column configuration".to_string())?;
+            let inflow_col = mapping
+                .inflow_column
+                .ok_or_else(|| "Missing inflow column configuration".to_string())?;
+
+            let outflow_str = record.get(outflow_col).map(|s| s.trim()).unwrap_or("");
+            let inflow_str = record.get(inflow_col).map(|s| s.trim()).unwrap_or("");
+
+            let outflow = if outflow_str.is_empty() {
+                Money::zero()
+            } else {
+                -self.parse_amount_string(outflow_str)?.abs()
+            };
+
+            let inflow = if inflow_str.is_empty() {
+                Money::zero()
+            } else {
+                self.parse_amount_string(inflow_str)?.abs()
+            };
+
+            outflow + inflow
+        };
+
+        if mapping.invert_amounts {
+            Ok(-amount)
+        } else {
+            Ok(amount)
         }
-
-        fields.push(&line[start..]);
-        fields
     }
 
     /// Parse a date string using multiple format attempts
@@ -336,52 +354,39 @@ impl<'a> ImportService<'a> {
         Err(format!("Could not parse date: '{}'", s))
     }
 
-    /// Parse amount from fields
-    fn parse_amount(
-        &self,
-        fields: &[&str],
-        mapping: &ColumnMapping,
-    ) -> Result<Money, String> {
-        let amount = if let Some(amount_col) = mapping.amount_column {
-            // Single amount column
-            let amount_str = fields
-                .get(amount_col)
-                .ok_or_else(|| "Missing amount column".to_string())?
-                .trim();
+    /// Detect column mapping from CSV header record
+    pub fn detect_mapping_from_headers(&self, headers: &StringRecord) -> ColumnMapping {
+        let mut mapping = ColumnMapping::new();
 
-            self.parse_amount_string(amount_str)?
-        } else {
-            // Separate inflow/outflow columns
-            let outflow_col = mapping
-                .outflow_column
-                .ok_or_else(|| "Missing outflow column configuration".to_string())?;
-            let inflow_col = mapping
-                .inflow_column
-                .ok_or_else(|| "Missing inflow column configuration".to_string())?;
+        for (idx, header) in headers.iter().enumerate() {
+            let h = header.to_lowercase();
+            let h = h.trim();
 
-            let outflow_str = fields.get(outflow_col).map(|s| s.trim()).unwrap_or("");
-            let inflow_str = fields.get(inflow_col).map(|s| s.trim()).unwrap_or("");
-
-            let outflow = if outflow_str.is_empty() {
-                Money::zero()
-            } else {
-                -self.parse_amount_string(outflow_str)?.abs()
-            };
-
-            let inflow = if inflow_str.is_empty() {
-                Money::zero()
-            } else {
-                self.parse_amount_string(inflow_str)?.abs()
-            };
-
-            outflow + inflow
-        };
-
-        if mapping.invert_amounts {
-            Ok(-amount)
-        } else {
-            Ok(amount)
+            if h.contains("date") || h.contains("posted") || h.contains("trans") {
+                mapping.date_column = idx;
+            } else if h.contains("amount") && mapping.amount_column.is_none() {
+                mapping.amount_column = Some(idx);
+            } else if h.contains("debit") || h.contains("outflow") || h.contains("withdrawal") {
+                mapping.outflow_column = Some(idx);
+            } else if h.contains("credit") || h.contains("inflow") || h.contains("deposit") {
+                mapping.inflow_column = Some(idx);
+            } else if h.contains("description")
+                || h.contains("payee")
+                || h.contains("merchant")
+                || h.contains("name")
+            {
+                mapping.payee_column = Some(idx);
+            } else if h.contains("memo") || h.contains("note") {
+                mapping.memo_column = Some(idx);
+            }
         }
+
+        // If we have separate inflow/outflow, clear the amount column
+        if mapping.outflow_column.is_some() && mapping.inflow_column.is_some() {
+            mapping.amount_column = None;
+        }
+
+        mapping
     }
 
     /// Parse an amount string, handling various formats
@@ -529,67 +534,7 @@ impl<'a> ImportService<'a> {
         Ok(result)
     }
 
-    /// Quick import from CSV file, combining parse + preview + import
-    pub fn quick_import(
-        &self,
-        path: &Path,
-        account_id: AccountId,
-        mapping: &ColumnMapping,
-        default_category_id: Option<CategoryId>,
-        skip_duplicates: bool,
-        mark_cleared: bool,
-    ) -> EnvelopeResult<ImportResult> {
-        let parsed = self.parse_csv_file(path, mapping)?;
-        let preview = self.generate_preview(&parsed, account_id)?;
 
-        if !skip_duplicates {
-            // Check if there are duplicates and return error
-            let has_duplicates = preview.iter().any(|e| e.status == ImportStatus::Duplicate);
-            if has_duplicates {
-                return Err(EnvelopeError::Import(
-                    "Duplicates found. Use --skip-duplicates to ignore them.".into(),
-                ));
-            }
-        }
-
-        self.import_from_preview(&preview, account_id, default_category_id, mark_cleared)
-    }
-
-    /// Detect column mapping from CSV header
-    pub fn detect_mapping(&self, header_line: &str) -> ColumnMapping {
-        let mut mapping = ColumnMapping::new();
-        let headers: Vec<&str> = header_line.split(',').collect();
-
-        for (idx, header) in headers.iter().enumerate() {
-            let h = header.to_lowercase();
-            let h = h.trim();
-
-            if h.contains("date") || h.contains("posted") || h.contains("trans") {
-                mapping.date_column = idx;
-            } else if h.contains("amount") && mapping.amount_column.is_none() {
-                mapping.amount_column = Some(idx);
-            } else if h.contains("debit") || h.contains("outflow") || h.contains("withdrawal") {
-                mapping.outflow_column = Some(idx);
-            } else if h.contains("credit") || h.contains("inflow") || h.contains("deposit") {
-                mapping.inflow_column = Some(idx);
-            } else if h.contains("description")
-                || h.contains("payee")
-                || h.contains("merchant")
-                || h.contains("name")
-            {
-                mapping.payee_column = Some(idx);
-            } else if h.contains("memo") || h.contains("note") {
-                mapping.memo_column = Some(idx);
-            }
-        }
-
-        // If we have separate inflow/outflow, clear the amount column
-        if mapping.outflow_column.is_some() && mapping.inflow_column.is_some() {
-            mapping.amount_column = None;
-        }
-
-        mapping
-    }
 }
 
 #[cfg(test)]
@@ -620,10 +565,11 @@ mod tests {
         let (_temp_dir, storage) = create_test_storage();
         let service = ImportService::new(&storage);
 
-        let csv = "Date,Amount,Description\n2025-01-15,-50.00,Test Store\n2025-01-16,100.00,Paycheck";
+        let csv_data = "Date,Amount,Description\n2025-01-15,-50.00,Test Store\n2025-01-16,100.00,Paycheck";
         let mapping = ColumnMapping::new();
+        let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
 
-        let results = service.parse_csv(csv, &mapping).unwrap();
+        let results = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
         assert_eq!(results.len(), 2);
 
         let txn1 = results[0].as_ref().unwrap();
@@ -641,10 +587,11 @@ mod tests {
         let (_temp_dir, storage) = create_test_storage();
         let service = ImportService::new(&storage);
 
-        let csv = "Date,Outflow,Inflow,Description\n2025-01-15,50.00,,Groceries\n2025-01-16,,100.00,Paycheck";
+        let csv_data = "Date,Outflow,Inflow,Description\n2025-01-15,50.00,,Groceries\n2025-01-16,,100.00,Paycheck";
         let mapping = ColumnMapping::separate_inout(0, 1, 2, 3);
+        let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
 
-        let results = service.parse_csv(csv, &mapping).unwrap();
+        let results = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
         assert_eq!(results.len(), 2);
 
         let txn1 = results[0].as_ref().unwrap();
@@ -660,9 +607,10 @@ mod tests {
         let service = ImportService::new(&storage);
 
         // MM/DD/YYYY format
-        let csv = "Date,Amount,Description\n01/15/2025,-50.00,Test";
+        let csv_data = "Date,Amount,Description\n01/15/2025,-50.00,Test";
         let mapping = ColumnMapping::new().with_date_format("%m/%d/%Y");
-        let results = service.parse_csv(csv, &mapping).unwrap();
+        let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
+        let results = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
         assert_eq!(
             results[0].as_ref().unwrap().date,
             NaiveDate::from_ymd_opt(2025, 1, 15).unwrap()
@@ -674,10 +622,11 @@ mod tests {
         let (_temp_dir, storage) = create_test_storage();
         let service = ImportService::new(&storage);
 
-        let csv = "Date,Amount,Description\n2025-01-15,(50.00),Test";
+        let csv_data = "Date,Amount,Description\n2025-01-15,(50.00),Test";
         let mapping = ColumnMapping::new();
+        let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
 
-        let results = service.parse_csv(csv, &mapping).unwrap();
+        let results = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
         let txn = results[0].as_ref().unwrap();
         assert_eq!(txn.amount.cents(), -5000);
     }
@@ -689,9 +638,10 @@ mod tests {
         let service = ImportService::new(&storage);
 
         // First import
-        let csv = "Date,Amount,Description\n2025-01-15,-50.00,Test Store";
+        let csv_data = "Date,Amount,Description\n2025-01-15,-50.00,Test Store";
         let mapping = ColumnMapping::new();
-        let parsed = service.parse_csv(csv, &mapping).unwrap();
+        let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
+        let parsed = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
 
         let preview1 = service.generate_preview(&parsed, account_id).unwrap();
         assert_eq!(preview1[0].status, ImportStatus::New);
@@ -711,8 +661,10 @@ mod tests {
         let (_temp_dir, storage) = create_test_storage();
         let service = ImportService::new(&storage);
 
-        let header = "Transaction Date,Debit,Credit,Description,Notes";
-        let mapping = service.detect_mapping(header);
+        let header_str = "Transaction Date,Debit,Credit,Description,Notes";
+        let mut reader = csv::ReaderBuilder::new().has_headers(false).from_reader(header_str.as_bytes());
+        let headers = reader.headers().unwrap().clone();
+        let mapping = service.detect_mapping_from_headers(&headers);
 
         assert_eq!(mapping.date_column, 0);
         assert_eq!(mapping.outflow_column, Some(1));
@@ -728,9 +680,10 @@ mod tests {
         let account_id = setup_test_account(&storage);
         let service = ImportService::new(&storage);
 
-        let csv = "Date,Amount,Description\n2025-01-15,-50.00,Store 1\n2025-01-16,-25.00,Store 2";
+        let csv_data = "Date,Amount,Description\n2025-01-15,-50.00,Store 1\n2025-01-16,-25.00,Store 2";
         let mapping = ColumnMapping::new();
-        let parsed = service.parse_csv(csv, &mapping).unwrap();
+        let mut reader = csv::Reader::from_reader(csv_data.as_bytes());
+        let parsed = service.parse_csv_from_reader(&mut reader, &mapping).unwrap();
         let preview = service.generate_preview(&parsed, account_id).unwrap();
 
         let result = service

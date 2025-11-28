@@ -29,13 +29,15 @@ pub fn handle_import_command(
     }
 
     // Try to detect mapping from CSV header
-    let content = std::fs::read_to_string(path)
-        .map_err(|e| EnvelopeError::Import(format!("Failed to read file: {}", e)))?;
-    let first_line = content.lines().next().unwrap_or("");
-    let mapping = import_service.detect_mapping(first_line);
+    let mut reader = csv::Reader::from_path(path)
+        .map_err(|e| EnvelopeError::Import(format!("Failed to open CSV file: {}", e)))?;
+    let headers = reader.headers()
+        .map_err(|e| EnvelopeError::Import(format!("Failed to read CSV headers: {}", e)))?
+        .clone();
+    let mapping = import_service.detect_mapping_from_headers(&headers);
 
     // Parse the CSV
-    let parsed = import_service.parse_csv(&content, &mapping)?;
+    let parsed = import_service.parse_csv_from_reader(&mut reader, &mapping)?;
 
     if parsed.is_empty() {
         println!("No transactions found in CSV file.");
