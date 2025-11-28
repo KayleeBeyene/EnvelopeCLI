@@ -65,11 +65,7 @@ fn render_header(frame: &mut Frame, app: &mut App, area: Rect) {
 /// Render transaction table
 fn render_transaction_table(frame: &mut Frame, app: &mut App, area: Rect) {
     let is_focused = app.focused_panel == FocusedPanel::Main;
-    let border_color = if is_focused {
-        Color::Cyan
-    } else {
-        Color::Gray
-    };
+    let border_color = if is_focused { Color::Cyan } else { Color::Gray };
 
     let block = Block::default()
         .borders(Borders::ALL)

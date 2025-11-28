@@ -315,14 +315,7 @@ fn render_category_field(
 
     let label_line = Line::from(vec![
         Span::styled(format!("{:>8} ", label), label_style),
-        Span::styled(
-            selected_name,
-            if selected.is_some() {
-                Style::default().fg(Color::White)
-            } else {
-                Style::default().fg(Color::White)
-            },
-        ),
+        Span::styled(selected_name, Style::default().fg(Color::White)),
     ]);
     frame.render_widget(Paragraph::new(label_line), label_area);
 

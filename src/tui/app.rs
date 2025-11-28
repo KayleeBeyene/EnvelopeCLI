@@ -251,11 +251,7 @@ impl<'a> App<'a> {
             ActiveView::Budget => {
                 self.selected_category_index = 0;
                 // Initialize selected_category to first category (in visual order)
-                let groups = self
-                    .storage
-                    .categories
-                    .get_all_groups()
-                    .unwrap_or_default();
+                let groups = self.storage.categories.get_all_groups().unwrap_or_default();
                 let all_categories = self
                     .storage
                     .categories
@@ -316,11 +312,7 @@ impl<'a> App<'a> {
             }
             ActiveView::Budget => {
                 if self.selected_category.is_none() {
-                    let groups = self
-                        .storage
-                        .categories
-                        .get_all_groups()
-                        .unwrap_or_default();
+                    let groups = self.storage.categories.get_all_groups().unwrap_or_default();
                     let all_categories = self
                         .storage
                         .categories

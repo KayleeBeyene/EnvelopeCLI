@@ -80,11 +80,7 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
 /// Render category budget table
 fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
     let is_focused = app.focused_panel == FocusedPanel::Main;
-    let border_color = if is_focused {
-        Color::Cyan
-    } else {
-        Color::Gray
-    };
+    let border_color = if is_focused { Color::Cyan } else { Color::Gray };
 
     let block = Block::default()
         .borders(Borders::ALL)

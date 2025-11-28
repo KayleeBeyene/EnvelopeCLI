@@ -98,9 +98,7 @@ impl AccountFormState {
     pub fn new() -> Self {
         Self {
             focused_field: AccountField::Name,
-            name_input: TextInput::new()
-                .label("Name")
-                .placeholder("Account name"),
+            name_input: TextInput::new().label("Name").placeholder("Account name"),
             account_type_index: 0, // Checking
             balance_input: TextInput::new()
                 .label("Balance")
@@ -123,13 +121,12 @@ impl AccountFormState {
 
         Self {
             focused_field: AccountField::Name,
-            name_input: TextInput::new()
-                .label("Name")
-                .content(&account.name),
+            name_input: TextInput::new().label("Name").content(&account.name),
             account_type_index,
-            balance_input: TextInput::new()
-                .label("Balance")
-                .content(format!("{:.2}", account.starting_balance.cents() as f64 / 100.0)),
+            balance_input: TextInput::new().label("Balance").content(format!(
+                "{:.2}",
+                account.starting_balance.cents() as f64 / 100.0
+            )),
             on_budget: account.on_budget,
             is_edit: true,
             editing_account_id: Some(account.id),
@@ -325,10 +322,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     };
     let type_label = Paragraph::new(Line::from(vec![
         Span::styled("Type: ", type_label_style),
-        Span::styled(
-            "(↑/↓ to change)",
-            Style::default().fg(Color::White),
-        ),
+        Span::styled("(↑/↓ to change)", Style::default().fg(Color::White)),
     ]));
     frame.render_widget(type_label, chunks[2]);
 
@@ -408,13 +402,7 @@ fn render_text_field(
 
     let label_span = Span::styled(format!("{}: ", label), label_style);
 
-    let value_style = if focused {
-        Style::default().fg(Color::White)
-    } else if value.is_empty() {
-        Style::default().fg(Color::White)
-    } else {
-        Style::default().fg(Color::White)
-    };
+    let value_style = Style::default().fg(Color::White);
 
     let display_value = if value.is_empty() && !focused {
         placeholder.to_string()

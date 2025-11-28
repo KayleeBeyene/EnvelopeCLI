@@ -211,7 +211,10 @@ pub fn render(frame: &mut Frame, app: &App) {
 
     // Error message
     if let Some(ref error) = state.error_message {
-        let error_line = Line::from(Span::styled(error.as_str(), Style::default().fg(Color::Red)));
+        let error_line = Line::from(Span::styled(
+            error.as_str(),
+            Style::default().fg(Color::Red),
+        ));
         frame.render_widget(Paragraph::new(error_line), chunks[7]);
     }
 

@@ -121,12 +121,8 @@ impl TransactionFormState {
             selected_category: None,
             category_list_index: 0,
             show_category_dropdown: false,
-            outflow_input: TextInput::new()
-                .label("Outflow")
-                .placeholder("(expense)"),
-            inflow_input: TextInput::new()
-                .label("Inflow")
-                .placeholder("(income)"),
+            outflow_input: TextInput::new().label("Outflow").placeholder("(expense)"),
+            inflow_input: TextInput::new().label("Inflow").placeholder("(income)"),
             memo_input: TextInput::new().label("Memo").placeholder("Optional note"),
             is_edit: false,
             error_message: None,
@@ -149,14 +145,10 @@ impl TransactionFormState {
             state.outflow_input = TextInput::new()
                 .label("Outflow")
                 .content(format!("{:.2}", (-cents) as f64 / 100.0));
-            state.inflow_input = TextInput::new()
-                .label("Inflow")
-                .placeholder("0.00");
+            state.inflow_input = TextInput::new().label("Inflow").placeholder("0.00");
         } else if cents > 0 {
             // Positive = inflow (income)
-            state.outflow_input = TextInput::new()
-                .label("Outflow")
-                .placeholder("0.00");
+            state.outflow_input = TextInput::new().label("Outflow").placeholder("0.00");
             state.inflow_input = TextInput::new()
                 .label("Inflow")
                 .content(format!("{:.2}", cents as f64 / 100.0));
@@ -487,8 +479,6 @@ fn render_field_simple(
     // Value with cursor if focused
     let value_style = if focused {
         Style::default().fg(Color::White)
-    } else if value.is_empty() {
-        Style::default().fg(Color::Yellow)
     } else {
         Style::default().fg(Color::Yellow)
     };
@@ -560,8 +550,6 @@ fn render_category_field(frame: &mut Frame, app: &mut App, input_area: Rect, dro
 
     let value_style = if focused {
         Style::default().fg(Color::White)
-    } else if display_value.is_empty() || display_value == form.category_input.placeholder {
-        Style::default().fg(Color::Yellow)
     } else {
         Style::default().fg(Color::Yellow)
     };

@@ -27,7 +27,11 @@ fn handle_key_event(app: &mut App, key: KeyEvent) -> Result<()> {
     // DEBUG: Log every key at the top level
     app.set_status(format!(
         "KEY: {:?} | mode={:?} | panel={:?} | view={:?} | dialog={:?}",
-        key.code, app.input_mode, app.focused_panel, app.active_view, app.has_dialog()
+        key.code,
+        app.input_mode,
+        app.focused_panel,
+        app.active_view,
+        app.has_dialog()
     ));
 
     // Check if we're in a dialog first
@@ -172,7 +176,10 @@ fn handle_sidebar_key(app: &mut App, key: KeyEvent) -> Result<()> {
 /// Handle keys when main panel is focused
 fn handle_main_panel_key(app: &mut App, key: KeyEvent) -> Result<()> {
     // DEBUG: Show which view we're in
-    app.set_status(format!("DEBUG: main_panel key={:?}, view={:?}", key.code, app.active_view));
+    app.set_status(format!(
+        "DEBUG: main_panel key={:?}, view={:?}",
+        key.code, app.active_view
+    ));
 
     match app.active_view {
         ActiveView::Accounts => handle_accounts_view_key(app, key),
@@ -377,11 +384,7 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
 /// Get categories in visual order (grouped by group, same as render)
 fn get_categories_in_visual_order(app: &App) -> Vec<crate::models::Category> {
-    let groups = app
-        .storage
-        .categories
-        .get_all_groups()
-        .unwrap_or_default();
+    let groups = app.storage.categories.get_all_groups().unwrap_or_default();
     let all_categories = app
         .storage
         .categories
