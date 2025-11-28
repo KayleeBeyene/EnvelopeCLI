@@ -16,7 +16,10 @@ pub mod transfer;
 pub use account::AccountService;
 pub use budget::BudgetService;
 pub use category::CategoryService;
-pub use import::{ColumnMapping, ImportPreviewEntry, ImportResult, ImportService, ImportStatus};
+pub use import::{
+    ColumnMapping, ImportPreviewEntry, ImportResult, ImportService, ImportStatus,
+    ParsedTransaction,
+};
 pub use payee::PayeeService;
 pub use period::PeriodService;
 pub use reconciliation::{

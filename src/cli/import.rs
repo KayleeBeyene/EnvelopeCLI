@@ -6,7 +6,10 @@
 use std::path::Path;
 
 use crate::error::{EnvelopeError, EnvelopeResult};
-use crate::services::{AccountService, ImportService, ImportStatus};
+use crate::models::{Account, AccountId};
+use crate::services::{
+    AccountService, ImportPreviewEntry, ImportService, ImportStatus, ParsedTransaction,
+};
 use crate::storage::Storage;
 
 /// Handle the import command
@@ -14,7 +17,35 @@ pub fn handle_import_command(storage: &Storage, file: &str, account: &str) -> En
     let account_service = AccountService::new(storage);
     let import_service = ImportService::new(storage);
 
-    // Find account
+    let (parsed, target_account) =
+        read_and_parse_csv(&import_service, &account_service, file, account)?;
+
+    if parsed.is_empty() {
+        println!("No transactions found in CSV file.");
+        return Ok(());
+    }
+
+    let preview = generate_and_display_preview(&import_service, &parsed, &target_account)?;
+
+    let new_count = preview
+        .iter()
+        .filter(|e| e.status == ImportStatus::New)
+        .count();
+
+    if new_count > 0 {
+        execute_import(&import_service, &preview, target_account.id)?;
+    }
+
+    Ok(())
+}
+
+/// Read and parse CSV file, returning parsed transactions and target account
+fn read_and_parse_csv(
+    import_service: &ImportService,
+    account_service: &AccountService,
+    file: &str,
+    account: &str,
+) -> EnvelopeResult<(Vec<Result<ParsedTransaction, String>>, Account)> {
     let target_account = account_service
         .find(account)?
         .ok_or_else(|| EnvelopeError::account_not_found(account))?;
@@ -24,7 +55,6 @@ pub fn handle_import_command(storage: &Storage, file: &str, account: &str) -> En
         return Err(EnvelopeError::Import(format!("File not found: {}", file)));
     }
 
-    // Try to detect mapping from CSV header
     let mut reader = csv::Reader::from_path(path)
         .map_err(|e| EnvelopeError::Import(format!("Failed to open CSV file: {}", e)))?;
     let headers = reader
@@ -33,18 +63,19 @@ pub fn handle_import_command(storage: &Storage, file: &str, account: &str) -> En
         .clone();
     let mapping = import_service.detect_mapping_from_headers(&headers);
 
-    // Parse the CSV
     let parsed = import_service.parse_csv_from_reader(&mut reader, &mapping)?;
 
-    if parsed.is_empty() {
-        println!("No transactions found in CSV file.");
-        return Ok(());
-    }
+    Ok((parsed, target_account))
+}
 
-    // Generate preview
-    let preview = import_service.generate_preview(&parsed, target_account.id)?;
+/// Generate import preview and display summary to user
+fn generate_and_display_preview(
+    import_service: &ImportService,
+    parsed: &[Result<ParsedTransaction, String>],
+    target_account: &Account,
+) -> EnvelopeResult<Vec<ImportPreviewEntry>> {
+    let preview = import_service.generate_preview(parsed, target_account.id)?;
 
-    // Show preview summary
     let new_count = preview
         .iter()
         .filter(|e| e.status == ImportStatus::New)
@@ -67,30 +98,36 @@ pub fn handle_import_command(storage: &Storage, file: &str, account: &str) -> En
 
     if new_count == 0 {
         println!("No new transactions to import.");
-        return Ok(());
+    } else {
+        println!("First transactions to import:");
+        for entry in preview
+            .iter()
+            .filter(|e| e.status == ImportStatus::New)
+            .take(5)
+        {
+            println!(
+                "  {} {} {}",
+                entry.transaction.date, entry.transaction.payee, entry.transaction.amount
+            );
+        }
+        if new_count > 5 {
+            println!("  ... and {} more", new_count - 5);
+        }
+        println!();
     }
 
-    // Show first few new transactions
-    println!("First transactions to import:");
-    for entry in preview
-        .iter()
-        .filter(|e| e.status == ImportStatus::New)
-        .take(5)
-    {
-        println!(
-            "  {} {} {}",
-            entry.transaction.date, entry.transaction.payee, entry.transaction.amount
-        );
-    }
-    if new_count > 5 {
-        println!("  ... and {} more", new_count - 5);
-    }
-    println!();
+    Ok(preview)
+}
 
-    // Perform import
+/// Execute the import and display results
+fn execute_import(
+    import_service: &ImportService,
+    preview: &[ImportPreviewEntry],
+    account_id: AccountId,
+) -> EnvelopeResult<()> {
     let result = import_service.import_from_preview(
-        &preview,
-        target_account.id,
+        preview,
+        account_id,
         None,  // No default category
         false, // Don't mark as cleared
     )?;
