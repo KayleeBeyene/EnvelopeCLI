@@ -169,6 +169,7 @@ impl AccountFormState {
     /// Move to next account type
     pub fn next_account_type(&mut self) {
         self.account_type_index = (self.account_type_index + 1) % ACCOUNT_TYPES.len();
+        self.on_budget = self.default_on_budget_for_type();
     }
 
     /// Move to previous account type
@@ -177,6 +178,17 @@ impl AccountFormState {
             self.account_type_index = ACCOUNT_TYPES.len() - 1;
         } else {
             self.account_type_index -= 1;
+        }
+        self.on_budget = self.default_on_budget_for_type();
+    }
+
+    /// Get the default on_budget value for the current account type
+    fn default_on_budget_for_type(&self) -> bool {
+        match self.selected_account_type() {
+            // Investment accounts default to off-budget
+            AccountType::Investment => false,
+            // All other account types default to on-budget
+            _ => true,
         }
     }
 

@@ -34,7 +34,7 @@ pub enum ActiveView {
 /// What to display in the budget header
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum BudgetHeaderDisplay {
-    /// Show Available to Budget / Overspent (default)
+    /// Show Available to Assign / Overspent (default)
     #[default]
     AvailableToBudget,
     /// Show total checking account balance
@@ -85,7 +85,7 @@ impl BudgetHeaderDisplay {
     /// Get the display label for this mode
     pub fn label(&self) -> &'static str {
         match self {
-            Self::AvailableToBudget => "Available to Budget",
+            Self::AvailableToBudget => "Available to Assign",
             Self::Checking => "Checking",
             Self::Savings => "Savings",
             Self::Credit => "Credit Cards",

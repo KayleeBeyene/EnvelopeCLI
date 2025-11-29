@@ -49,7 +49,7 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
             } else if atb.is_zero() {
                 "All money assigned!"
             } else {
-                "Available to Budget"
+                "Available to Assign"
             };
 
             (label.to_string(), atb, color)
@@ -109,7 +109,7 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
     {
         if remaining.is_positive() {
             Some((
-                format!("  │  Income Remaining: {} ✓", remaining),
+                format!("  │  Remaining to Budget: {} ✓", remaining),
                 Color::Green,
             ))
         } else if remaining.is_zero() {
