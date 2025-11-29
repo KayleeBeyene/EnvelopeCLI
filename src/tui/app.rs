@@ -13,6 +13,7 @@ use super::dialogs::budget::BudgetDialogState;
 use super::dialogs::bulk_categorize::BulkCategorizeState;
 use super::dialogs::category::CategoryFormState;
 use super::dialogs::group::GroupFormState;
+use super::dialogs::income::IncomeFormState;
 use super::dialogs::move_funds::MoveFundsState;
 use super::dialogs::reconcile_start::ReconcileStartState;
 use super::dialogs::transaction::TransactionFormState;
@@ -135,6 +136,7 @@ pub enum ActiveDialog {
     UnlockConfirm(UnlockConfirmState),
     Adjustment,
     Budget,
+    Income,
 }
 
 /// Main application state
@@ -241,6 +243,9 @@ pub struct App<'a> {
     /// Unified budget dialog state (period budget + target)
     pub budget_dialog_state: BudgetDialogState,
 
+    /// Income form dialog state
+    pub income_form: IncomeFormState,
+
     /// Pending 'g' keypress for Vim-style gg (go to top)
     pub pending_g: bool,
 }
@@ -290,6 +295,7 @@ impl<'a> App<'a> {
             category_form: CategoryFormState::new(),
             group_form: GroupFormState::new(),
             budget_dialog_state: BudgetDialogState::new(),
+            income_form: IncomeFormState::new(),
             pending_g: false,
         }
     }
@@ -539,6 +545,12 @@ impl<'a> App<'a> {
                         self.input_mode = InputMode::Editing;
                     }
                 }
+            }
+            ActiveDialog::Income => {
+                // Initialize income dialog for current period
+                self.income_form
+                    .init_for_period(&self.current_period, self.storage);
+                self.input_mode = InputMode::Editing;
             }
             _ => {}
         }

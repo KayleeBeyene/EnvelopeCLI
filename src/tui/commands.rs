@@ -41,6 +41,9 @@ pub enum CommandAction {
     NextPeriod,
     PrevPeriod,
 
+    // Income operations
+    SetIncome,
+
     // Category operations
     AddCategory,
     AddGroup,
@@ -135,6 +138,13 @@ pub static COMMANDS: &[Command] = &[
         description: "Go to previous budget period",
         shortcut: Some("["),
         action: CommandAction::PrevPeriod,
+    },
+    // Income commands
+    Command {
+        name: "set-income",
+        description: "Set expected income for current period",
+        shortcut: Some("i"),
+        action: CommandAction::SetIncome,
     },
     // Account commands
     Command {

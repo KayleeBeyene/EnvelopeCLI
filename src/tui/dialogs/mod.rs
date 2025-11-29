@@ -11,6 +11,7 @@ pub mod command_palette;
 pub mod confirm;
 pub mod group;
 pub mod help;
+pub mod income;
 pub mod move_funds;
 pub mod reconcile_start;
 pub mod transaction;

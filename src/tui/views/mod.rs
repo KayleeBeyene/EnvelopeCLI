@@ -85,6 +85,9 @@ fn render_dialog(frame: &mut Frame, app: &mut App) {
         ActiveDialog::Budget => {
             dialogs::budget::render(frame, app);
         }
+        ActiveDialog::Income => {
+            dialogs::income::render(frame, app);
+        }
         ActiveDialog::AddAccount | ActiveDialog::EditAccount(_) => {
             dialogs::account::render(frame, app);
         }

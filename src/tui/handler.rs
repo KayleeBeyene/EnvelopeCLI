@@ -567,6 +567,12 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             }
         }
 
+        // Open income dialog
+        KeyCode::Char('i') => {
+            app.pending_g = false;
+            app.open_dialog(ActiveDialog::Income);
+        }
+
         _ => {
             app.pending_g = false;
         }
@@ -779,6 +785,11 @@ fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
             app.prev_period();
         }
 
+        // Income operations
+        CommandAction::SetIncome => {
+            app.open_dialog(ActiveDialog::Income);
+        }
+
         // Category operations
         CommandAction::AddCategory => {
             // Initialize category form with available groups
@@ -988,6 +999,9 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
         }
         ActiveDialog::Budget => {
             super::dialogs::budget::handle_key(app, key);
+        }
+        ActiveDialog::Income => {
+            super::dialogs::income::handle_key(app, key);
         }
         ActiveDialog::AddAccount | ActiveDialog::EditAccount(_) => {
             super::dialogs::account::handle_key(app, key);
