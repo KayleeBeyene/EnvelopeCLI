@@ -368,9 +368,7 @@ impl<'a> ImportService<'a> {
         if let Some(first) = record.get(0) {
             let first = first.trim();
             // Try to parse as a date - if it succeeds, this is data not a header
-            let date_formats = [
-                "%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y", "%d/%m/%Y", "%d/%m/%y",
-            ];
+            let date_formats = ["%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y", "%d/%m/%Y", "%d/%m/%y"];
             for format in date_formats {
                 if NaiveDate::parse_from_str(first, format).is_ok() {
                     return true;

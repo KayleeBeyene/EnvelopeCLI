@@ -855,13 +855,16 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
 /// Execute an action after user confirmation
 fn execute_confirmed_action(app: &mut App, message: &str) -> Result<()> {
     // Bulk delete transactions
-    if message.contains("Delete") && message.contains("transaction") && !app.selected_transactions.is_empty() {
+    if message.contains("Delete")
+        && message.contains("transaction")
+        && !app.selected_transactions.is_empty()
+    {
         let transaction_ids = app.selected_transactions.clone();
         let mut deleted_count = 0;
         let mut error_count = 0;
 
         for txn_id in &transaction_ids {
-            if let Err(_) = app.storage.transactions.delete(*txn_id) {
+            if app.storage.transactions.delete(*txn_id).is_err() {
                 error_count += 1;
             } else {
                 deleted_count += 1;
@@ -873,7 +876,10 @@ fn execute_confirmed_action(app: &mut App, message: &str) -> Result<()> {
         app.multi_select_mode = false;
 
         if error_count > 0 {
-            app.set_status(format!("Deleted {} transaction(s), {} failed", deleted_count, error_count));
+            app.set_status(format!(
+                "Deleted {} transaction(s), {} failed",
+                deleted_count, error_count
+            ));
         } else {
             app.set_status(format!("Deleted {} transaction(s)", deleted_count));
         }
