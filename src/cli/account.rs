@@ -32,6 +32,9 @@ pub enum AccountCommands {
         /// Show archived accounts
         #[arg(short, long)]
         all: bool,
+        /// Use pretty table with borders
+        #[arg(short, long)]
+        pretty: bool,
     },
     /// Show account details
     Show {
@@ -102,9 +105,9 @@ pub fn handle_account_command(storage: &Storage, cmd: AccountCommands) -> Envelo
             println!("  ID: {}", account.id);
         }
 
-        AccountCommands::List { all } => {
+        AccountCommands::List { all, pretty } => {
             let summaries = service.list_with_balances(all)?;
-            print!("{}", format_account_list(&summaries));
+            print!("{}", format_account_list(&summaries, pretty));
         }
 
         AccountCommands::Show { account } => {

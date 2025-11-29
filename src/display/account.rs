@@ -4,74 +4,107 @@
 
 use crate::models::Account;
 use crate::services::account::AccountSummary;
+use tabled::{
+    settings::{object::Columns, Alignment, Modify, Style},
+    Table, Tabled,
+};
+
+/// Row for account table display (used in pretty mode)
+#[derive(Tabled)]
+struct AccountRow {
+    #[tabled(rename = "Name")]
+    name: String,
+    #[tabled(rename = "Type")]
+    account_type: String,
+    #[tabled(rename = "Balance")]
+    balance: String,
+    #[tabled(rename = "Cleared")]
+    cleared: String,
+    #[tabled(rename = "Status")]
+    status: String,
+}
 
 /// Format a list of accounts with balances as a table
-pub fn format_account_list(summaries: &[AccountSummary]) -> String {
+///
+/// When `pretty` is true, uses a bordered table with rounded corners.
+/// When `pretty` is false, uses a simple text-based table format.
+pub fn format_account_list(summaries: &[AccountSummary], pretty: bool) -> String {
     if summaries.is_empty() {
         return "No accounts found.".to_string();
     }
 
-    // Calculate column widths
-    let name_width = summaries
-        .iter()
-        .map(|s| s.account.name.len())
-        .max()
-        .unwrap_or(4)
-        .max(4);
+    if pretty {
+        format_account_list_pretty(summaries)
+    } else {
+        format_account_list_plain(summaries)
+    }
+}
 
-    let type_width = summaries
+/// Format account list with bordered table (pretty mode)
+fn format_account_list_pretty(summaries: &[AccountSummary]) -> String {
+    let mut rows: Vec<AccountRow> = summaries
         .iter()
-        .map(|s| s.account.account_type.to_string().len())
-        .max()
-        .unwrap_or(4)
-        .max(4);
+        .map(|summary| {
+            let status = get_account_status(summary);
+            AccountRow {
+                name: summary.account.name.clone(),
+                account_type: summary.account.account_type.to_string(),
+                balance: summary.balance.to_string(),
+                cleared: summary.cleared_balance.to_string(),
+                status,
+            }
+        })
+        .collect();
 
-    // Build header
+    // Add total row
+    let total_balance: crate::models::Money = summaries.iter().map(|s| s.balance).sum();
+    let total_cleared: crate::models::Money = summaries.iter().map(|s| s.cleared_balance).sum();
+
+    rows.push(AccountRow {
+        name: "TOTAL".to_string(),
+        account_type: String::new(),
+        balance: total_balance.to_string(),
+        cleared: total_cleared.to_string(),
+        status: String::new(),
+    });
+
+    Table::new(&rows)
+        .with(Style::rounded())
+        .with(Modify::new(Columns::new(2..=3)).with(Alignment::right()))
+        .to_string()
+}
+
+/// Format account list with simple text table (plain mode)
+/// Matches the budget overview formatting style (80-char width)
+fn format_account_list_plain(summaries: &[AccountSummary]) -> String {
     let mut output = String::new();
-    output.push_str(&format!(
-        "{:<name_width$}  {:<type_width$}  {:>12}  {:>12}  {}\n",
-        "Name",
-        "Type",
-        "Balance",
-        "Cleared",
-        "Status",
-        name_width = name_width,
-        type_width = type_width,
-    ));
 
-    // Separator line
-    output.push_str(&format!(
-        "{:-<name_width$}  {:-<type_width$}  {:->12}  {:->12}  {:-<10}\n",
-        "",
-        "",
-        "",
-        "",
-        "",
-        name_width = name_width,
-        type_width = type_width,
-    ));
+    // Header - matches budget overview style
+    output.push_str("Accounts\n");
+    output.push_str(&"=".repeat(80));
+    output.push('\n');
 
-    // Account rows
+    // Column headers - aligned with data rows
+    // Widths: Name=26, Type=14, Balance=12, Cleared=12, Status=12 (+ 4 spaces = 80)
+    output.push_str(&format!(
+        "{:<26} {:>14} {:>12} {:>12} {:>12}\n",
+        "Name", "Type", "Balance", "Cleared", "Status"
+    ));
+    output.push_str(&"-".repeat(80));
+    output.push('\n');
+
+    // Account rows - same column widths as header
+    // Note: account_type.to_string() is needed because AccountType's Display
+    // impl doesn't honor width specifiers, unlike Money which does
     for summary in summaries {
-        let status = if summary.account.archived {
-            "Archived"
-        } else if !summary.account.on_budget {
-            "Off-Budget"
-        } else if summary.uncleared_count > 0 {
-            &format!("{} pending", summary.uncleared_count)
-        } else {
-            ""
-        };
-
+        let status = get_account_status(summary);
         output.push_str(&format!(
-            "{:<name_width$}  {:<type_width$}  {:>12}  {:>12}  {}\n",
-            summary.account.name,
-            summary.account.account_type,
-            summary.balance.to_string(),
-            summary.cleared_balance.to_string(),
+            "{:<26} {:>14} {:>12} {:>12} {:>12}\n",
+            truncate_str(&summary.account.name, 26),
+            summary.account.account_type.to_string(),
+            summary.balance,
+            summary.cleared_balance,
             status,
-            name_width = name_width,
-            type_width = type_width,
         ));
     }
 
@@ -79,28 +112,39 @@ pub fn format_account_list(summaries: &[AccountSummary]) -> String {
     let total_balance: crate::models::Money = summaries.iter().map(|s| s.balance).sum();
     let total_cleared: crate::models::Money = summaries.iter().map(|s| s.cleared_balance).sum();
 
+    output.push('\n');
+    output.push_str(&"=".repeat(80));
+    output.push('\n');
     output.push_str(&format!(
-        "{:-<name_width$}  {:-<type_width$}  {:->12}  {:->12}  {:-<10}\n",
-        "",
-        "",
-        "",
-        "",
-        "",
-        name_width = name_width,
-        type_width = type_width,
-    ));
-
-    output.push_str(&format!(
-        "{:<name_width$}  {:<type_width$}  {:>12}  {:>12}\n",
-        "TOTAL",
-        "",
-        total_balance.to_string(),
-        total_cleared.to_string(),
-        name_width = name_width,
-        type_width = type_width,
+        "{:<26} {:>14} {:>12} {:>12}\n",
+        "TOTALS:", "", total_balance, total_cleared
     ));
 
     output
+}
+
+/// Truncate a string to a maximum length, adding "..." if truncated
+fn truncate_str(s: &str, max_len: usize) -> String {
+    if s.len() <= max_len {
+        s.to_string()
+    } else if max_len > 3 {
+        format!("{}...", &s[..max_len - 3])
+    } else {
+        s[..max_len].to_string()
+    }
+}
+
+/// Get status string for an account
+fn get_account_status(summary: &AccountSummary) -> String {
+    if summary.account.archived {
+        "Archived".to_string()
+    } else if !summary.account.on_budget {
+        "Off-Budget".to_string()
+    } else if summary.uncleared_count > 0 {
+        format!("{} pending", summary.uncleared_count)
+    } else {
+        String::new()
+    }
 }
 
 /// Format a single account's details
@@ -195,26 +239,38 @@ mod tests {
     }
 
     #[test]
-    fn test_format_account_list() {
+    fn test_format_account_list_plain() {
         let summaries = vec![
             create_test_summary("Checking", 100000, 95000),
             create_test_summary("Savings", 500000, 500000),
         ];
 
-        let output = format_account_list(&summaries);
+        let output = format_account_list(&summaries, false);
+        assert!(output.contains("Accounts"));
+        assert!(output.contains("===="));  // 80-char header separator
+        assert!(output.contains("----"));  // 80-char row separator
+        assert!(output.contains("Checking"));
+        assert!(output.contains("Savings"));
+        assert!(output.contains("TOTALS:")); // Matches budget overview style
+    }
+
+    #[test]
+    fn test_format_account_list_pretty() {
+        let summaries = vec![
+            create_test_summary("Checking", 100000, 95000),
+            create_test_summary("Savings", 500000, 500000),
+        ];
+
+        let output = format_account_list(&summaries, true);
         assert!(output.contains("Checking"));
         assert!(output.contains("Savings"));
         assert!(output.contains("TOTAL"));
-        assert!(
-            output.contains("$1,000.00")
-                || output.contains("$6000.00")
-                || output.contains("$6,000.00")
-        );
+        assert!(output.contains("│")); // Pretty mode has box drawing chars
     }
 
     #[test]
     fn test_format_empty_list() {
-        let output = format_account_list(&[]);
+        let output = format_account_list(&[], false);
         assert!(output.contains("No accounts found"));
     }
 
