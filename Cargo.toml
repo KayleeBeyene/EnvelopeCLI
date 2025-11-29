@@ -79,6 +79,8 @@ install-updater = false
 pr-run-mode = "plan"
 # Whether to auto-include files like LICENSE/README
 auto-includes = true
+# Allow manual edits to CI workflow (we added --clobber flag)
+allow-dirty = ["ci"]
 
 # Homebrew tap configuration
 [workspace.metadata.dist.homebrew]
