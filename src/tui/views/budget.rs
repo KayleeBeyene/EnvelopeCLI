@@ -101,10 +101,7 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
         .flatten()
     {
         // Over budget warning
-        Some((
-            format!("  │  Over Income: {} ⚠", overage),
-            Color::Red,
-        ))
+        Some((format!("  │  Over Income: {} ⚠", overage), Color::Red))
     } else if let Some(remaining) = budget_service
         .get_remaining_to_budget_from_income(&app.current_period)
         .ok()
@@ -116,10 +113,7 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
                 Color::Green,
             ))
         } else if remaining.is_zero() {
-            Some((
-                "  │  Income: Fully Budgeted ✓".to_string(),
-                Color::Green,
-            ))
+            Some(("  │  Income: Fully Budgeted ✓".to_string(), Color::Green))
         } else {
             None
         }

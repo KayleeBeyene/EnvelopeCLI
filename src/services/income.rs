@@ -51,7 +51,10 @@ impl<'a> IncomeService<'a> {
                 Some(format!("Income for {}", period)),
                 &before,
                 &updated,
-                Some(format!("{} -> {}", before.expected_amount, updated.expected_amount)),
+                Some(format!(
+                    "{} -> {}",
+                    before.expected_amount, updated.expected_amount
+                )),
             )?;
 
             Ok(updated)
@@ -161,7 +164,11 @@ mod tests {
 
         // Update
         let updated = service
-            .set_expected_income(&period, Money::from_cents(600000), Some("Updated".to_string()))
+            .set_expected_income(
+                &period,
+                Money::from_cents(600000),
+                Some("Updated".to_string()),
+            )
             .unwrap();
 
         assert_eq!(updated.expected_amount.cents(), 600000);
