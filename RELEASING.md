@@ -89,12 +89,12 @@ gh release download vX.Y.Z --pattern "envelope-cli.rb" --dir /tmp
 # Clone the tap repo
 gh repo clone KayleeBeyene/homebrew-tap /tmp/homebrew-tap
 
-# Copy and rename the formula
-cp /tmp/envelope-cli.rb /tmp/homebrew-tap/Formula/envelope.rb
+# Copy the formula (keep the name as envelope-cli.rb)
+cp /tmp/envelope-cli.rb /tmp/homebrew-tap/Formula/envelope-cli.rb
 
 # Commit and push
 git -C /tmp/homebrew-tap add -A
-git -C /tmp/homebrew-tap commit -m "Update envelope formula to vX.Y.Z"
+git -C /tmp/homebrew-tap commit -m "Update envelope-cli formula to vX.Y.Z"
 git -C /tmp/homebrew-tap push origin main
 
 # Cleanup
@@ -110,7 +110,7 @@ After release, users can install via:
 | Method | Command |
 |--------|---------|
 | Cargo | `cargo install envelope-cli` |
-| Homebrew | `brew tap KayleeBeyene/tap && brew install envelope` |
+| Homebrew | `brew tap KayleeBeyene/tap && brew install envelope-cli` |
 | Shell script | `curl -fsSL https://github.com/KayleeBeyene/EnvelopeCLI/releases/latest/download/envelope-cli-installer.sh \| sh` |
 | PowerShell | `irm https://github.com/KayleeBeyene/EnvelopeCLI/releases/latest/download/envelope-cli-installer.ps1 \| iex` |
 | Source | `git clone ... && cargo install --path .` |
