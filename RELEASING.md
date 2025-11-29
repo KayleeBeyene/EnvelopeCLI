@@ -137,4 +137,5 @@ After release, users can install via:
 
 | Version | Date | Notes |
 |---------|------|-------|
+| 0.2.0 | 2025-11-29 | XDG-compliant data paths, env var override |
 | 0.1.0 | 2025-11-28 | Initial public release |

@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-11-29
+
+### Changed
+
+- **Data location** - Moved from platform-specific paths to `~/.config/envelope-cli/` on Unix and `%APPDATA%\envelope-cli\` on Windows
+- **XDG compliance** - Respects `XDG_CONFIG_HOME` environment variable when set
+- **Environment override** - Added `ENVELOPE_CLI_DATA_DIR` for custom data location
+- **Naming** - Directory renamed from `envelope` to `envelope-cli` to avoid conflicts with other packages
+
+### Removed
+
+- Removed `directories` crate dependency in favor of direct XDG path resolution
+
+### Migration
+
+If upgrading from 0.1.x, move your data manually:
+
+```bash
+# macOS (from Application Support)
+mv ~/Library/Application\ Support/envelope ~/.config/envelope-cli
+
+# Linux (if using old path)
+mv ~/.envelope ~/.config/envelope-cli
+```
+
 ## [0.1.0] - 2025-11-28
 
 ### Added
@@ -38,5 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cross-platform support (Linux, macOS, Windows)
 - Rust 1.70+ required
 
-[Unreleased]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/KayleeBeyene/EnvelopeCLI/releases/tag/v0.1.0
