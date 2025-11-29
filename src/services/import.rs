@@ -403,9 +403,9 @@ impl<'a> ImportService<'a> {
             let h = header.to_lowercase();
             let h = h.trim();
 
-            if h.contains("date") || h.contains("posted") || h.contains("trans") {
+            if h.contains("date") || h.contains("posted") {
                 mapping.date_column = idx;
-            } else if h.contains("amount") && mapping.amount_column.is_none() {
+            } else if h.contains("amount") {
                 mapping.amount_column = Some(idx);
             } else if h.contains("debit") || h.contains("outflow") || h.contains("withdrawal") {
                 mapping.outflow_column = Some(idx);
