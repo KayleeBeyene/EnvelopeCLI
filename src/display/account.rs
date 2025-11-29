@@ -143,7 +143,7 @@ fn get_account_status(summary: &AccountSummary) -> String {
     } else if summary.uncleared_count > 0 {
         format!("{} pending", summary.uncleared_count)
     } else {
-        String::new()
+        "Active".to_string()
     }
 }
 
