@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-11-29
+
+### Added
+
+- **Category group management** - Edit and delete category groups from the TUI
+- **Bulk transaction delete** - Delete multiple transactions at once
+- **Header-less CSV import** - Import CSV files without headers by specifying column order
+- **Dynamic version display** - Sidebar now shows actual package version
+
+### Fixed
+
+- Removed unnecessary format! macro in budget view
+
 ## [0.2.0] - 2025-11-29
 
 ### Changed
@@ -63,6 +76,7 @@ mv ~/.envelope ~/.config/envelope-cli
 - Cross-platform support (Linux, macOS, Windows)
 - Rust 1.70+ required
 
-[Unreleased]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/KayleeBeyene/EnvelopeCLI/releases/tag/v0.1.0
