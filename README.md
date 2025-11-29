@@ -18,6 +18,7 @@ A terminal-based zero-based budgeting application inspired by YNAB. Every dollar
 ## Features
 
 ### Core Budgeting
+
 - **Zero-based budgeting** - Assign every dollar to a category before you spend it
 - **Budget targets** - Set recurring targets (weekly, monthly, yearly, or by specific date) with auto-fill
 - **Fund movement** - Move money between categories as priorities change
@@ -25,12 +26,14 @@ A terminal-based zero-based budgeting application inspired by YNAB. Every dollar
 - **Overspending alerts** - Track and resolve overspent categories
 
 ### Account Management
+
 - **Multiple account types** - Checking, savings, credit cards, cash, investments, lines of credit
 - **On/off-budget accounts** - Track investment accounts without affecting your budget
 - **Account archiving** - Hide accounts without losing historical data
 - **Net worth tracking** - See your complete financial picture
 
 ### Transaction Management
+
 - **Full transaction tracking** - Date, payee, category, memo, and cleared status
 - **CSV import** - Import transactions from your bank
 - **Transfers** - Move money between accounts with linked transactions
@@ -38,18 +41,21 @@ A terminal-based zero-based budgeting application inspired by YNAB. Every dollar
 - **Reconciliation** - Match your records with bank statements
 
 ### Reporting
+
 - **Budget overview** - See budgeted, spent, and available by category
 - **Spending analysis** - Track spending by category with percentage breakdowns
 - **Account register** - Filter transactions by date, payee, or category
 - **Net worth report** - Assets vs liabilities summary
 
 ### Data & Security
+
 - **Local-first storage** - All data stored on your machine in JSON format
 - **AES-256-GCM encryption** - Optional passphrase-protected encryption with Argon2 key derivation
 - **Automatic backups** - Configurable backup retention
 - **Multi-format export** - CSV, JSON, or YAML for portability
 
 ### Interface
+
 - **Interactive TUI** - Full terminal interface with vim-style navigation
 - **CLI commands** - Script-friendly command-line interface for automation
 - **Command palette** - Quick access to all actions with `:` key
@@ -112,7 +118,7 @@ envelope tui
 
 ```bash
 envelope account create "Savings" --type savings --balance 5000.00
-envelope account create "Visa" --type credit --balance -1200.00
+envelope account create "Visa" --type credit --balance 1200.00
 envelope account list                    # Show all active accounts
 envelope account list --all              # Include archived accounts
 envelope account show "Checking"         # View account details
@@ -226,56 +232,56 @@ envelope --help                                # Show all commands
 
 ### Global
 
-| Key | Action |
-|-----|--------|
-| `q` | Quit |
-| `?` | Help dialog |
-| `:` | Command palette |
-| `Tab` | Switch panel focus |
+| Key   | Action                   |
+| ----- | ------------------------ |
+| `q`   | Quit                     |
+| `?`   | Help dialog              |
+| `:`   | Command palette          |
+| `Tab` | Switch panel focus       |
 | `h/l` | Focus sidebar/main panel |
-| `j/k` | Navigate down/up |
-| `1` | Accounts view |
-| `2` | Budget view |
-| `3` | Reports view |
+| `j/k` | Navigate down/up         |
+| `1`   | Accounts view            |
+| `2`   | Budget view              |
+| `3`   | Reports view             |
 
 ### Register View (Transactions)
 
-| Key | Action |
-|-----|--------|
-| `a` | Add transaction |
-| `e` | Edit selected transaction |
-| `c` | Toggle cleared status |
-| `Ctrl+d` | Delete transaction |
-| `v` | Multi-select mode |
-| `Space` | Toggle selection (in multi-select) |
-| `g` | Go to top |
-| `G` | Go to bottom |
+| Key      | Action                             |
+| -------- | ---------------------------------- |
+| `a`      | Add transaction                    |
+| `e`      | Edit selected transaction          |
+| `c`      | Toggle cleared status              |
+| `Ctrl+d` | Delete transaction                 |
+| `v`      | Multi-select mode                  |
+| `Space`  | Toggle selection (in multi-select) |
+| `g`      | Go to top                          |
+| `G`      | Go to bottom                       |
 
 ### Budget View
 
-| Key | Action |
-|-----|--------|
-| `[` / `]` | Previous/next period |
-| `m` | Move funds between categories |
-| `a` | Add category |
-| `A` | Add category group |
-| `Enter` | Edit budget/target for category |
+| Key       | Action                          |
+| --------- | ------------------------------- |
+| `[` / `]` | Previous/next period            |
+| `m`       | Move funds between categories   |
+| `a`       | Add category                    |
+| `A`       | Add category group              |
+| `Enter`   | Edit budget/target for category |
 
 ### Sidebar
 
-| Key | Action |
-|-----|--------|
-| `a` | Add account |
-| `Enter` | Select account |
-| `A` | Toggle archived accounts |
+| Key     | Action                   |
+| ------- | ------------------------ |
+| `a`     | Add account              |
+| `Enter` | Select account           |
+| `A`     | Toggle archived accounts |
 
 ### Dialogs
 
-| Key | Action |
-|-----|--------|
-| `Esc` | Close/cancel |
-| `Enter` | Confirm |
-| `Tab` | Next field |
+| Key     | Action       |
+| ------- | ------------ |
+| `Esc`   | Close/cancel |
+| `Enter` | Confirm      |
+| `Tab`   | Next field   |
 
 ## Data Storage
 

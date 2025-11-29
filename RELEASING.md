@@ -34,6 +34,8 @@ name = "envelope-cli"
 version = "X.Y.Z"  # Update this
 ```
 
+> **Note:** The TUI sidebar version display uses `env!("CARGO_PKG_VERSION")` at compile time, so updating `Cargo.toml` automatically updates the version shown in the UI. No manual changes needed elsewhere.
+
 Commit the version bump:
 
 ```bash

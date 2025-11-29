@@ -40,7 +40,7 @@ fn render_header(frame: &mut Frame, area: Rect) {
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::White));
 
-    let version = Paragraph::new("v0.1.0")
+    let version = Paragraph::new(format!("v{}", env!("CARGO_PKG_VERSION")))
         .block(block)
         .style(Style::default().fg(Color::Yellow));
 
