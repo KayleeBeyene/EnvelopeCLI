@@ -105,7 +105,7 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
 
     let line = Line::from(vec![
         Span::styled("◀ ", Style::default().fg(Color::DarkGray)),
-        Span::styled(format!("{}", label), Style::default().fg(Color::White)),
+        Span::styled(label, Style::default().fg(Color::White)),
         Span::styled(" ▶  ", Style::default().fg(Color::DarkGray)),
         Span::styled(
             format!("{}", amount),
