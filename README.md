@@ -20,6 +20,7 @@ A terminal-based zero-based budgeting application inspired by YNAB. Every dollar
 ### Core Budgeting
 
 - **Zero-based budgeting** - Assign every dollar to a category before you spend it
+- **Expected income tracking** - Set expected income per period with warnings when over-budgeting
 - **Budget targets** - Set recurring targets (weekly, monthly, yearly, or by specific date) with auto-fill
 - **Fund movement** - Move money between categories as priorities change
 - **Rollover support** - Carry over surplus or deficit from previous periods
@@ -163,6 +164,18 @@ envelope target list                           # Show all targets
 envelope target show "Rent"                    # View target details
 envelope target auto-fill                      # Fill budgets from targets
 envelope target delete "Rent"                  # Remove a target
+```
+
+### Income Commands
+
+```bash
+envelope income set 5000.00                       # Set expected income for current month
+envelope income set 5000.00 --period 2025-01      # Set for specific month
+envelope income set 5000.00 --notes "Salary only" # With notes
+envelope income show                              # Show expected income for current month
+envelope income show --period 2025-01             # Show for specific month
+envelope income compare                           # Compare expected income vs budgeted
+envelope income remove                            # Remove expected income for current month
 ```
 
 ### Category Commands
