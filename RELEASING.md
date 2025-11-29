@@ -139,6 +139,7 @@ After release, users can install via:
 
 | Version | Date | Notes |
 |---------|------|-------|
+| 0.2.2 | 2025-11-29 | Patch release |
 | 0.2.1 | 2025-11-29 | Category group editing, bulk delete, header-less CSV |
 | 0.2.0 | 2025-11-29 | XDG-compliant data paths, env var override |
 | 0.1.0 | 2025-11-28 | Initial public release |
