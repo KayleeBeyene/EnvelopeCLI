@@ -7,6 +7,7 @@ pub mod account;
 pub mod budget;
 pub mod category;
 pub mod import;
+pub mod income;
 pub mod payee;
 pub mod period;
 pub mod reconciliation;
@@ -19,6 +20,7 @@ pub use category::CategoryService;
 pub use import::{
     ColumnMapping, ImportPreviewEntry, ImportResult, ImportService, ImportStatus, ParsedTransaction,
 };
+pub use income::IncomeService;
 pub use payee::PayeeService;
 pub use period::PeriodService;
 pub use reconciliation::{

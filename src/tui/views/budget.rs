@@ -28,9 +28,10 @@ pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
 
 /// Render Available to Budget header (or account type balance based on toggle)
 fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
+    let budget_service = BudgetService::new(app.storage);
+
     let (label, amount, color) = match app.budget_header_display {
         BudgetHeaderDisplay::AvailableToBudget => {
-            let budget_service = BudgetService::new(app.storage);
             let atb = budget_service
                 .get_available_to_budget(&app.current_period)
                 .unwrap_or_default();
@@ -93,6 +94,39 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
         }
     };
 
+    // Check for expected income comparison
+    let income_indicator = if let Some(overage) = budget_service
+        .is_over_expected_income(&app.current_period)
+        .ok()
+        .flatten()
+    {
+        // Over budget warning
+        Some((
+            format!("  │  Over Income: {} ⚠", overage),
+            Color::Red,
+        ))
+    } else if let Some(remaining) = budget_service
+        .get_remaining_to_budget_from_income(&app.current_period)
+        .ok()
+        .flatten()
+    {
+        if remaining.is_positive() {
+            Some((
+                format!("  │  Income Remaining: {} ✓", remaining),
+                Color::Green,
+            ))
+        } else if remaining.is_zero() {
+            Some((
+                "  │  Income: Fully Budgeted ✓".to_string(),
+                Color::Green,
+            ))
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     let block = Block::default()
         .title(format!(" Budget - {} ", app.current_period))
         .title_style(
@@ -103,7 +137,7 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::White));
 
-    let line = Line::from(vec![
+    let mut spans = vec![
         Span::styled("◀ ", Style::default().fg(Color::DarkGray)),
         Span::styled(label, Style::default().fg(Color::White)),
         Span::styled(" ▶  ", Style::default().fg(Color::DarkGray)),
@@ -111,11 +145,21 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
             format!("{}", amount),
             Style::default().fg(color).add_modifier(Modifier::BOLD),
         ),
+    ];
+
+    // Add income indicator if present
+    if let Some((income_text, income_color)) = income_indicator {
+        spans.push(Span::styled(income_text, Style::default().fg(income_color)));
+    }
+
+    spans.extend(vec![
         Span::raw("  │  "),
         Span::styled("[< / >] Toggle  ", Style::default().fg(Color::Yellow)),
         Span::styled("[[ / ]] Period  ", Style::default().fg(Color::Yellow)),
         Span::styled("[m] Move", Style::default().fg(Color::Yellow)),
     ]);
+
+    let line = Line::from(spans);
 
     let paragraph = Paragraph::new(line).block(block);
 

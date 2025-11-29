@@ -76,6 +76,7 @@ define_id!(TransactionId, "txn-");
 define_id!(CategoryId, "cat-");
 define_id!(CategoryGroupId, "grp-");
 define_id!(PayeeId, "pay-");
+define_id!(IncomeId, "inc-");
 
 #[cfg(test)]
 mod tests {

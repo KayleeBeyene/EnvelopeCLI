@@ -186,6 +186,15 @@ impl ErrorInfo {
                 ],
                 None,
             ),
+            EnvelopeError::Income(msg) => (
+                "Income Error".to_string(),
+                msg.clone(),
+                vec![
+                    "Check the expected income amount is positive".to_string(),
+                    "Run 'envelope income show' to see current income expectations".to_string(),
+                ],
+                None,
+            ),
         };
 
         Self {

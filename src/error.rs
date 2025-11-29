@@ -77,6 +77,10 @@ pub enum EnvelopeError {
     /// TUI errors
     #[error("TUI error: {0}")]
     Tui(String),
+
+    /// Income expectation errors
+    #[error("Income error: {0}")]
+    Income(String),
 }
 
 impl EnvelopeError {
@@ -174,6 +178,7 @@ impl EnvelopeError {
             }
             Self::Storage(msg) => format!("Storage error: {}", msg),
             Self::Tui(msg) => format!("Display error: {}", msg),
+            Self::Income(msg) => msg.clone(),
         }
     }
 
@@ -236,6 +241,10 @@ impl EnvelopeError {
                 "Try with elevated permissions",
             ],
             Self::Tui(_) => vec!["Try resizing your terminal", "Use CLI commands instead"],
+            Self::Income(_) => vec![
+                "Check the expected income amount is positive",
+                "Run 'envelope income show' to see current income expectations",
+            ],
         }
     }
 
@@ -257,6 +266,7 @@ impl EnvelopeError {
             Self::InsufficientFunds { .. } => 13,
             Self::Storage(_) => 14,
             Self::Tui(_) => 15,
+            Self::Income(_) => 16,
         }
     }
 }

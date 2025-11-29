@@ -39,6 +39,7 @@ pub enum EntityType {
     BudgetAllocation,
     BudgetTarget,
     Payee,
+    IncomeExpectation,
 }
 
 impl std::fmt::Display for EntityType {
@@ -51,6 +52,7 @@ impl std::fmt::Display for EntityType {
             EntityType::BudgetAllocation => write!(f, "BudgetAllocation"),
             EntityType::BudgetTarget => write!(f, "BudgetTarget"),
             EntityType::Payee => write!(f, "Payee"),
+            EntityType::IncomeExpectation => write!(f, "IncomeExpectation"),
         }
     }
 }

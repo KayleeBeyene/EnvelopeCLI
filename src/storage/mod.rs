@@ -8,6 +8,7 @@ pub mod accounts;
 pub mod budget;
 pub mod categories;
 pub mod file_io;
+pub mod income;
 pub mod init;
 pub mod payees;
 pub mod targets;
@@ -17,6 +18,7 @@ pub use accounts::AccountRepository;
 pub use budget::BudgetRepository;
 pub use categories::CategoryRepository;
 pub use file_io::{read_json, write_json_atomic};
+pub use income::IncomeRepository;
 pub use init::initialize_storage;
 pub use payees::PayeeRepository;
 pub use targets::TargetRepository;
@@ -40,6 +42,7 @@ pub struct Storage {
     pub budget: BudgetRepository,
     pub payees: PayeeRepository,
     pub targets: TargetRepository,
+    pub income: IncomeRepository,
     audit: AuditLogger,
 }
 
@@ -58,6 +61,7 @@ impl Storage {
             budget: BudgetRepository::new(paths.allocations_file()),
             payees: PayeeRepository::new(paths.payees_file()),
             targets: TargetRepository::new(paths.targets_file()),
+            income: IncomeRepository::new(paths.income_file()),
             audit,
             paths,
         })
@@ -136,6 +140,7 @@ impl Storage {
         self.budget.load()?;
         self.payees.load()?;
         self.targets.load()?;
+        self.income.load()?;
         Ok(())
     }
 
@@ -147,6 +152,7 @@ impl Storage {
         self.budget.save()?;
         self.payees.save()?;
         self.targets.save()?;
+        self.income.save()?;
         Ok(())
     }
 

@@ -105,6 +105,11 @@ impl EnvelopePaths {
         self.data_dir().join("targets.json")
     }
 
+    /// Get the path to income.json (income expectations)
+    pub fn income_file(&self) -> PathBuf {
+        self.data_dir().join("income.json")
+    }
+
     /// Ensure all required directories exist
     ///
     /// Creates:

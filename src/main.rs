@@ -3,8 +3,8 @@ use clap::{Parser, Subcommand};
 
 use envelope_cli::cli::{
     handle_account_command, handle_backup_command, handle_budget_command, handle_category_command,
-    handle_encrypt_command, handle_export_command, handle_import_command, handle_payee_command,
-    handle_reconcile_command, handle_report_command, handle_target_command,
+    handle_encrypt_command, handle_export_command, handle_import_command, handle_income_command,
+    handle_payee_command, handle_reconcile_command, handle_report_command, handle_target_command,
     handle_transaction_command, handle_transfer_command,
 };
 use envelope_cli::config::{paths::EnvelopePaths, settings::Settings};
@@ -46,6 +46,10 @@ enum Commands {
     /// Budget target management commands
     #[command(subcommand)]
     Target(envelope_cli::cli::TargetCommands),
+
+    /// Expected income management commands
+    #[command(subcommand)]
+    Income(envelope_cli::cli::IncomeCommands),
 
     /// Backup management commands
     #[command(subcommand)]
@@ -134,6 +138,9 @@ fn main() -> Result<()> {
         }
         Some(Commands::Target(cmd)) => {
             handle_target_command(&storage, &settings, cmd)?;
+        }
+        Some(Commands::Income(cmd)) => {
+            handle_income_command(&storage, &settings, cmd)?;
         }
         Some(Commands::Backup(cmd)) => {
             handle_backup_command(&paths, &settings, cmd)?;

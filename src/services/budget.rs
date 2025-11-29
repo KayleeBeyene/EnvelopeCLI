@@ -26,6 +26,10 @@ pub struct BudgetOverview {
     pub total_available: Money,
     pub available_to_budget: Money,
     pub categories: Vec<CategoryBudgetSummary>,
+    /// Expected income for this period (if set)
+    pub expected_income: Option<Money>,
+    /// Amount over expected income (Some if budgeted > expected, None otherwise)
+    pub over_budget_amount: Option<Money>,
 }
 
 impl<'a> BudgetService<'a> {
@@ -306,6 +310,52 @@ impl<'a> BudgetService<'a> {
         Ok(total_balance - total_budgeted)
     }
 
+    /// Get expected income for a period (if set)
+    pub fn get_expected_income(&self, period: &BudgetPeriod) -> Option<Money> {
+        self.storage
+            .income
+            .get_for_period(period)
+            .map(|e| e.expected_amount)
+    }
+
+    /// Check if total budgeted exceeds expected income
+    ///
+    /// Returns Some(overage_amount) if over budget, None otherwise
+    pub fn is_over_expected_income(&self, period: &BudgetPeriod) -> EnvelopeResult<Option<Money>> {
+        let expected = match self.get_expected_income(period) {
+            Some(e) => e,
+            None => return Ok(None), // No expectation set
+        };
+
+        let allocations = self.storage.budget.get_for_period(period)?;
+        let total_budgeted: Money = allocations.iter().map(|a| a.budgeted).sum();
+
+        if total_budgeted > expected {
+            Ok(Some(total_budgeted - expected)) // Return overage amount
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Get remaining amount that can be budgeted based on expected income
+    ///
+    /// Returns the difference between expected income and total budgeted.
+    /// Positive = room to budget more, Negative = over-budgeted
+    pub fn get_remaining_to_budget_from_income(
+        &self,
+        period: &BudgetPeriod,
+    ) -> EnvelopeResult<Option<Money>> {
+        let expected = match self.get_expected_income(period) {
+            Some(e) => e,
+            None => return Ok(None),
+        };
+
+        let allocations = self.storage.budget.get_for_period(period)?;
+        let total_budgeted: Money = allocations.iter().map(|a| a.budgeted).sum();
+
+        Ok(Some(expected - total_budgeted))
+    }
+
     /// Get a complete budget overview for a period
     pub fn get_budget_overview(&self, period: &BudgetPeriod) -> EnvelopeResult<BudgetOverview> {
         let category_service = CategoryService::new(self.storage);
@@ -326,6 +376,16 @@ impl<'a> BudgetService<'a> {
 
         let available_to_budget = self.get_available_to_budget(period)?;
 
+        // Get expected income and calculate over-budget amount
+        let expected_income = self.get_expected_income(period);
+        let over_budget_amount = expected_income.and_then(|expected| {
+            if total_budgeted > expected {
+                Some(total_budgeted - expected)
+            } else {
+                None
+            }
+        });
+
         Ok(BudgetOverview {
             period: period.clone(),
             total_budgeted,
@@ -333,6 +393,8 @@ impl<'a> BudgetService<'a> {
             total_available,
             available_to_budget,
             categories: summaries,
+            expected_income,
+            over_budget_amount,
         })
     }
 
