@@ -358,6 +358,16 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             app.open_dialog(ActiveDialog::BulkCategorize);
         }
 
+        // Bulk delete
+        KeyCode::Char('D') if app.multi_select_mode && !app.selected_transactions.is_empty() => {
+            let count = app.selected_transactions.len();
+            app.open_dialog(ActiveDialog::Confirm(format!(
+                "Delete {} transaction{}?",
+                count,
+                if count == 1 { "" } else { "s" }
+            )));
+        }
+
         _ => {}
     }
 
@@ -844,8 +854,32 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
 /// Execute an action after user confirmation
 fn execute_confirmed_action(app: &mut App, message: &str) -> Result<()> {
-    // Delete transaction
-    if message.contains("Delete") && message.contains("transaction") {
+    // Bulk delete transactions
+    if message.contains("Delete") && message.contains("transaction") && !app.selected_transactions.is_empty() {
+        let transaction_ids = app.selected_transactions.clone();
+        let mut deleted_count = 0;
+        let mut error_count = 0;
+
+        for txn_id in &transaction_ids {
+            if let Err(_) = app.storage.transactions.delete(*txn_id) {
+                error_count += 1;
+            } else {
+                deleted_count += 1;
+            }
+        }
+
+        let _ = app.storage.transactions.save();
+        app.selected_transactions.clear();
+        app.multi_select_mode = false;
+
+        if error_count > 0 {
+            app.set_status(format!("Deleted {} transaction(s), {} failed", deleted_count, error_count));
+        } else {
+            app.set_status(format!("Deleted {} transaction(s)", deleted_count));
+        }
+    }
+    // Delete single transaction
+    else if message.contains("Delete") && message.contains("transaction") {
         if let Some(txn_id) = app.selected_transaction {
             if let Err(e) = app.storage.transactions.delete(txn_id) {
                 app.set_status(format!("Failed to delete: {}", e));

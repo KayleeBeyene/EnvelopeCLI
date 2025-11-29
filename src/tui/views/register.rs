@@ -50,7 +50,7 @@ fn render_header(frame: &mut Frame, app: &mut App, area: Rect) {
         .border_style(Style::default().fg(Color::White));
 
     let hints = if app.multi_select_mode {
-        "Multi-select: SPACE to select, C to categorize, v to exit"
+        "Multi-select: SPACE to select, C to categorize, D to delete, v to exit"
     } else {
         "a:Add  e:Edit  c:Clear  v:Multi-select"
     };
