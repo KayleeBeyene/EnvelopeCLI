@@ -2,6 +2,19 @@
 
 A terminal-based zero-based budgeting application inspired by YNAB. Every dollar gets a job.
 
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [CLI Reference](#cli-reference)
+- [TUI Keyboard Shortcuts](#tui-keyboard-shortcuts)
+- [Data Storage](#data-storage)
+- [Project Structure](#project-structure)
+- [Development](#development)
+- [License](#license)
+- [Author](#author)
+
 ## Features
 
 ### Core Budgeting
