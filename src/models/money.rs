@@ -155,10 +155,22 @@ impl Default for Money {
 
 impl fmt::Display for Money {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.is_negative() {
-            write!(f, "-${}.{:02}", self.dollars().abs(), self.cents_part())
+        let formatted = if self.is_negative() {
+            format!("-${}.{:02}", self.dollars().abs(), self.cents_part())
         } else {
-            write!(f, "${}.{:02}", self.dollars(), self.cents_part())
+            format!("${}.{:02}", self.dollars(), self.cents_part())
+        };
+
+        // Honor width and alignment from the formatter
+        if let Some(width) = f.width() {
+            if f.align() == Some(fmt::Alignment::Left) {
+                write!(f, "{:<width$}", formatted, width = width)
+            } else {
+                // Default to right alignment for money
+                write!(f, "{:>width$}", formatted, width = width)
+            }
+        } else {
+            write!(f, "{}", formatted)
         }
     }
 }
