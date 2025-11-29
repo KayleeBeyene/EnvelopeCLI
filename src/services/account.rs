@@ -334,6 +334,29 @@ impl<'a> AccountService<'a> {
 
         Ok(total)
     }
+
+    /// Get total balance for all accounts of a specific type
+    pub fn total_balance_by_type(&self, account_type: AccountType) -> EnvelopeResult<Money> {
+        let accounts = self.storage.accounts.get_active()?;
+        let mut total = Money::zero();
+
+        for account in accounts {
+            if account.account_type == account_type {
+                total += self.calculate_balance(account.id)?;
+            }
+        }
+
+        Ok(total)
+    }
+
+    /// Get count of accounts of a specific type
+    pub fn count_by_type(&self, account_type: AccountType) -> EnvelopeResult<usize> {
+        let accounts = self.storage.accounts.get_active()?;
+        Ok(accounts
+            .iter()
+            .filter(|a| a.account_type == account_type)
+            .count())
+    }
 }
 
 #[cfg(test)]

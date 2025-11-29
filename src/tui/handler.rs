@@ -414,6 +414,14 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             app.next_period();
         }
 
+        // Header display toggle (cycle through account types)
+        KeyCode::Char('<') | KeyCode::Char(',') => {
+            app.budget_header_display = app.budget_header_display.prev();
+        }
+        KeyCode::Char('>') | KeyCode::Char('.') => {
+            app.budget_header_display = app.budget_header_display.next();
+        }
+
         // Move funds
         KeyCode::Char('m') => {
             app.open_dialog(ActiveDialog::MoveFunds);
