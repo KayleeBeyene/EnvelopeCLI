@@ -10,9 +10,9 @@ use ratatui::{
     Frame,
 };
 
-use crate::models::TargetCadence;
-use crate::services::{BudgetService, CategoryService};
-use crate::tui::app::{App, FocusedPanel};
+use crate::models::{AccountType, TargetCadence};
+use crate::services::{AccountService, BudgetService, CategoryService};
+use crate::tui::app::{App, BudgetHeaderDisplay, FocusedPanel};
 use crate::tui::layout::BudgetLayout;
 
 /// Render the budget view
@@ -26,27 +26,71 @@ pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
     render_category_table(frame, app, layout.categories);
 }
 
-/// Render Available to Budget header
+/// Render Available to Budget header (or account type balance based on toggle)
 fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
-    let budget_service = BudgetService::new(app.storage);
-    let atb = budget_service
-        .get_available_to_budget(&app.current_period)
-        .unwrap_or_default();
+    let (label, amount, color) = match app.budget_header_display {
+        BudgetHeaderDisplay::AvailableToBudget => {
+            let budget_service = BudgetService::new(app.storage);
+            let atb = budget_service
+                .get_available_to_budget(&app.current_period)
+                .unwrap_or_default();
 
-    let atb_color = if atb.is_negative() {
-        Color::Red
-    } else if atb.is_zero() {
-        Color::Green
-    } else {
-        Color::Yellow
-    };
+            let color = if atb.is_negative() {
+                Color::Red
+            } else if atb.is_zero() {
+                Color::Green
+            } else {
+                Color::Yellow
+            };
 
-    let atb_label = if atb.is_negative() {
-        "Overspent"
-    } else if atb.is_zero() {
-        "All money assigned!"
-    } else {
-        "Available to Budget"
+            let label = if atb.is_negative() {
+                "Overspent"
+            } else if atb.is_zero() {
+                "All money assigned!"
+            } else {
+                "Available to Budget"
+            };
+
+            (label.to_string(), atb, color)
+        }
+        _ => {
+            // Get account type from the display mode
+            let account_type = match app.budget_header_display {
+                BudgetHeaderDisplay::Checking => AccountType::Checking,
+                BudgetHeaderDisplay::Savings => AccountType::Savings,
+                BudgetHeaderDisplay::Credit => AccountType::Credit,
+                BudgetHeaderDisplay::Cash => AccountType::Cash,
+                BudgetHeaderDisplay::Investment => AccountType::Investment,
+                BudgetHeaderDisplay::LineOfCredit => AccountType::LineOfCredit,
+                BudgetHeaderDisplay::Other => AccountType::Other,
+                BudgetHeaderDisplay::AvailableToBudget => unreachable!(),
+            };
+
+            let account_service = AccountService::new(app.storage);
+            let balance = account_service
+                .total_balance_by_type(account_type)
+                .unwrap_or_default();
+            let count = account_service.count_by_type(account_type).unwrap_or(0);
+
+            // Color: green for positive, red for negative, yellow for zero
+            let color = if balance.is_negative() {
+                Color::Red
+            } else if balance.is_zero() {
+                Color::Yellow
+            } else {
+                Color::Green
+            };
+
+            let label = if count == 0 {
+                format!("{} (no accounts)", app.budget_header_display.label())
+            } else if count == 1 {
+                format!("{} (1 account)", app.budget_header_display.label())
+            } else {
+                format!("{} ({} accounts)", app.budget_header_display.label(), count)
+            };
+
+            (label, balance, color)
+        }
     };
 
     let block = Block::default()
@@ -60,19 +104,17 @@ fn render_atb_header(frame: &mut Frame, app: &mut App, area: Rect) {
         .border_style(Style::default().fg(Color::White));
 
     let line = Line::from(vec![
+        Span::styled("◀ ", Style::default().fg(Color::DarkGray)),
+        Span::styled(format!("{}", label), Style::default().fg(Color::White)),
+        Span::styled(" ▶  ", Style::default().fg(Color::DarkGray)),
         Span::styled(
-            format!("{}  ", atb_label),
-            Style::default().fg(Color::White),
-        ),
-        Span::styled(
-            format!("{}", atb),
-            Style::default().fg(atb_color).add_modifier(Modifier::BOLD),
+            format!("{}", amount),
+            Style::default().fg(color).add_modifier(Modifier::BOLD),
         ),
         Span::raw("  │  "),
+        Span::styled("[< / >] Toggle  ", Style::default().fg(Color::Yellow)),
         Span::styled("[[ / ]] Period  ", Style::default().fg(Color::Yellow)),
-        Span::styled("[m] Move  ", Style::default().fg(Color::Yellow)),
-        Span::styled("[a] Add Category  ", Style::default().fg(Color::Yellow)),
-        Span::styled("[A] Add Group", Style::default().fg(Color::Yellow)),
+        Span::styled("[m] Move", Style::default().fg(Color::Yellow)),
     ]);
 
     let paragraph = Paragraph::new(line).block(block);

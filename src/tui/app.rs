@@ -30,6 +30,72 @@ pub enum ActiveView {
     Reconcile,
 }
 
+/// What to display in the budget header
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum BudgetHeaderDisplay {
+    /// Show Available to Budget / Overspent (default)
+    #[default]
+    AvailableToBudget,
+    /// Show total checking account balance
+    Checking,
+    /// Show total savings account balance
+    Savings,
+    /// Show total credit card balance
+    Credit,
+    /// Show total cash balance
+    Cash,
+    /// Show total investment balance
+    Investment,
+    /// Show total line of credit balance
+    LineOfCredit,
+    /// Show total for other account types
+    Other,
+}
+
+impl BudgetHeaderDisplay {
+    /// Cycle to the next display mode
+    pub fn next(self) -> Self {
+        match self {
+            Self::AvailableToBudget => Self::Checking,
+            Self::Checking => Self::Savings,
+            Self::Savings => Self::Credit,
+            Self::Credit => Self::Cash,
+            Self::Cash => Self::Investment,
+            Self::Investment => Self::LineOfCredit,
+            Self::LineOfCredit => Self::Other,
+            Self::Other => Self::AvailableToBudget,
+        }
+    }
+
+    /// Cycle to the previous display mode
+    pub fn prev(self) -> Self {
+        match self {
+            Self::AvailableToBudget => Self::Other,
+            Self::Checking => Self::AvailableToBudget,
+            Self::Savings => Self::Checking,
+            Self::Credit => Self::Savings,
+            Self::Cash => Self::Credit,
+            Self::Investment => Self::Cash,
+            Self::LineOfCredit => Self::Investment,
+            Self::Other => Self::LineOfCredit,
+        }
+    }
+
+    /// Get the display label for this mode
+    pub fn label(&self) -> &'static str {
+        match self {
+            Self::AvailableToBudget => "Available to Budget",
+            Self::Checking => "Checking",
+            Self::Savings => "Savings",
+            Self::Credit => "Credit Cards",
+            Self::Cash => "Cash",
+            Self::Investment => "Investment",
+            Self::LineOfCredit => "Line of Credit",
+            Self::Other => "Other",
+        }
+    }
+}
+
 /// Which panel currently has focus
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum FocusedPanel {
@@ -117,6 +183,9 @@ pub struct App<'a> {
     /// Current budget period being viewed
     pub current_period: BudgetPeriod,
 
+    /// What to display in the budget header (toggle between ATB and account balances)
+    pub budget_header_display: BudgetHeaderDisplay,
+
     /// Show archived accounts
     pub show_archived: bool,
 
@@ -198,6 +267,7 @@ impl<'a> App<'a> {
             selected_category: None,
             selected_category_index: 0,
             current_period: BudgetPeriod::current_month(),
+            budget_header_display: BudgetHeaderDisplay::default(),
             show_archived: false,
             multi_select_mode: false,
             selected_transactions: Vec::new(),
