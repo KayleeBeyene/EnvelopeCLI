@@ -1,6 +1,6 @@
 [package]
 name = "envelope-cli"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Kaylee Beyene"]
 description = "Terminal-based zero-based budgeting application"
@@ -85,4 +85,4 @@ allow-dirty = ["ci"]
 # Homebrew tap configuration
 [workspace.metadata.dist.homebrew]
 tap = "KayleeBeyene/homebrew-tap"
-formula = "envelope"
+formula = "envelope-cli"
