@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2025-11-29
+
+### Added
+
+- **Expected income tracking** - Set expected monthly income and receive budget warnings when overspending
+
 ## [0.2.3] - 2025-11-29
 
 ### Added
@@ -93,7 +99,8 @@ mv ~/.envelope ~/.config/envelope-cli
 - Cross-platform support (Linux, macOS, Windows)
 - Rust 1.70+ required
 
-[Unreleased]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/KayleeBeyene/EnvelopeCLI/compare/v0.2.0...v0.2.1
