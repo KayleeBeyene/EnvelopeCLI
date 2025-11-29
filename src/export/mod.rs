@@ -10,5 +10,7 @@ pub mod json;
 pub mod yaml;
 
 pub use csv::{export_accounts_csv, export_allocations_csv, export_transactions_csv};
-pub use json::{export_full_json, FullExport, EXPORT_SCHEMA_VERSION};
-pub use yaml::export_full_yaml;
+pub use json::{
+    export_full_json, restore_from_export, ExportRestoreResult, FullExport, EXPORT_SCHEMA_VERSION,
+};
+pub use yaml::{export_full_yaml, import_from_yaml};

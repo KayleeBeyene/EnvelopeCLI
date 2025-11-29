@@ -50,4 +50,4 @@ mod manager;
 mod restore;
 
 pub use manager::{BackupArchive, BackupInfo, BackupManager};
-pub use restore::{RestoreManager, RestoreResult, ValidationResult};
+pub use restore::{ExportRestoreCounts, RestoreManager, RestoreResult, ValidationResult};

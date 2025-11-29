@@ -209,6 +209,99 @@ pub fn import_from_json(json_str: &str) -> EnvelopeResult<FullExport> {
     Ok(export)
 }
 
+/// Result of restoring from an export file
+#[derive(Debug, Default)]
+pub struct ExportRestoreResult {
+    /// Number of accounts restored
+    pub accounts_restored: usize,
+    /// Number of category groups restored
+    pub category_groups_restored: usize,
+    /// Number of categories restored
+    pub categories_restored: usize,
+    /// Number of transactions restored
+    pub transactions_restored: usize,
+    /// Number of allocations restored
+    pub allocations_restored: usize,
+    /// Number of payees restored
+    pub payees_restored: usize,
+    /// Schema version of the restored export
+    pub schema_version: String,
+    /// Date the export was created
+    pub exported_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl ExportRestoreResult {
+    /// Get a summary of what was restored
+    pub fn summary(&self) -> String {
+        format!(
+            "Restored: {} accounts, {} groups, {} categories, {} transactions, {} allocations, {} payees",
+            self.accounts_restored,
+            self.category_groups_restored,
+            self.categories_restored,
+            self.transactions_restored,
+            self.allocations_restored,
+            self.payees_restored
+        )
+    }
+}
+
+/// Restore data from a FullExport to storage
+///
+/// This will overwrite all existing data with the export contents.
+pub fn restore_from_export(
+    storage: &crate::storage::Storage,
+    export: &FullExport,
+) -> EnvelopeResult<ExportRestoreResult> {
+    let mut result = ExportRestoreResult {
+        schema_version: export.schema_version.clone(),
+        exported_at: export.exported_at,
+        ..Default::default()
+    };
+
+    // Restore accounts
+    for account in &export.accounts {
+        storage.accounts.upsert(account.clone())?;
+        result.accounts_restored += 1;
+    }
+    storage.accounts.save()?;
+
+    // Restore category groups first (categories depend on them)
+    for group in &export.category_groups {
+        storage.categories.upsert_group(group.clone())?;
+        result.category_groups_restored += 1;
+    }
+
+    // Restore categories
+    for category in &export.categories {
+        storage.categories.upsert_category(category.clone())?;
+        result.categories_restored += 1;
+    }
+    storage.categories.save()?;
+
+    // Restore transactions
+    for txn in &export.transactions {
+        storage.transactions.upsert(txn.clone())?;
+        result.transactions_restored += 1;
+    }
+    storage.transactions.save()?;
+
+    // Restore allocations
+    for alloc in &export.allocations {
+        storage.budget.upsert(alloc.clone())?;
+        result.allocations_restored += 1;
+    }
+    storage.budget.save()?;
+
+    // Restore payees
+    for payee in &export.payees {
+        storage.payees.upsert(payee.clone())?;
+        result.payees_restored += 1;
+    }
+    storage.payees.save()?;
+
+    Ok(result)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

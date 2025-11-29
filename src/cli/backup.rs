@@ -127,7 +127,11 @@ pub fn handle_backup_command(
                 "Created: {}",
                 validation.backup_date.format("%Y-%m-%d %H:%M:%S UTC")
             );
-            println!("Schema version: {}", validation.schema_version);
+            if let Some(ref export_ver) = validation.export_schema_version {
+                println!("Format: Export (v{})", export_ver);
+            } else {
+                println!("Format: Backup (v{})", validation.schema_version);
+            }
             println!("Status: {}", validation.summary());
             println!();
 
@@ -176,7 +180,11 @@ pub fn handle_backup_command(
                 "Created: {}",
                 validation.backup_date.format("%Y-%m-%d %H:%M:%S UTC")
             );
-            println!("Schema version: {}", validation.schema_version);
+            if let Some(ref export_ver) = validation.export_schema_version {
+                println!("Format: Export (v{})", export_ver);
+            } else {
+                println!("Format: Backup (v{})", validation.schema_version);
+            }
             println!();
             println!("Contents:");
             println!(
