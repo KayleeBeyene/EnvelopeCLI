@@ -212,11 +212,18 @@ impl AccountFormState {
         let account_type = self.selected_account_type();
 
         let balance_str = self.balance_input.value().trim();
-        let starting_balance = if balance_str.is_empty() {
+        let mut starting_balance = if balance_str.is_empty() {
             Money::zero()
         } else {
             Money::parse(balance_str).map_err(|_| "Invalid balance")?
         };
+
+        // For liability accounts (credit cards, lines of credit), balances represent
+        // debt owed and should be stored as negative values. Users naturally enter
+        // positive numbers when specifying debt, so we negate them.
+        if account_type.is_liability() && starting_balance.cents() > 0 {
+            starting_balance = Money::from_cents(-starting_balance.cents());
+        }
 
         let mut account = Account::with_starting_balance(name, account_type, starting_balance);
         account.on_budget = self.on_budget;
@@ -602,11 +609,17 @@ fn save_account(app: &mut App) -> Result<(), String> {
 
                 // Update starting balance
                 let balance_str = app.account_form.balance_input.value().trim();
-                existing.starting_balance = if balance_str.is_empty() {
+                let mut new_balance = if balance_str.is_empty() {
                     Money::zero()
                 } else {
                     Money::parse(balance_str).map_err(|_| "Invalid balance")?
                 };
+
+                // For liability accounts, negate positive balances (debt is stored as negative)
+                if existing.account_type.is_liability() && new_balance.cents() > 0 {
+                    new_balance = Money::from_cents(-new_balance.cents());
+                }
+                existing.starting_balance = new_balance;
 
                 existing.updated_at = chrono::Utc::now();
 

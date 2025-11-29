@@ -76,12 +76,19 @@ pub fn handle_account_command(storage: &Storage, cmd: AccountCommands) -> Envelo
                 ))
             })?;
 
-            let starting_balance = Money::parse(&balance).map_err(|e| {
+            let mut starting_balance = Money::parse(&balance).map_err(|e| {
                 crate::error::EnvelopeError::Validation(format!(
                     "Invalid balance format: '{}'. Use format like '1000.00' or '1000'. Error: {}",
                     balance, e
                 ))
             })?;
+
+            // For liability accounts (credit cards, lines of credit), balances represent
+            // debt owed and should be stored as negative values. Users naturally enter
+            // positive numbers when specifying debt, so we negate them.
+            if account_type.is_liability() && starting_balance.cents() > 0 {
+                starting_balance = Money::from_cents(-starting_balance.cents());
+            }
 
             let account = service.create(&name, account_type, starting_balance, !off_budget)?;
 
