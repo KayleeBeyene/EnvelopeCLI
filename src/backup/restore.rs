@@ -58,7 +58,6 @@ fn parse_backup_contents(path: &Path, contents: &str) -> EnvelopeResult<BackupFi
     }
 }
 
-
 /// Handles restoring from backups
 pub struct RestoreManager {
     paths: EnvelopePaths,
