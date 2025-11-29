@@ -55,6 +55,7 @@ fn read_and_parse_csv(
         return Err(EnvelopeError::Import(format!("File not found: {}", file)));
     }
 
+    // First, peek at the file to detect the format
     let mut reader = csv::Reader::from_path(path)
         .map_err(|e| EnvelopeError::Import(format!("Failed to open CSV file: {}", e)))?;
     let headers = reader
@@ -63,7 +64,16 @@ fn read_and_parse_csv(
         .clone();
     let mapping = import_service.detect_mapping_from_headers(&headers);
 
-    let parsed = import_service.parse_csv_from_reader(&mut reader, &mapping)?;
+    // If no header detected, re-read without treating first row as header
+    let parsed = if !mapping.has_header {
+        let mut reader = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .from_path(path)
+            .map_err(|e| EnvelopeError::Import(format!("Failed to open CSV file: {}", e)))?;
+        import_service.parse_csv_from_reader(&mut reader, &mapping)?
+    } else {
+        import_service.parse_csv_from_reader(&mut reader, &mapping)?
+    };
 
     Ok((parsed, target_account))
 }

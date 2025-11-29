@@ -114,6 +114,22 @@ impl ColumnMapping {
         }
     }
 
+    /// TD Bank CSV format (no header, date/description/debit/credit/balance)
+    pub fn td_bank() -> Self {
+        Self {
+            date_column: 0,
+            amount_column: None,
+            outflow_column: Some(2),
+            inflow_column: Some(3),
+            payee_column: Some(1),
+            memo_column: None,
+            date_format: "%Y-%m-%d".to_string(),
+            has_header: false,
+            delimiter: ',',
+            invert_amounts: false,
+        }
+    }
+
     /// Set the date format
     pub fn with_date_format(mut self, format: &str) -> Self {
         self.date_format = format.to_string();
@@ -346,8 +362,43 @@ impl<'a> ImportService<'a> {
         Err(format!("Could not parse date: '{}'", s))
     }
 
+    /// Check if a record looks like data (not headers)
+    /// Returns true if first column parses as a date
+    fn looks_like_data_row(&self, record: &StringRecord) -> bool {
+        if let Some(first) = record.get(0) {
+            let first = first.trim();
+            // Try to parse as a date - if it succeeds, this is data not a header
+            let date_formats = [
+                "%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y", "%d/%m/%Y", "%d/%m/%y",
+            ];
+            for format in date_formats {
+                if NaiveDate::parse_from_str(first, format).is_ok() {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     /// Detect column mapping from CSV header record
     pub fn detect_mapping_from_headers(&self, headers: &StringRecord) -> ColumnMapping {
+        // First, check if this looks like a data row (no headers)
+        if self.looks_like_data_row(headers) {
+            // This is likely a headerless CSV like TD Bank
+            // Check if it matches TD Bank format: date, desc, debit, credit, balance
+            if headers.len() >= 4 {
+                // Verify column 2 or 3 looks like a number (debit/credit)
+                let col2 = headers.get(2).map(|s| s.trim()).unwrap_or("");
+                let col3 = headers.get(3).map(|s| s.trim()).unwrap_or("");
+                let col2_is_num = col2.is_empty() || col2.parse::<f64>().is_ok();
+                let col3_is_num = col3.is_empty() || col3.parse::<f64>().is_ok();
+
+                if col2_is_num && col3_is_num {
+                    return ColumnMapping::td_bank();
+                }
+            }
+        }
+
         let mut mapping = ColumnMapping::new();
 
         for (idx, header) in headers.iter().enumerate() {
