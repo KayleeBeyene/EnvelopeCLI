@@ -10,6 +10,22 @@ use crate::error::{EnvelopeError, EnvelopeResult};
 
 use super::manager::BackupArchive;
 
+/// Parse backup file contents based on file extension
+fn parse_backup_contents(path: &Path, contents: &str) -> EnvelopeResult<BackupArchive> {
+    let extension = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+    match extension.as_str() {
+        "yaml" | "yml" => serde_yaml::from_str(contents)
+            .map_err(|e| EnvelopeError::Json(format!("Failed to parse YAML backup file: {}", e))),
+        _ => serde_json::from_str(contents)
+            .map_err(|e| EnvelopeError::Json(format!("Failed to parse backup file: {}", e))),
+    }
+}
+
 /// Handles restoring from backups
 pub struct RestoreManager {
     paths: EnvelopePaths,
@@ -25,13 +41,13 @@ impl RestoreManager {
     ///
     /// This will overwrite all current data with the backup contents.
     /// It's recommended to create a backup before restoring.
+    /// Supports both JSON and YAML formats (detected by file extension).
     pub fn restore_from_file(&self, backup_path: &Path) -> EnvelopeResult<RestoreResult> {
         // Read and parse the backup
         let contents = fs::read_to_string(backup_path)
             .map_err(|e| EnvelopeError::Io(format!("Failed to read backup file: {}", e)))?;
 
-        let archive: BackupArchive = serde_json::from_str(&contents)
-            .map_err(|e| EnvelopeError::Json(format!("Failed to parse backup file: {}", e)))?;
+        let archive: BackupArchive = parse_backup_contents(backup_path, &contents)?;
 
         self.restore_from_archive(&archive)
     }
@@ -87,12 +103,12 @@ impl RestoreManager {
     }
 
     /// Validate a backup file without restoring it
+    /// Supports both JSON and YAML formats (detected by file extension).
     pub fn validate_backup(&self, backup_path: &Path) -> EnvelopeResult<ValidationResult> {
         let contents = fs::read_to_string(backup_path)
             .map_err(|e| EnvelopeError::Io(format!("Failed to read backup file: {}", e)))?;
 
-        let archive: BackupArchive = serde_json::from_str(&contents)
-            .map_err(|e| EnvelopeError::Json(format!("Failed to parse backup file: {}", e)))?;
+        let archive: BackupArchive = parse_backup_contents(backup_path, &contents)?;
 
         Ok(ValidationResult {
             is_valid: true,

@@ -296,10 +296,12 @@ fn resolve_backup_path(
         return Ok(backup_path);
     }
 
-    // Try adding .json extension
-    let with_ext = paths.backup_dir().join(format!("{}.json", backup));
-    if with_ext.exists() {
-        return Ok(with_ext);
+    // Try adding common backup extensions
+    for ext in &["json", "yaml", "yml"] {
+        let with_ext = paths.backup_dir().join(format!("{}.{}", backup, ext));
+        if with_ext.exists() {
+            return Ok(with_ext);
+        }
     }
 
     Err(crate::error::EnvelopeError::NotFound {
