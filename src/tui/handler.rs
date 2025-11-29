@@ -245,6 +245,7 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
     match key.code {
         // Navigation
         KeyCode::Char('j') | KeyCode::Down => {
+            app.pending_g = false;
             app.move_down(txn_count);
             // Update selected transaction from sorted list
             if let Some(txn) = txns.get(app.selected_transaction_index) {
@@ -252,6 +253,7 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             }
         }
         KeyCode::Char('k') | KeyCode::Up => {
+            app.pending_g = false;
             app.move_up();
             // Update selected transaction from sorted list
             if let Some(txn) = txns.get(app.selected_transaction_index) {
@@ -259,9 +261,10 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             }
         }
 
-        // Page navigation
+        // Page navigation (Vim-style)
         KeyCode::Char('G') => {
-            // Go to bottom
+            // Shift-G: Go to bottom
+            app.pending_g = false;
             if txn_count > 0 {
                 app.selected_transaction_index = txn_count - 1;
                 if let Some(txn) = txns.get(app.selected_transaction_index) {
@@ -270,20 +273,29 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             }
         }
         KeyCode::Char('g') => {
-            // Go to top (gg in vim, but we'll use single g)
-            app.selected_transaction_index = 0;
-            if let Some(txn) = txns.first() {
-                app.selected_transaction = Some(txn.id);
+            // gg: Go to top (requires double-g press)
+            if app.pending_g {
+                // Second 'g' pressed - go to top
+                app.pending_g = false;
+                app.selected_transaction_index = 0;
+                if let Some(txn) = txns.first() {
+                    app.selected_transaction = Some(txn.id);
+                }
+            } else {
+                // First 'g' pressed - wait for second
+                app.pending_g = true;
             }
         }
 
         // Add transaction
         KeyCode::Char('a') | KeyCode::Char('n') => {
+            app.pending_g = false;
             app.open_dialog(ActiveDialog::AddTransaction);
         }
 
         // Edit transaction
         KeyCode::Char('e') => {
+            app.pending_g = false;
             // DEBUG: Force initialize selection and try edit
             if app.selected_transaction.is_none() {
                 let txns = get_sorted_transactions(app);
@@ -296,6 +308,7 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             }
         }
         KeyCode::Enter => {
+            app.pending_g = false;
             if app.selected_transaction.is_none() {
                 let txns = get_sorted_transactions(app);
                 if let Some(txn) = txns.get(app.selected_transaction_index) {
@@ -309,6 +322,7 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
         // Clear transaction (toggle)
         KeyCode::Char('c') => {
+            app.pending_g = false;
             if let Some(txn_id) = app.selected_transaction {
                 // Toggle cleared status
                 if let Ok(Some(txn)) = app.storage.transactions.get(txn_id) {
@@ -331,6 +345,7 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
         // Delete transaction
         KeyCode::Char('d') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            app.pending_g = false;
             if app.selected_transaction.is_some() {
                 app.open_dialog(ActiveDialog::Confirm(
                     "Delete this transaction?".to_string(),
@@ -340,6 +355,7 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
         // Multi-select mode
         KeyCode::Char('v') => {
+            app.pending_g = false;
             app.toggle_multi_select();
             if app.multi_select_mode {
                 app.set_status("Multi-select mode ON");
@@ -350,16 +366,19 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
         // Toggle selection in multi-select mode
         KeyCode::Char(' ') if app.multi_select_mode => {
+            app.pending_g = false;
             app.toggle_transaction_selection();
         }
 
         // Bulk categorize
         KeyCode::Char('C') if app.multi_select_mode && !app.selected_transactions.is_empty() => {
+            app.pending_g = false;
             app.open_dialog(ActiveDialog::BulkCategorize);
         }
 
         // Bulk delete
         KeyCode::Char('D') if app.multi_select_mode && !app.selected_transactions.is_empty() => {
+            app.pending_g = false;
             let count = app.selected_transactions.len();
             app.open_dialog(ActiveDialog::Confirm(format!(
                 "Delete {} transaction{}?",
@@ -368,7 +387,9 @@ fn handle_register_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             )));
         }
 
-        _ => {}
+        _ => {
+            app.pending_g = false;
+        }
     }
 
     Ok(())
@@ -404,51 +425,87 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
     match key.code {
         // Navigation
         KeyCode::Char('j') | KeyCode::Down => {
+            app.pending_g = false;
             app.move_down(category_count);
             if let Some(cat) = categories.get(app.selected_category_index) {
                 app.selected_category = Some(cat.id);
             }
         }
         KeyCode::Char('k') | KeyCode::Up => {
+            app.pending_g = false;
             app.move_up();
             if let Some(cat) = categories.get(app.selected_category_index) {
                 app.selected_category = Some(cat.id);
             }
         }
 
+        // Page navigation (Vim-style)
+        KeyCode::Char('G') => {
+            // Shift-G: Go to bottom
+            app.pending_g = false;
+            if category_count > 0 {
+                app.selected_category_index = category_count - 1;
+                if let Some(cat) = categories.get(app.selected_category_index) {
+                    app.selected_category = Some(cat.id);
+                }
+            }
+        }
+        KeyCode::Char('g') => {
+            // gg: Go to top (requires double-g press)
+            if app.pending_g {
+                // Second 'g' pressed - go to top
+                app.pending_g = false;
+                app.selected_category_index = 0;
+                if let Some(cat) = categories.first() {
+                    app.selected_category = Some(cat.id);
+                }
+            } else {
+                // First 'g' pressed - wait for second
+                app.pending_g = true;
+            }
+        }
+
         // Period navigation
         KeyCode::Char('[') | KeyCode::Char('H') => {
+            app.pending_g = false;
             app.prev_period();
         }
         KeyCode::Char(']') | KeyCode::Char('L') => {
+            app.pending_g = false;
             app.next_period();
         }
 
         // Header display toggle (cycle through account types)
         KeyCode::Char('<') | KeyCode::Char(',') => {
+            app.pending_g = false;
             app.budget_header_display = app.budget_header_display.prev();
         }
         KeyCode::Char('>') | KeyCode::Char('.') => {
+            app.pending_g = false;
             app.budget_header_display = app.budget_header_display.next();
         }
 
         // Move funds
         KeyCode::Char('m') => {
+            app.pending_g = false;
             app.open_dialog(ActiveDialog::MoveFunds);
         }
 
         // Add new category
         KeyCode::Char('a') => {
+            app.pending_g = false;
             app.open_dialog(ActiveDialog::AddCategory);
         }
 
         // Add new category group
         KeyCode::Char('A') => {
+            app.pending_g = false;
             app.open_dialog(ActiveDialog::AddGroup);
         }
 
         // Edit category group (Shift+E)
         KeyCode::Char('E') => {
+            app.pending_g = false;
             if let Some(cat) = categories.get(app.selected_category_index) {
                 app.open_dialog(ActiveDialog::EditGroup(cat.group_id));
             }
@@ -456,6 +513,7 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
         // Delete category group (Shift+D)
         KeyCode::Char('D') => {
+            app.pending_g = false;
             if let Some(cat) = categories.get(app.selected_category_index) {
                 if let Ok(Some(group)) = app.storage.categories.get_group(cat.group_id) {
                     let group_categories = app
@@ -479,6 +537,7 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
         // Edit category
         KeyCode::Char('e') => {
+            app.pending_g = false;
             if let Some(cat) = categories.get(app.selected_category_index) {
                 app.selected_category = Some(cat.id);
                 app.open_dialog(ActiveDialog::EditCategory(cat.id));
@@ -487,6 +546,7 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
         // Delete category
         KeyCode::Char('d') => {
+            app.pending_g = false;
             if let Some(cat) = categories.get(app.selected_category_index) {
                 app.selected_category = Some(cat.id);
                 if let Ok(Some(category)) = app.storage.categories.get_category(cat.id) {
@@ -500,13 +560,16 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
 
         // Open unified budget dialog (period budget + target)
         KeyCode::Enter | KeyCode::Char('b') | KeyCode::Char('t') => {
+            app.pending_g = false;
             if let Some(cat) = categories.get(app.selected_category_index) {
                 app.selected_category = Some(cat.id);
                 app.open_dialog(ActiveDialog::Budget);
             }
         }
 
-        _ => {}
+        _ => {
+            app.pending_g = false;
+        }
     }
 
     Ok(())

@@ -750,7 +750,7 @@ fn render_target_tab(frame: &mut Frame, area: Rect, app: &App) {
         Span::raw(" Cancel  "),
         Span::styled("[Del]", Style::default().fg(Color::Magenta)),
         Span::raw(" Remove  "),
-        Span::styled("[↑↓]", Style::default().fg(Color::Cyan)),
+        Span::styled("[j/k]", Style::default().fg(Color::Cyan)),
         Span::raw(" Fields"),
     ]);
     frame.render_widget(Paragraph::new(instructions), chunks[row]);
@@ -861,7 +861,7 @@ fn render_selector_field(frame: &mut Frame, area: Rect, label: &str, value: &str
         Style::default().fg(Color::White)
     };
 
-    let hint = if focused { " ← j/k →" } else { "" };
+    let hint = if focused { " ← h/l →" } else { "" };
 
     let line = Line::from(vec![
         Span::styled(format!("{}: ", label), label_style),
@@ -963,22 +963,24 @@ fn handle_target_key(app: &mut App, key: crossterm::event::KeyEvent) -> bool {
     use crossterm::event::{KeyCode, KeyModifiers};
 
     match key.code {
-        KeyCode::Down => {
+        // Field navigation: j/k or up/down arrows
+        KeyCode::Down | KeyCode::Char('j') => {
             app.budget_dialog_state.target_next_field();
             true
         }
 
-        KeyCode::Up => {
+        KeyCode::Up | KeyCode::Char('k') => {
             app.budget_dialog_state.target_prev_field();
             true
         }
 
-        KeyCode::Char('j') if app.budget_dialog_state.target_field == TargetField::Cadence => {
+        // Cadence cycling: h/l when on cadence field
+        KeyCode::Char('l') if app.budget_dialog_state.target_field == TargetField::Cadence => {
             app.budget_dialog_state.next_cadence();
             true
         }
 
-        KeyCode::Char('k') if app.budget_dialog_state.target_field == TargetField::Cadence => {
+        KeyCode::Char('h') if app.budget_dialog_state.target_field == TargetField::Cadence => {
             app.budget_dialog_state.prev_cadence();
             true
         }

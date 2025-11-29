@@ -162,7 +162,7 @@ pub static KEYBINDINGS: &[Keybinding] = &[
     Keybinding {
         key: KeyCode::Char('g'),
         modifiers: KeyModifiers::NONE,
-        description: "Go to top",
+        description: "Go to top (gg)",
         context: KeyContext::Register,
     },
     Keybinding {
@@ -172,6 +172,18 @@ pub static KEYBINDINGS: &[Keybinding] = &[
         context: KeyContext::Register,
     },
     // Budget
+    Keybinding {
+        key: KeyCode::Char('g'),
+        modifiers: KeyModifiers::NONE,
+        description: "Go to top (gg)",
+        context: KeyContext::Budget,
+    },
+    Keybinding {
+        key: KeyCode::Char('G'),
+        modifiers: KeyModifiers::SHIFT,
+        description: "Go to bottom",
+        context: KeyContext::Budget,
+    },
     Keybinding {
         key: KeyCode::Char('['),
         modifiers: KeyModifiers::NONE,

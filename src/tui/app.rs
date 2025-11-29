@@ -240,6 +240,9 @@ pub struct App<'a> {
 
     /// Unified budget dialog state (period budget + target)
     pub budget_dialog_state: BudgetDialogState,
+
+    /// Pending 'g' keypress for Vim-style gg (go to top)
+    pub pending_g: bool,
 }
 
 impl<'a> App<'a> {
@@ -287,6 +290,7 @@ impl<'a> App<'a> {
             category_form: CategoryFormState::new(),
             group_form: GroupFormState::new(),
             budget_dialog_state: BudgetDialogState::new(),
+            pending_g: false,
         }
     }
 
