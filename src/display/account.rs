@@ -247,8 +247,8 @@ mod tests {
 
         let output = format_account_list(&summaries, false);
         assert!(output.contains("Accounts"));
-        assert!(output.contains("===="));  // 80-char header separator
-        assert!(output.contains("----"));  // 80-char row separator
+        assert!(output.contains("====")); // 80-char header separator
+        assert!(output.contains("----")); // 80-char row separator
         assert!(output.contains("Checking"));
         assert!(output.contains("Savings"));
         assert!(output.contains("TOTALS:")); // Matches budget overview style
