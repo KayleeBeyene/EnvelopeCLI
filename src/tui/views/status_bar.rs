@@ -83,10 +83,13 @@ pub fn render(frame: &mut Frame, app: &mut App, area: Rect) {
     // Key hints (right-aligned)
     let hints = " q:Quit  ?:Help  / or ::Command ";
 
-    // Calculate padding
+    // Calculate padding (use saturating_sub to prevent underflow when content exceeds width)
     let left_len: usize = spans.iter().map(|s| s.content.len()).sum();
-    let padding_len = area.width as usize - left_len - hints.len();
-    let padding = " ".repeat(padding_len.max(1));
+    let padding_len = (area.width as usize)
+        .saturating_sub(left_len)
+        .saturating_sub(hints.len())
+        .max(1);
+    let padding = " ".repeat(padding_len);
 
     spans.push(Span::raw(padding));
     spans.push(Span::styled(hints, Style::default().fg(Color::White)));
