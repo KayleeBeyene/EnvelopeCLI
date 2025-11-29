@@ -23,6 +23,7 @@ Thumbs.db
 *.local.json
 .env
 .env.local
+.envelope
 
 # Coverage reports
 /coverage/

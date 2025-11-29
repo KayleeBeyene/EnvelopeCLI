@@ -53,8 +53,10 @@ cargo install envelope-cli
 
 ```bash
 brew tap KayleeBeyene/tap
-brew install envelope
+brew install envelope-cli
 ```
+
+> **Note:** Use `envelope-cli` (not `envelope`) to avoid conflict with an unrelated package in homebrew-core.
 
 ### Via Shell Script (macOS/Linux)
 
