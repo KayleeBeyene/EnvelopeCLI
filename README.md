@@ -279,10 +279,10 @@ envelope --help                                # Show all commands
 
 ## Data Storage
 
-All data is stored locally in `~/.envelope/`:
+All data is stored locally in `~/.config/envelope-cli/` (Linux/macOS) or `%APPDATA%\envelope-cli\` (Windows):
 
 ```
-~/.envelope/
+~/.config/envelope-cli/
 ├── config.json          # Settings and encryption config
 ├── data/
 │   ├── accounts.json    # Account definitions
@@ -294,6 +294,15 @@ All data is stored locally in `~/.envelope/`:
 ├── audit.log            # Change history
 └── backups/             # Automatic backups
 ```
+
+### Path Resolution
+
+1. `ENVELOPE_CLI_DATA_DIR` environment variable (if set)
+2. `$XDG_CONFIG_HOME/envelope-cli` (if `XDG_CONFIG_HOME` is set)
+3. `~/.config/envelope-cli` (Linux/macOS default)
+4. `%APPDATA%\envelope-cli` (Windows default)
+
+Use `envelope config` to see the active paths on your system.
 
 ## Project Structure
 

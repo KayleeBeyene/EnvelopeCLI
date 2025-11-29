@@ -170,9 +170,11 @@ EnvelopeCLI stores data in:
 
 | Platform | Location |
 |----------|----------|
-| Linux | `~/.envelope/` |
-| macOS | `~/.envelope/` |
-| Windows | `%APPDATA%\envelope\` |
+| Linux | `~/.config/envelope-cli/` |
+| macOS | `~/.config/envelope-cli/` |
+| Windows | `%APPDATA%\envelope-cli\` |
+
+Override with `ENVELOPE_CLI_DATA_DIR` environment variable. Run `envelope config` to see active paths.
 
 ## Updating
 
@@ -200,7 +202,7 @@ cargo install --path . --force
 sudo rm /usr/local/bin/envelope
 
 # Optional: Remove data (WARNING: This deletes all your budget data!)
-rm -rf ~/.envelope/
+rm -rf ~/.config/envelope-cli/
 ```
 
 On Windows:
@@ -208,7 +210,7 @@ On Windows:
 del $env:USERPROFILE\bin\envelope.exe
 
 # Optional: Remove data
-Remove-Item -Recurse $env:APPDATA\envelope
+Remove-Item -Recurse $env:APPDATA\envelope-cli
 ```
 
 ## Troubleshooting

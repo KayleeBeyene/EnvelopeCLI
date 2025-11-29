@@ -12,8 +12,8 @@ envelope --version
 envelope config
 
 # Check if data files exist
-ls -la ~/.envelope/
-ls -la ~/.envelope/data/
+ls -la ~/.config/envelope-cli/
+ls -la ~/.config/envelope-cli/data/
 ```
 
 ---
@@ -72,8 +72,8 @@ mv envelope ~/bin/
 
 1. Create the directory manually:
    ```bash
-   mkdir -p ~/.envelope/data
-   mkdir -p ~/.envelope/backups
+   mkdir -p ~/.config/envelope-cli/data
+   mkdir -p ~/.config/envelope-cli/backups
    ```
 
 2. Check permissions:
@@ -94,21 +94,21 @@ mv envelope ~/bin/
    envelope backup list
 
    # Restore most recent
-   envelope backup restore ~/.envelope/backups/YYYY-MM-DD_HHMMSS.json
+   envelope backup restore ~/.config/envelope-cli/backups/YYYY-MM-DD_HHMMSS.json
    ```
 
 2. Manually inspect the file:
    ```bash
    # Check if it's valid JSON
-   cat ~/.envelope/data/transactions.json | python3 -m json.tool
+   cat ~/.config/envelope-cli/data/transactions.json | python3 -m json.tool
 
    # If invalid, check the audit log for recent changes
-   tail -50 ~/.envelope/audit.log
+   tail -50 ~/.config/envelope-cli/audit.log
    ```
 
 3. If no backup exists, check for `.tmp` files that might contain good data:
    ```bash
-   ls -la ~/.envelope/data/*.tmp
+   ls -la ~/.config/envelope-cli/data/*.tmp
    ```
 
 ### Audit Log Too Large
@@ -119,10 +119,10 @@ mv envelope ~/bin/
 
 ```bash
 # Backup the old log first
-mv ~/.envelope/audit.log ~/.envelope/audit.log.old
+mv ~/.config/envelope-cli/audit.log ~/.config/envelope-cli/audit.log.old
 
 # Create a fresh log
-touch ~/.envelope/audit.log
+touch ~/.config/envelope-cli/audit.log
 ```
 
 ---
@@ -296,7 +296,7 @@ If you truly cannot remember:
 1. Your data is not recoverable
 2. Delete the data directory and start fresh:
    ```bash
-   rm -rf ~/.envelope/
+   rm -rf ~/.config/envelope-cli/
    envelope init
    ```
 
@@ -312,7 +312,7 @@ If you truly cannot remember:
 
 1. Check data file sizes:
    ```bash
-   ls -lh ~/.envelope/data/
+   ls -lh ~/.config/envelope-cli/data/
    ```
 
 2. If transactions.json is very large (>10MB), consider:
@@ -321,7 +321,7 @@ If you truly cannot remember:
 
 3. Check for disk issues:
    ```bash
-   df -h ~/.envelope/
+   df -h ~/.config/envelope-cli/
    ```
 
 ### High Memory Usage
@@ -346,7 +346,7 @@ When reporting issues, please include:
 3. Terminal emulator name and version
 4. Steps to reproduce the issue
 5. Any error messages (full text)
-6. Relevant log entries from `~/.envelope/audit.log`
+6. Relevant log entries from `~/.config/envelope-cli/audit.log`
 
 ### Debug Mode
 
@@ -362,10 +362,10 @@ If all else fails, you can reset to a fresh state:
 
 ```bash
 # BACKUP FIRST!
-cp -r ~/.envelope/ ~/.envelope.backup/
+cp -r ~/.config/envelope-cli/ ~/.envelope.backup/
 
 # Reset
-rm -rf ~/.envelope/
+rm -rf ~/.config/envelope-cli/
 envelope init
 ```
 

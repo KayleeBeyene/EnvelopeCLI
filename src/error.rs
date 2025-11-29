@@ -181,7 +181,7 @@ impl EnvelopeError {
     pub fn recovery_suggestions(&self) -> Vec<&'static str> {
         match self {
             Self::Config(_) => vec![
-                "Check ~/.envelope/config.json for syntax errors",
+                "Check ~/.config/envelope-cli/config.json for syntax errors",
                 "Run 'envelope init' to reset configuration",
             ],
             Self::Io(_) => vec![

@@ -1,33 +1,40 @@
 //! Path management for EnvelopeCLI
 //!
 //! Provides XDG-compliant path resolution for configuration, data, and backups.
-//! Default location: ~/.envelope/
+//!
+//! ## Path Resolution Order
+//!
+//! 1. `ENVELOPE_CLI_DATA_DIR` environment variable (if set)
+//! 2. Unix (Linux/macOS): `$XDG_CONFIG_HOME/envelope-cli` or `~/.config/envelope-cli`
+//! 3. Windows: `%APPDATA%\envelope-cli`
 
 use std::path::PathBuf;
-
-use directories::ProjectDirs;
 
 use crate::error::EnvelopeError;
 
 /// Manages all paths used by EnvelopeCLI
 #[derive(Debug, Clone)]
 pub struct EnvelopePaths {
-    /// Base directory for all EnvelopeCLI data (~/.envelope/)
+    /// Base directory for all EnvelopeCLI data
     base_dir: PathBuf,
 }
 
 impl EnvelopePaths {
-    /// Create a new EnvelopePaths instance using XDG directories
+    /// Create a new EnvelopePaths instance
+    ///
+    /// Path resolution:
+    /// 1. `ENVELOPE_CLI_DATA_DIR` env var (explicit override)
+    /// 2. Unix: `$XDG_CONFIG_HOME/envelope-cli` or `~/.config/envelope-cli`
+    /// 3. Windows: `%APPDATA%\envelope-cli`
     ///
     /// # Errors
     ///
     /// Returns an error if the home directory cannot be determined.
     pub fn new() -> Result<Self, EnvelopeError> {
-        let base_dir = if let Some(proj_dirs) = ProjectDirs::from("", "", "envelope") {
-            proj_dirs.data_dir().to_path_buf()
+        let base_dir = if let Ok(custom) = std::env::var("ENVELOPE_CLI_DATA_DIR") {
+            PathBuf::from(custom)
         } else {
-            // Fallback to ~/.envelope if XDG fails
-            dirs_fallback()?
+            resolve_default_path()?
         };
 
         Ok(Self { base_dir })
@@ -38,7 +45,7 @@ impl EnvelopePaths {
         Self { base_dir }
     }
 
-    /// Get the base directory (~/.envelope/ or equivalent)
+    /// Get the base directory (~/.config/envelope-cli/ or equivalent)
     pub fn base_dir(&self) -> &PathBuf {
         &self.base_dir
     }
@@ -48,12 +55,12 @@ impl EnvelopePaths {
         self.base_dir.clone()
     }
 
-    /// Get the data directory (~/.envelope/data/)
+    /// Get the data directory (~/.config/envelope-cli/data/)
     pub fn data_dir(&self) -> PathBuf {
         self.base_dir.join("data")
     }
 
-    /// Get the backup directory (~/.envelope/backups/)
+    /// Get the backup directory (~/.config/envelope-cli/backups/)
     pub fn backup_dir(&self) -> PathBuf {
         self.base_dir.join("backups")
     }
@@ -101,9 +108,9 @@ impl EnvelopePaths {
     /// Ensure all required directories exist
     ///
     /// Creates:
-    /// - Base directory (~/.envelope/)
-    /// - Data directory (~/.envelope/data/)
-    /// - Backup directory (~/.envelope/backups/)
+    /// - Base directory (~/.config/envelope-cli/)
+    /// - Data directory (~/.config/envelope-cli/data/)
+    /// - Backup directory (~/.config/envelope-cli/backups/)
     pub fn ensure_directories(&self) -> Result<(), EnvelopeError> {
         std::fs::create_dir_all(&self.base_dir)
             .map_err(|e| EnvelopeError::Io(format!("Failed to create base directory: {}", e)))?;
@@ -123,16 +130,32 @@ impl EnvelopePaths {
     }
 }
 
-/// Fallback path resolution when XDG directories aren't available
-fn dirs_fallback() -> Result<PathBuf, EnvelopeError> {
-    let home = std::env::var("HOME")
-        .map_err(|_| EnvelopeError::Config("Could not determine home directory".into()))?;
-    Ok(PathBuf::from(home).join(".envelope"))
+/// Resolve the default data directory path based on platform
+#[cfg(not(windows))]
+fn resolve_default_path() -> Result<PathBuf, EnvelopeError> {
+    // Unix (Linux/macOS): Use XDG_CONFIG_HOME if set, otherwise ~/.config
+    let config_base = std::env::var("XDG_CONFIG_HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            let home = std::env::var("HOME").expect("HOME environment variable not set");
+            PathBuf::from(home).join(".config")
+        });
+    Ok(config_base.join("envelope-cli"))
+}
+
+/// Resolve the default data directory path based on platform
+#[cfg(windows)]
+fn resolve_default_path() -> Result<PathBuf, EnvelopeError> {
+    // Windows: Use APPDATA
+    let appdata = std::env::var("APPDATA")
+        .map_err(|_| EnvelopeError::Config("Could not determine APPDATA directory".into()))?;
+    Ok(PathBuf::from(appdata).join("envelope-cli"))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
     use tempfile::TempDir;
 
     #[test]
@@ -143,6 +166,21 @@ mod tests {
         assert_eq!(paths.base_dir(), temp_dir.path());
         assert_eq!(paths.data_dir(), temp_dir.path().join("data"));
         assert_eq!(paths.backup_dir(), temp_dir.path().join("backups"));
+    }
+
+    #[test]
+    fn test_env_var_override() {
+        let temp_dir = TempDir::new().unwrap();
+        let custom_path = temp_dir.path().to_str().unwrap();
+
+        // Set the env var
+        env::set_var("ENVELOPE_CLI_DATA_DIR", custom_path);
+
+        let paths = EnvelopePaths::new().unwrap();
+        assert_eq!(paths.base_dir(), temp_dir.path());
+
+        // Clean up
+        env::remove_var("ENVELOPE_CLI_DATA_DIR");
     }
 
     #[test]

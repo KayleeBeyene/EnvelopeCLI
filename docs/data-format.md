@@ -6,13 +6,15 @@ This document describes the JSON data format used by EnvelopeCLI. Understanding 
 
 By default, EnvelopeCLI stores data in:
 
-- **Linux/macOS:** `~/.envelope/`
-- **Windows:** `%APPDATA%\envelope\`
+- **Linux/macOS:** `~/.config/envelope-cli/`
+- **Windows:** `%APPDATA%\envelope-cli\`
+
+Override with the `ENVELOPE_CLI_DATA_DIR` environment variable.
 
 ## Directory Structure
 
 ```
-~/.envelope/
+~/.config/envelope-cli/
 ├── config.json          # User settings
 ├── data/
 │   ├── accounts.json    # Account definitions
