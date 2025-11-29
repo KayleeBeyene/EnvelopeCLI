@@ -447,6 +447,57 @@ fn handle_budget_view_key(app: &mut App, key: KeyEvent) -> Result<()> {
             app.open_dialog(ActiveDialog::AddGroup);
         }
 
+        // Edit category group (Shift+E)
+        KeyCode::Char('E') => {
+            if let Some(cat) = categories.get(app.selected_category_index) {
+                app.open_dialog(ActiveDialog::EditGroup(cat.group_id));
+            }
+        }
+
+        // Delete category group (Shift+D)
+        KeyCode::Char('D') => {
+            if let Some(cat) = categories.get(app.selected_category_index) {
+                if let Ok(Some(group)) = app.storage.categories.get_group(cat.group_id) {
+                    let group_categories = app
+                        .storage
+                        .categories
+                        .get_categories_in_group(group.id)
+                        .unwrap_or_default();
+                    let warning = if group_categories.is_empty() {
+                        format!("Delete group '{}'?", group.name)
+                    } else {
+                        format!(
+                            "Delete group '{}' and its {} categories?",
+                            group.name,
+                            group_categories.len()
+                        )
+                    };
+                    app.open_dialog(ActiveDialog::Confirm(warning));
+                }
+            }
+        }
+
+        // Edit category
+        KeyCode::Char('e') => {
+            if let Some(cat) = categories.get(app.selected_category_index) {
+                app.selected_category = Some(cat.id);
+                app.open_dialog(ActiveDialog::EditCategory(cat.id));
+            }
+        }
+
+        // Delete category
+        KeyCode::Char('d') => {
+            if let Some(cat) = categories.get(app.selected_category_index) {
+                app.selected_category = Some(cat.id);
+                if let Ok(Some(category)) = app.storage.categories.get_category(cat.id) {
+                    app.open_dialog(ActiveDialog::Confirm(format!(
+                        "Delete category '{}'?",
+                        category.name
+                    )));
+                }
+            }
+        }
+
         // Open unified budget dialog (period budget + target)
         KeyCode::Enter | KeyCode::Char('b') | KeyCode::Char('t') => {
             if let Some(cat) = categories.get(app.selected_category_index) {
@@ -705,6 +756,43 @@ fn execute_command_action(app: &mut App, action: CommandAction) -> Result<()> {
                 app.set_status("No category selected".to_string());
             }
         }
+        CommandAction::EditGroup => {
+            // Edit the group of the currently selected category
+            if let Some(category_id) = app.selected_category {
+                if let Ok(Some(category)) = app.storage.categories.get_category(category_id) {
+                    app.open_dialog(ActiveDialog::EditGroup(category.group_id));
+                }
+            } else {
+                app.set_status("No category selected. Switch to Budget view first.".to_string());
+            }
+        }
+        CommandAction::DeleteGroup => {
+            // Delete the group of the currently selected category with confirmation
+            if let Some(category_id) = app.selected_category {
+                if let Ok(Some(category)) = app.storage.categories.get_category(category_id) {
+                    if let Ok(Some(group)) = app.storage.categories.get_group(category.group_id) {
+                        // Check if group has categories
+                        let categories = app
+                            .storage
+                            .categories
+                            .get_categories_in_group(group.id)
+                            .unwrap_or_default();
+                        let warning = if categories.is_empty() {
+                            format!("Delete group '{}'?", group.name)
+                        } else {
+                            format!(
+                                "Delete group '{}' and its {} categories?",
+                                group.name,
+                                categories.len()
+                            )
+                        };
+                        app.open_dialog(ActiveDialog::Confirm(warning));
+                    }
+                }
+            } else {
+                app.set_status("No category selected".to_string());
+            }
+        }
 
         // General
         CommandAction::Help => {
@@ -844,7 +932,7 @@ fn handle_dialog_key(app: &mut App, key: KeyEvent) -> Result<()> {
         ActiveDialog::AddCategory | ActiveDialog::EditCategory(_) => {
             super::dialogs::category::handle_key(app, key);
         }
-        ActiveDialog::AddGroup => {
+        ActiveDialog::AddGroup | ActiveDialog::EditGroup(_) => {
             super::dialogs::group::handle_key(app, key);
         }
         ActiveDialog::None => {}
@@ -929,6 +1017,27 @@ fn execute_confirmed_action(app: &mut App, message: &str) -> Result<()> {
                 }
                 Err(e) => {
                     app.set_status(format!("Failed to delete: {}", e));
+                }
+            }
+        }
+    }
+    // Delete group
+    else if message.contains("Delete group") {
+        if let Some(category_id) = app.selected_category {
+            use crate::services::CategoryService;
+            if let Ok(Some(category)) = app.storage.categories.get_category(category_id) {
+                let group_id = category.group_id;
+                let category_service = CategoryService::new(app.storage);
+                // force_delete_categories = true since user confirmed
+                match category_service.delete_group(group_id, true) {
+                    Ok(()) => {
+                        app.set_status("Category group deleted".to_string());
+                        app.selected_category = None;
+                        app.selected_category_index = 0;
+                    }
+                    Err(e) => {
+                        app.set_status(format!("Failed to delete: {}", e));
+                    }
                 }
             }
         }

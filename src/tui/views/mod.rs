@@ -91,7 +91,7 @@ fn render_dialog(frame: &mut Frame, app: &mut App) {
         ActiveDialog::AddCategory | ActiveDialog::EditCategory(_) => {
             dialogs::category::render(frame, app);
         }
-        ActiveDialog::AddGroup => {
+        ActiveDialog::AddGroup | ActiveDialog::EditGroup(_) => {
             dialogs::group::render(frame, app);
         }
         ActiveDialog::None => {}

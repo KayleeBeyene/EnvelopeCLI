@@ -4,7 +4,7 @@
 
 use crate::config::paths::EnvelopePaths;
 use crate::config::settings::Settings;
-use crate::models::{AccountId, BudgetPeriod, CategoryId, TransactionId};
+use crate::models::{AccountId, BudgetPeriod, CategoryGroupId, CategoryId, TransactionId};
 use crate::storage::Storage;
 
 use super::dialogs::account::AccountFormState;
@@ -125,6 +125,7 @@ pub enum ActiveDialog {
     AddCategory,
     EditCategory(CategoryId),
     AddGroup,
+    EditGroup(CategoryGroupId),
     MoveFunds,
     CommandPalette,
     Help,
@@ -494,6 +495,14 @@ impl<'a> App<'a> {
             ActiveDialog::AddGroup => {
                 // Reset form for new group
                 self.group_form = GroupFormState::new();
+                self.input_mode = InputMode::Editing;
+            }
+            ActiveDialog::EditGroup(group_id) => {
+                // Load group data into form for editing
+                if let Ok(Some(group)) = self.storage.categories.get_group(*group_id) {
+                    self.group_form = GroupFormState::new();
+                    self.group_form.init_for_edit(&group);
+                }
                 self.input_mode = InputMode::Editing;
             }
             ActiveDialog::Budget => {

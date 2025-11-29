@@ -46,6 +46,8 @@ pub enum CommandAction {
     AddGroup,
     EditCategory,
     DeleteCategory,
+    EditGroup,
+    DeleteGroup,
 
     // General
     Help,
@@ -183,6 +185,18 @@ pub static COMMANDS: &[Command] = &[
         description: "Delete selected category",
         shortcut: None,
         action: CommandAction::DeleteCategory,
+    },
+    Command {
+        name: "edit-group",
+        description: "Edit selected category group",
+        shortcut: Some("E"),
+        action: CommandAction::EditGroup,
+    },
+    Command {
+        name: "delete-group",
+        description: "Delete selected category group",
+        shortcut: Some("D"),
+        action: CommandAction::DeleteGroup,
     },
     // General commands
     Command {

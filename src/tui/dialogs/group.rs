@@ -11,7 +11,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::models::CategoryGroup;
+use crate::models::{CategoryGroup, CategoryGroupId};
 use crate::services::CategoryService;
 use crate::tui::app::App;
 use crate::tui::layout::centered_rect;
@@ -25,6 +25,9 @@ pub struct GroupFormState {
 
     /// Error message to display
     pub error_message: Option<String>,
+
+    /// Group ID being edited (None for new group)
+    pub editing_id: Option<CategoryGroupId>,
 }
 
 impl Default for GroupFormState {
@@ -41,7 +44,18 @@ impl GroupFormState {
                 .label("Name")
                 .placeholder("Group name (e.g., Bills, Savings)"),
             error_message: None,
+            editing_id: None,
         }
+    }
+
+    /// Initialize the form for editing an existing group
+    pub fn init_for_edit(&mut self, group: &CategoryGroup) {
+        self.editing_id = Some(group.id);
+        self.name_input = TextInput::new()
+            .label("Name")
+            .placeholder("Group name (e.g., Bills, Savings)")
+            .content(&group.name);
+        self.error_message = None;
     }
 
     /// Validate the form and return any error
@@ -81,8 +95,15 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     // Clear the background
     frame.render_widget(Clear, area);
 
+    // Choose title based on whether we're editing or adding
+    let title = if app.group_form.editing_id.is_some() {
+        " Edit Category Group "
+    } else {
+        " Add Category Group "
+    };
+
     let block = Block::default()
-        .title(" Add Category Group ")
+        .title(title)
         .title_style(
             Style::default()
                 .fg(Color::Cyan)
@@ -270,19 +291,30 @@ fn save_group(app: &mut App) -> Result<(), String> {
     app.group_form.validate()?;
 
     let name = app.group_form.name_input.value().trim().to_string();
-
-    // Use CategoryService to create the group
     let category_service = CategoryService::new(app.storage);
-    category_service
-        .create_group(&name)
-        .map_err(|e| e.to_string())?;
 
-    // Save to disk
-    app.storage.categories.save().map_err(|e| e.to_string())?;
+    if let Some(group_id) = app.group_form.editing_id {
+        // Update existing group
+        category_service
+            .update_group(group_id, Some(&name))
+            .map_err(|e| e.to_string())?;
 
-    // Close dialog
-    app.close_dialog();
-    app.set_status(format!("Category group '{}' created", name));
+        // Close dialog
+        app.close_dialog();
+        app.set_status(format!("Category group '{}' updated", name));
+    } else {
+        // Create new group
+        category_service
+            .create_group(&name)
+            .map_err(|e| e.to_string())?;
+
+        // Save to disk
+        app.storage.categories.save().map_err(|e| e.to_string())?;
+
+        // Close dialog
+        app.close_dialog();
+        app.set_status(format!("Category group '{}' created", name));
+    }
 
     Ok(())
 }
