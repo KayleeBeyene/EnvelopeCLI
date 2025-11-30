@@ -11,6 +11,7 @@ use crate::models::{
 };
 use crate::services::CategoryService;
 use crate::storage::Storage;
+use chrono::Datelike;
 
 /// Service for budget management
 pub struct BudgetService<'a> {
@@ -406,6 +407,63 @@ impl<'a> BudgetService<'a> {
         self.storage.budget.get_for_category(category_id)
     }
 
+    /// Calculate the cumulative amount budgeted to a category across all periods
+    /// up to and including the specified period.
+    ///
+    /// This is useful for ByDate targets where progress should reflect total
+    /// budgeted over time, not just current available balance.
+    pub fn calculate_cumulative_budgeted(
+        &self,
+        category_id: CategoryId,
+        up_to_period: &BudgetPeriod,
+    ) -> EnvelopeResult<Money> {
+        let allocations = self.storage.budget.get_for_category(category_id)?;
+
+        let total: Money = allocations
+            .iter()
+            .filter(|a| &a.period <= up_to_period)
+            .map(|a| a.budgeted)
+            .sum();
+
+        Ok(total)
+    }
+
+    /// Calculate the cumulative amount paid/spent from a category across all time
+    /// up to and including the specified period.
+    ///
+    /// This returns the absolute value of negative activity (outflows/payments).
+    /// Useful for ByDate targets where payments should count as progress even
+    /// if no explicit budgeting occurred.
+    pub fn calculate_cumulative_paid(
+        &self,
+        category_id: CategoryId,
+        up_to_period: &BudgetPeriod,
+    ) -> EnvelopeResult<Money> {
+        let transactions = self.storage.transactions.get_by_category(category_id)?;
+        let end_date = up_to_period.end_date();
+
+        let total_paid: i64 = transactions
+            .iter()
+            .filter(|t| t.date <= end_date)
+            .map(|t| {
+                if t.is_split() {
+                    // Sum only the splits for this category
+                    t.splits
+                        .iter()
+                        .filter(|s| s.category_id == category_id)
+                        .map(|s| s.amount.cents())
+                        .sum::<i64>()
+                } else {
+                    t.amount.cents()
+                }
+            })
+            .filter(|&cents| cents < 0) // Only count outflows (payments)
+            .map(|cents| cents.abs()) // Convert to positive
+            .sum();
+
+        Ok(Money::from_cents(total_paid))
+    }
+
     /// Calculate the carryover amount for a category going into a specific period
     ///
     /// This is the "Available" balance from the previous period, which includes:
@@ -607,6 +665,71 @@ impl<'a> BudgetService<'a> {
         }
     }
 
+    /// Get the suggested budget amount for a category, accounting for progress made.
+    ///
+    /// For ByDate targets, this subtracts what's already been paid from the target
+    /// amount before calculating the monthly suggestion. This prevents over-budgeting
+    /// when payments have already been made toward a debt payoff goal.
+    ///
+    /// For other target types (Weekly, Monthly, Yearly, Custom), this delegates
+    /// to the standard calculation since those are recurring targets.
+    pub fn get_suggested_budget_with_progress(
+        &self,
+        category_id: CategoryId,
+        period: &BudgetPeriod,
+    ) -> EnvelopeResult<Option<Money>> {
+        let target = match self.storage.targets.get_for_category(category_id)? {
+            Some(t) => t,
+            None => return Ok(None),
+        };
+
+        match &target.cadence {
+            TargetCadence::ByDate { target_date } => {
+                let period_start = period.start_date();
+
+                // Target already passed
+                if *target_date < period_start {
+                    return Ok(Some(Money::zero()));
+                }
+
+                // Calculate cumulative paid toward this target
+                let target_period = BudgetPeriod::monthly(target_date.year(), target_date.month());
+                let cumulative_paid =
+                    self.calculate_cumulative_paid(category_id, &target_period)?;
+
+                // Calculate remaining amount needed
+                let remaining = (target.amount.cents() - cumulative_paid.cents()).max(0);
+
+                // If already fully paid, suggest $0
+                if remaining == 0 {
+                    return Ok(Some(Money::zero()));
+                }
+
+                // Calculate months remaining (including current month)
+                let months = self.months_between(period_start, *target_date);
+
+                if months <= 0 {
+                    // Target is due this period - suggest remaining amount
+                    Ok(Some(Money::from_cents(remaining)))
+                } else {
+                    // Spread remaining over remaining months
+                    Ok(Some(Money::from_cents(
+                        (remaining as f64 / months as f64).ceil() as i64,
+                    )))
+                }
+            }
+            // For recurring targets, use the standard calculation
+            _ => Ok(Some(target.calculate_for_period(period))),
+        }
+    }
+
+    /// Calculate months between two dates
+    fn months_between(&self, start: chrono::NaiveDate, end: chrono::NaiveDate) -> i32 {
+        let years = end.year() - start.year();
+        let months = end.month() as i32 - start.month() as i32;
+        years * 12 + months
+    }
+
     /// Delete a target
     pub fn delete_target(&self, target_id: BudgetTargetId) -> EnvelopeResult<bool> {
         if let Some(target) = self.storage.targets.get(target_id)? {
@@ -644,12 +767,15 @@ impl<'a> BudgetService<'a> {
     }
 
     /// Auto-fill budget for a category based on its target
+    ///
+    /// Uses progress-aware calculation for ByDate targets, accounting for
+    /// payments already made toward the goal.
     pub fn auto_fill_from_target(
         &self,
         category_id: CategoryId,
         period: &BudgetPeriod,
     ) -> EnvelopeResult<Option<BudgetAllocation>> {
-        if let Some(suggested) = self.get_suggested_budget(category_id, period)? {
+        if let Some(suggested) = self.get_suggested_budget_with_progress(category_id, period)? {
             let allocation = self.assign_to_category(category_id, period, suggested)?;
             Ok(Some(allocation))
         } else {
@@ -658,6 +784,9 @@ impl<'a> BudgetService<'a> {
     }
 
     /// Auto-fill budgets for all categories with targets
+    ///
+    /// Uses progress-aware calculation for ByDate targets, accounting for
+    /// payments already made toward each goal.
     pub fn auto_fill_all_targets(
         &self,
         period: &BudgetPeriod,
@@ -666,9 +795,12 @@ impl<'a> BudgetService<'a> {
         let mut allocations = Vec::with_capacity(targets.len());
 
         for target in &targets {
-            let suggested = target.calculate_for_period(period);
-            let allocation = self.assign_to_category(target.category_id, period, suggested)?;
-            allocations.push(allocation);
+            if let Some(suggested) =
+                self.get_suggested_budget_with_progress(target.category_id, period)?
+            {
+                let allocation = self.assign_to_category(target.category_id, period, suggested)?;
+                allocations.push(allocation);
+            }
         }
 
         Ok(allocations)
@@ -971,5 +1103,263 @@ mod tests {
         assert_eq!(overspent.len(), 1);
         assert_eq!(overspent[0].category_id, cat1_id);
         assert_eq!(overspent[0].available.cents(), -10000);
+    }
+
+    #[test]
+    fn test_cumulative_budgeted_for_bydate_progress() {
+        let (_temp_dir, storage) = create_test_storage();
+        let (cat_id, _, _) = setup_test_data(&storage);
+        let service = BudgetService::new(&storage);
+
+        // Budget $200 in November 2025
+        let nov = BudgetPeriod::monthly(2025, 11);
+        service
+            .assign_to_category(cat_id, &nov, Money::from_cents(20000))
+            .unwrap();
+
+        // Budget $200 in December 2025
+        let dec = BudgetPeriod::monthly(2025, 12);
+        service
+            .assign_to_category(cat_id, &dec, Money::from_cents(20000))
+            .unwrap();
+
+        // Cumulative through November should be $200
+        let cumulative_nov = service.calculate_cumulative_budgeted(cat_id, &nov).unwrap();
+        assert_eq!(cumulative_nov.cents(), 20000);
+
+        // Cumulative through December should be $400
+        let cumulative_dec = service.calculate_cumulative_budgeted(cat_id, &dec).unwrap();
+        assert_eq!(cumulative_dec.cents(), 40000);
+
+        // Cumulative through a future month (Dec 2026) should still be $400
+        let dec_2026 = BudgetPeriod::monthly(2026, 12);
+        let cumulative_future = service
+            .calculate_cumulative_budgeted(cat_id, &dec_2026)
+            .unwrap();
+        assert_eq!(cumulative_future.cents(), 40000);
+    }
+
+    #[test]
+    fn test_cumulative_paid_for_bydate_progress() {
+        let (_temp_dir, storage) = create_test_storage();
+        let (cat_id, _, _) = setup_test_data(&storage);
+
+        // Create an account for transactions
+        let account = Account::new("Checking", AccountType::Checking);
+        storage.accounts.upsert(account.clone()).unwrap();
+
+        // Make a $100 payment in November (no budgeting)
+        let mut txn1 = Transaction::new(
+            account.id,
+            NaiveDate::from_ymd_opt(2025, 11, 15).unwrap(),
+            Money::from_cents(-10000), // $100 payment (negative = outflow)
+        );
+        txn1.category_id = Some(cat_id);
+        storage.transactions.upsert(txn1).unwrap();
+
+        // Make another $50 payment in December
+        let mut txn2 = Transaction::new(
+            account.id,
+            NaiveDate::from_ymd_opt(2025, 12, 15).unwrap(),
+            Money::from_cents(-5000), // $50 payment
+        );
+        txn2.category_id = Some(cat_id);
+        storage.transactions.upsert(txn2).unwrap();
+
+        let service = BudgetService::new(&storage);
+
+        // Cumulative paid through November should be $100
+        let nov = BudgetPeriod::monthly(2025, 11);
+        let cumulative_nov = service.calculate_cumulative_paid(cat_id, &nov).unwrap();
+        assert_eq!(cumulative_nov.cents(), 10000);
+
+        // Cumulative paid through December should be $150
+        let dec = BudgetPeriod::monthly(2025, 12);
+        let cumulative_dec = service.calculate_cumulative_paid(cat_id, &dec).unwrap();
+        assert_eq!(cumulative_dec.cents(), 15000);
+
+        // With $0 budgeted, payments should still count as progress
+        let cumulative_budgeted = service.calculate_cumulative_budgeted(cat_id, &dec).unwrap();
+        assert_eq!(cumulative_budgeted.cents(), 0);
+
+        // Paid always wins when there are payments (it's the source of truth)
+        let progress_amount = if cumulative_dec.cents() > 0 {
+            cumulative_dec.cents()
+        } else {
+            cumulative_budgeted.cents().max(0)
+        };
+        assert_eq!(progress_amount, 15000); // $150 from payments
+    }
+
+    #[test]
+    fn test_paid_wins_over_budgeted() {
+        let (_temp_dir, storage) = create_test_storage();
+        let (cat_id, _, _) = setup_test_data(&storage);
+
+        // Create an account for transactions
+        let account = Account::new("Checking", AccountType::Checking);
+        storage.accounts.upsert(account.clone()).unwrap();
+
+        let service = BudgetService::new(&storage);
+        let dec = BudgetPeriod::monthly(2025, 12);
+
+        // Budget $200 in December
+        service
+            .assign_to_category(cat_id, &dec, Money::from_cents(20000))
+            .unwrap();
+
+        // But only pay $100
+        let mut txn = Transaction::new(
+            account.id,
+            NaiveDate::from_ymd_opt(2025, 12, 15).unwrap(),
+            Money::from_cents(-10000), // $100 payment
+        );
+        txn.category_id = Some(cat_id);
+        storage.transactions.upsert(txn).unwrap();
+
+        let cumulative_budgeted = service.calculate_cumulative_budgeted(cat_id, &dec).unwrap();
+        let cumulative_paid = service.calculate_cumulative_paid(cat_id, &dec).unwrap();
+
+        assert_eq!(cumulative_budgeted.cents(), 20000); // $200 budgeted
+        assert_eq!(cumulative_paid.cents(), 10000); // $100 paid
+
+        // Paid wins - even though budgeted is higher, paid is the source of truth
+        let progress_amount = if cumulative_paid.cents() > 0 {
+            cumulative_paid.cents()
+        } else {
+            cumulative_budgeted.cents().max(0)
+        };
+        assert_eq!(progress_amount, 10000); // $100 from payments, not $200 budgeted
+    }
+
+    #[test]
+    fn test_suggested_budget_accounts_for_cumulative_paid() {
+        let (_temp_dir, storage) = create_test_storage();
+        let (cat_id, _, _) = setup_test_data(&storage);
+
+        // Create an account for transactions
+        let account = Account::new("Checking", AccountType::Checking);
+        storage.accounts.upsert(account.clone()).unwrap();
+
+        let service = BudgetService::new(&storage);
+
+        // Create a ByDate target: $2000 by December 2026
+        let target_date = NaiveDate::from_ymd_opt(2026, 12, 31).unwrap();
+        service
+            .set_target(
+                cat_id,
+                Money::from_cents(200000),
+                TargetCadence::by_date(target_date),
+            )
+            .unwrap();
+
+        // Current period: January 2026
+        // months_between(Jan, Dec) = 12 - 1 = 11 months
+        let jan_2026 = BudgetPeriod::monthly(2026, 1);
+
+        // Without any payments, should suggest $2000/11 = $181.82 (ceil)
+        let suggested = service
+            .get_suggested_budget_with_progress(cat_id, &jan_2026)
+            .unwrap()
+            .unwrap();
+        assert_eq!(suggested.cents(), 18182); // ceil($2000/11) = $181.82
+
+        // Now make a $500 payment in January
+        let mut txn = Transaction::new(
+            account.id,
+            NaiveDate::from_ymd_opt(2026, 1, 15).unwrap(),
+            Money::from_cents(-50000), // $500 payment
+        );
+        txn.category_id = Some(cat_id);
+        storage.transactions.upsert(txn).unwrap();
+
+        // For February, should suggest ($2000-$500)/10 = $150
+        // months_between(Feb, Dec) = 12 - 2 = 10 months
+        let feb_2026 = BudgetPeriod::monthly(2026, 2);
+        let suggested = service
+            .get_suggested_budget_with_progress(cat_id, &feb_2026)
+            .unwrap()
+            .unwrap();
+        // Remaining: $1500, Months: 10 (Feb through Dec)
+        assert_eq!(suggested.cents(), 15000); // $1500/10 = $150
+
+        // Make another $500 payment in February
+        let mut txn2 = Transaction::new(
+            account.id,
+            NaiveDate::from_ymd_opt(2026, 2, 15).unwrap(),
+            Money::from_cents(-50000), // $500 payment
+        );
+        txn2.category_id = Some(cat_id);
+        storage.transactions.upsert(txn2).unwrap();
+
+        // For March, should suggest ($2000-$1000)/9 = $111.12 (ceil)
+        // months_between(Mar, Dec) = 12 - 3 = 9 months
+        let mar_2026 = BudgetPeriod::monthly(2026, 3);
+        let suggested = service
+            .get_suggested_budget_with_progress(cat_id, &mar_2026)
+            .unwrap()
+            .unwrap();
+        assert_eq!(suggested.cents(), 11112); // ceil($1000/9) = $111.12
+    }
+
+    #[test]
+    fn test_suggested_budget_fully_paid_suggests_zero() {
+        let (_temp_dir, storage) = create_test_storage();
+        let (cat_id, _, _) = setup_test_data(&storage);
+
+        // Create an account for transactions
+        let account = Account::new("Checking", AccountType::Checking);
+        storage.accounts.upsert(account.clone()).unwrap();
+
+        let service = BudgetService::new(&storage);
+
+        // Create a ByDate target: $500 by June 2026
+        let target_date = NaiveDate::from_ymd_opt(2026, 6, 30).unwrap();
+        service
+            .set_target(
+                cat_id,
+                Money::from_cents(50000),
+                TargetCadence::by_date(target_date),
+            )
+            .unwrap();
+
+        // Pay full amount in January
+        let mut txn = Transaction::new(
+            account.id,
+            NaiveDate::from_ymd_opt(2026, 1, 15).unwrap(),
+            Money::from_cents(-50000), // $500 payment - full target
+        );
+        txn.category_id = Some(cat_id);
+        storage.transactions.upsert(txn).unwrap();
+
+        // For February, should suggest $0 since fully paid
+        let feb_2026 = BudgetPeriod::monthly(2026, 2);
+        let suggested = service
+            .get_suggested_budget_with_progress(cat_id, &feb_2026)
+            .unwrap()
+            .unwrap();
+        assert_eq!(suggested.cents(), 0);
+    }
+
+    #[test]
+    fn test_suggested_budget_recurring_targets_unchanged() {
+        let (_temp_dir, storage) = create_test_storage();
+        let (cat_id, _, _) = setup_test_data(&storage);
+
+        let service = BudgetService::new(&storage);
+
+        // Create a Monthly target: $300/month
+        service
+            .set_target(cat_id, Money::from_cents(30000), TargetCadence::Monthly)
+            .unwrap();
+
+        let jan_2026 = BudgetPeriod::monthly(2026, 1);
+
+        // Should always suggest $300 regardless of payments (recurring target)
+        let suggested = service
+            .get_suggested_budget_with_progress(cat_id, &jan_2026)
+            .unwrap()
+            .unwrap();
+        assert_eq!(suggested.cents(), 30000);
     }
 }

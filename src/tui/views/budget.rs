@@ -2,6 +2,7 @@
 //!
 //! Shows budget categories with budgeted, activity, available, and target amounts
 
+use chrono::Datelike;
 use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
@@ -10,7 +11,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::models::{AccountType, TargetCadence};
+use crate::models::{AccountType, BudgetPeriod, TargetCadence};
 use crate::services::{AccountService, BudgetService, CategoryService};
 use crate::tui::app::{App, BudgetHeaderDisplay, FocusedPanel};
 use crate::tui::layout::BudgetLayout;
@@ -220,24 +221,73 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
                 Some(t) => {
                     match &t.cadence {
                         TargetCadence::ByDate { target_date } => {
-                            // For ByDate goals, show progress
-                            let progress_pct = if t.amount.cents() > 0 {
-                                let saved = summary.available.cents().max(0);
-                                ((saved as f64 / t.amount.cents() as f64) * 100.0).min(100.0)
+                            // For ByDate goals: paid is the source of truth, budgeted is fallback
+                            let target_period =
+                                BudgetPeriod::monthly(target_date.year(), target_date.month());
+                            let cumulative_paid = budget_service
+                                .calculate_cumulative_paid(category.id, &target_period)
+                                .unwrap_or_default();
+                            let cumulative_budgeted = budget_service
+                                .calculate_cumulative_budgeted(category.id, &target_period)
+                                .unwrap_or_default();
+
+                            // Use paid amount; fall back to budgeted only if no payments yet
+                            let progress_amount = if cumulative_paid.cents() > 0 {
+                                cumulative_paid.cents()
                             } else {
-                                0.0
+                                cumulative_budgeted.cents().max(0)
                             };
-                            format!(
-                                "{} by {} ({:.0}%)",
+
+                            // Preview: what progress would be if all budgeted amount is paid
+                            // Only count unpaid budgeted (avoid double-counting already paid amounts)
+                            let unpaid_budgeted =
+                                (cumulative_budgeted.cents() - cumulative_paid.cents()).max(0);
+                            let preview_amount = cumulative_paid.cents() + unpaid_budgeted;
+
+                            let target_cents = t.amount.cents();
+                            let (progress_pct, preview_pct) = if target_cents > 0 {
+                                let progress = ((progress_amount as f64 / target_cents as f64)
+                                    * 100.0)
+                                    .min(100.0);
+                                let preview =
+                                    ((preview_amount.max(0) as f64 / target_cents as f64) * 100.0)
+                                        .min(100.0);
+                                (progress, preview)
+                            } else {
+                                (0.0, 0.0)
+                            };
+
+                            let base_text = format!(
+                                "{} by {} ({:.0}%",
                                 t.amount,
                                 target_date.format("%b %Y"),
                                 progress_pct
-                            )
+                            );
+
+                            // Show preview only if it differs from current progress
+                            if (preview_pct - progress_pct).abs() > 0.5 {
+                                Line::from(vec![
+                                    Span::styled(base_text, Style::default().fg(Color::Magenta)),
+                                    Span::styled(
+                                        format!(" → {:.0}%", preview_pct),
+                                        Style::default().fg(Color::White),
+                                    ),
+                                    Span::styled(")", Style::default().fg(Color::Magenta)),
+                                ])
+                            } else {
+                                Line::from(vec![Span::styled(
+                                    format!("{})", base_text),
+                                    Style::default().fg(Color::Magenta),
+                                )])
+                            }
                         }
-                        _ => format!("{} {}", t.amount, t.cadence),
+                        _ => Line::from(Span::styled(
+                            format!("{} {}", t.amount, t.cadence),
+                            Style::default().fg(Color::Magenta),
+                        )),
                     }
                 }
-                None => "—".to_string(),
+                None => Line::from(Span::styled("—", Style::default().fg(Color::White))),
             };
 
             // Available column styling
@@ -258,19 +308,12 @@ fn render_category_table(frame: &mut Frame, app: &mut App, area: Rect) {
                 Style::default().fg(Color::Yellow)
             };
 
-            // Target styling
-            let target_style = if target.is_some() {
-                Style::default().fg(Color::Magenta)
-            } else {
-                Style::default().fg(Color::White)
-            };
-
             rows.push(Row::new(vec![
                 Cell::from(format!("{}{}", target_indicator, category.name)),
                 Cell::from(format!("{}", summary.budgeted)),
                 Cell::from(format!("{}", summary.activity)).style(activity_style),
                 Cell::from(format!("{}", summary.available)).style(available_style),
-                Cell::from(target_display).style(target_style),
+                Cell::from(target_display),
             ]));
             row_to_category_index.push(Some(cat_index));
         }

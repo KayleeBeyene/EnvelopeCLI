@@ -526,7 +526,7 @@ impl<'a> App<'a> {
                                 crate::models::CategoryBudgetSummary::empty(category_id)
                             });
                         let suggested = budget_service
-                            .get_suggested_budget(category_id, &self.current_period)
+                            .get_suggested_budget_with_progress(category_id, &self.current_period)
                             .ok()
                             .flatten();
                         let existing_target = self
