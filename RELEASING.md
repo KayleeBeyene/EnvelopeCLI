@@ -139,6 +139,8 @@ After release, users can install via:
 
 | Version | Date | Notes |
 |---------|------|-------|
+| 0.2.6 | 2025-11-30 | ByDate target progress calculation improvements |
+| 0.2.5 | 2025-11-30 | TUI terminology updates, account form behavior |
 | 0.2.4 | 2025-11-29 | Expected income tracking with budget warnings |
 | 0.2.3 | 2025-11-29 | Vim keybindings, unified backup/export restore |
 | 0.2.2 | 2025-11-29 | Patch release |
